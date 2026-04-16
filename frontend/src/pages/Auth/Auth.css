@@ -1,0 +1,168 @@
+/* --- RESET CƠ BẢN --- */
+.auth-container {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+  background-color: #ffffff;
+}
+
+/* --- BANNER TRÁI --- */
+.auth-banner {
+  flex: 1.4;
+  background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('../../assets/images/freelancer.jpeg');
+  background-size: cover;
+  background-position: center;
+  padding: 60px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.banner-content { text-align: right; color: white; }
+.banner-content h1 { font-size: 3rem; margin-bottom: 20px; color: white !important; }
+.banner-features li { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-bottom: 10px; color: white !important; }
+
+/* --- FORM PHẢI --- */
+.auth-form-side {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #ffffff;
+}
+
+.form-box { width: 100%; max-width: 400px; padding: 20px; }
+
+.form-box h2 {
+  font-size: 28px;
+  color: #404145 !important;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.top-switch-sub {
+  font-size: 14px;
+  color: #74767e !important;
+  margin-bottom: 25px;
+}
+
+.top-switch-sub span {
+  color: #1dbf73 !important;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* --- FIX LỖI MẤT CHỮ TRẮNG XÓA (AUTOFILL & TRÌNH DUYỆT) --- */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px white inset !important;
+  -webkit-text-fill-color: #222325 !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* --- INPUTS --- */
+.input-group { margin-bottom: 15px; } /* Giảm margin một chút để chứa thêm dòng password mới */
+.input-group label {
+  display: block;
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 8px;
+  color: #404145 !important;
+}
+
+.input-wrapper {
+  display: flex;
+  align-items: center;
+  border: 1px solid #dadbdd;
+  border-radius: 4px;
+  padding: 12px;
+  background: #ffffff !important;
+}
+
+.input-wrapper input {
+  border: none;
+  outline: none;
+  width: 100%;
+  margin-left: 10px;
+  font-size: 15px;
+  color: #222325 !important;
+  background: transparent;
+}
+
+.input-wrapper input::placeholder {
+  color: #b5b6ba !important;
+}
+
+.input-wrapper svg {
+  color: #b5b6ba;
+}
+
+/* --- TABS --- */
+.tab-container { display: flex; gap: 10px; margin-bottom: 20px; }
+.tab {
+  padding: 8px 20px;
+  border-radius: 20px;
+  border: none;
+  background: #f1f1f2;
+  color: #62646a !important;
+  cursor: pointer;
+  font-weight: 600;
+}
+.tab.active { background: #1dbf73; color: white !important; }
+
+/* --- BUTTONS --- */
+.btn-auth {
+  width: 100%;
+  padding: 14px;
+  background-color: #1dbf73;
+  color: white !important;
+  border: none;
+  border-radius: 4px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+/* --- OTP --- */
+.otp-boxes { display: flex; gap: 8px; justify-content: center; }
+.otp-input {
+  width: 45px;
+  height: 50px;
+  border: 1px solid #dadbdd;
+  border-radius: 4px;
+  text-align: center;
+  font-size: 20px;
+  background: #f1f1f2;
+  color: #404145 !important;
+  font-weight: 700;
+}
+
+/* --- LINKS --- */
+.form-options {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  margin-bottom: 20px;
+  color: #404145 !important;
+}
+
+.forgot-link { color: #62646a !important; font-weight: 600; cursor: pointer; text-decoration: none; }
+.forgot-link:hover { text-decoration: underline; }
+
+.back-link {
+  color: #1dbf73 !important;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 14px;
+}
+
+.footer-terms {
+  margin-top: 30px;
+  font-size: 12px;
+  color: #95979d !important;
+  text-align: center;
+}
