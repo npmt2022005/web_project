@@ -4,6 +4,7 @@
   height: 100vh;
   width: 100%;
   background-color: #ffffff;
+  overflow: hidden; /* Ngăn chặn cuộn toàn bộ trang */
 }
 
 /* --- BANNER TRÁI --- */
@@ -29,16 +30,23 @@
   font-size: 18px;
 }
 
-/* --- FORM PHẢI --- */
+/* --- FORM PHẢI (Đã thêm Scroll) --- */
 .auth-form-side {
   flex: 1;
   display: flex;
-  align-items: center;
+  align-items: flex-start; /* Thay đổi thành flex-start để cuộn từ đầu trang */
   justify-content: center;
   background-color: #ffffff;
+  height: 100vh;
+  overflow-y: auto; /* Cho phép cuộn dọc khi form dài */
 }
 
-.form-box { width: 100%; max-width: 400px; padding: 20px; }
+.form-box { 
+  width: 100%; 
+  max-width: 400px; 
+  padding: 60px 20px; /* Tăng padding trên dưới để tạo khoảng trống khi cuộn */
+  margin: auto; /* Căn giữa form khi nội dung ngắn */
+}
 
 .form-box h2 {
   font-size: 28px;
@@ -60,7 +68,6 @@
 }
 
 /* --- METHOD SELECTOR (EMAIL/PHONE/USERNAME) --- */
-/* Cập nhật theo hình ảnh mẫu */
 .method-selector {
   display: flex;
   gap: 10px;
@@ -70,9 +77,9 @@
 
 .method-btn {
   padding: 8px 20px;
-  border-radius: 20px; /* Bo tròn dạng pill */
+  border-radius: 20px;
   border: none;
-  background-color: #f1f1f2; /* Màu nền khi chưa chọn */
+  background-color: #f1f1f2;
   color: #62646a !important;
   cursor: pointer;
   font-weight: 600;
@@ -81,7 +88,7 @@
 }
 
 .method-btn.active {
-  background-color: #7dbb8e; /* Màu xanh nhạt theo ảnh */
+  background-color: #7dbb8e;
   color: white !important;
 }
 
@@ -126,7 +133,7 @@
 .btn-auth {
   width: 100%;
   padding: 14px;
-  background-color: #7dbb8e; /* Màu xanh đồng bộ với nút chọn */
+  background-color: #7dbb8e;
   color: white !important;
   border: none;
   border-radius: 4px;
@@ -208,4 +215,19 @@
   align-items: center;
   gap: 5px;
   font-size: 14px;
+}
+
+/* --- TÙY CHỈNH THANH CUỘN CHO ĐẸP --- */
+.auth-form-side::-webkit-scrollbar {
+  width: 6px;
+}
+.auth-form-side::-webkit-scrollbar-track {
+  background: #f1f1f2;
+}
+.auth-form-side::-webkit-scrollbar-thumb {
+  background: #b5b6ba;
+  border-radius: 10px;
+}
+.auth-form-side::-webkit-scrollbar-thumb:hover {
+  background: #7dbb8e;
 }

@@ -17,7 +17,7 @@ const AuthPage = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // --- API HANDLERS (Giữ nguyên logic cũ) ---
+  // --- API HANDLERS ---
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
@@ -89,7 +89,6 @@ const AuthPage = () => {
               <h2>Sign in to your account</h2>
               <p className="top-switch-sub">Don't have an account? <span onClick={() => setAuthMode('signup')}>Join here</span></p>
               
-              {/* Phần chọn phương thức đăng nhập với 3 lựa chọn */}
               <div className="method-selector">
                 <button 
                   type="button"
@@ -114,7 +113,6 @@ const AuthPage = () => {
                 </button>
               </div>
 
-              {/* Trường định danh duy nhất (Identifier) thay đổi theo method */}
               <div className="input-group">
                 <label>{currentMethod.label}</label>
                 <div className="input-wrapper">
@@ -145,23 +143,27 @@ const AuthPage = () => {
             </>
           )}
 
-          {/* --- CÁC PHẦN KHÁC (GIỮ NGUYÊN) --- */}
+          {/* --- GIAO DIỆN ĐĂNG KÝ (SIGN UP) --- */}
           {authMode === 'signup' && (
             <>
               <h2>Join our community</h2>
               <p className="top-switch-sub">Already have an account? <span onClick={() => setAuthMode('login')}>Sign In</span></p>
+              
               <div className="input-group">
                 <label>Full Name</label>
                 <div className="input-wrapper"><User size={18} /><input name="fullname" type="text" placeholder="Ví dụ: Phan Trung Kiên" onChange={handleChange} /></div>
               </div>
+              
               <div className="input-group">
                 <label>Username</label>
                 <div className="input-wrapper"><AtSign size={18} /><input name="username" type="text" placeholder="vana_nguyen" onChange={handleChange} /></div>
               </div>
+              
               <div className="method-selector">
                 <button type="button" className={`method-btn ${method === 'email' ? 'active' : ''}`} onClick={() => setMethod('email')}>Email</button>
                 <button type="button" className={`method-btn ${method === 'phone' ? 'active' : ''}`} onClick={() => setMethod('phone')}>Số điện thoại</button>
               </div>
+              
               <div className="input-group">
                 <label>{method === 'email' ? 'Email' : 'Số điện thoại'}</label>
                 <div className="input-wrapper">
@@ -169,18 +171,43 @@ const AuthPage = () => {
                   <input name={method === 'email' ? "email" : "phone"} type="text" placeholder={method === 'email' ? "yourname@example.com" : "0987654321"} onChange={handleChange} />
                 </div>
               </div>
+              
               <div className="input-group">
                 <label>Password</label>
                 <div className="input-wrapper"><Lock size={18} /><input name="password" type="password" placeholder="Create a password" onChange={handleChange} /></div>
               </div>
+              
               <div className="input-group">
                 <label>Confirm Password</label>
                 <div className="input-wrapper"><Lock size={18} /><input name="confirmPassword" type="password" placeholder="Confirm your password" onChange={handleChange} /></div>
               </div>
+
+              {/* --- PHẦN CHỌN ROLE MỚI THÊM --- */}
+              <div className="input-group">
+                <label>Bạn tham gia với vai trò:</label>
+                <div className="method-selector">
+                  <button 
+                    type="button"
+                    className={`method-btn ${formData.role === 'ROLE_BUYER' ? 'active' : ''}`} 
+                    onClick={() => setFormData({ ...formData, role: 'ROLE_BUYER' })}
+                  >
+                    Người mua (Buyer)
+                  </button>
+                  <button 
+                    type="button"
+                    className={`method-btn ${formData.role === 'ROLE_SELLER' ? 'active' : ''}`} 
+                    onClick={() => setFormData({ ...formData, role: 'ROLE_SELLER' })}
+                  >
+                    Người bán (Seller)
+                  </button>
+                </div>
+              </div>
+
               <button className="btn-auth" onClick={handleRegister}>Join Now</button>
             </>
           )}
 
+          {/* --- QUÊN MẬT KHẨU --- */}
           {authMode === 'forgot' && (
             <>
               <h2>Reset Password</h2>
