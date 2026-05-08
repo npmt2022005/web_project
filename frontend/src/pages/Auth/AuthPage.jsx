@@ -13,6 +13,9 @@ const AuthPage = () => {
     password: '', confirmPassword: '', identifier: '', otp: '', role: 'ROLE_BUYER'
   });
 
+  // State mới để lưu thông báo lỗi hoặc thành công
+  const [message, setMessage] = useState({ text: '', type: '' });
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -20,40 +23,53 @@ const AuthPage = () => {
   // --- API HANDLERS ---
   const handleLogin = async (e) => {
     e.preventDefault();
+    setMessage({ text: '', type: '' });
     try {
       const res = await authService.login({ 
         identifier: formData.identifier, 
         password: formData.password 
       });
-      alert(res.data.message);
+      setMessage({ text: "Đăng nhập thành công!", type: 'success' });
       if (res.data.data?.token) localStorage.setItem('token', res.data.data.token);
     } catch (err) {
-      alert(err.response?.data?.message || "Đăng nhập thất bại");
+      setMessage({ text: err.response?.data?.message || "Đăng nhập thất bại", type: 'error' });
     }
   };
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    if (formData.password !== formData.confirmPassword) return alert("Mật khẩu xác nhận không khớp");
+    setMessage({ text: '', type: '' });
+    if (formData.password !== formData.confirmPassword) {
+      return setMessage({ text: "Mật khẩu xác nhận không khớp", type: 'error' });
+    }
     try {
       const res = await authService.register({ ...formData });
-      alert(res.data.message);
-      setAuthMode('login');
+      setMessage({ text: "Đăng ký thành công! Đang chuyển hướng...", type: 'success' });
+      setTimeout(() => setAuthMode('login'), 2000);
     } catch (err) {
-      alert(err.response?.data?.message || "Đăng ký thất bại");
+      setMessage({ text: err.response?.data?.message || "Đăng ký thất bại", type: 'error' });
     }
   };
 
   const handleForgotPassword = async () => {
+    setMessage({ text: '', type: '' });
     try {
       const res = await authService.forgotPassword({ identifier: formData.identifier });
-      alert(res.data.message);
+      setMessage({ text: res.data.message || "Đã gửi mã OTP!", type: 'success' });
     } catch (err) {
-      alert(err.response?.data?.message || "Không thể gửi mã OTP");
+      setMessage({ text: err.response?.data?.message || "Không thể gửi mã OTP", type: 'error' });
     }
   };
 
-  // Helper function để lấy Label, Icon và Placeholder dựa trên method đang chọn
+  // Helper component hiển thị thông báo
+  const StatusMessage = () => (
+    message.text ? (
+      <div className={`status-msg ${message.type}`}>
+        {message.text}
+      </div>
+    ) : null
+  );
+
   const getMethodDetails = () => {
     switch (method) {
       case 'phone':
@@ -83,46 +99,29 @@ const AuthPage = () => {
       <div className="auth-form-side">
         <div className="form-box">
           
-          {/* --- GIAO DIỆN ĐĂNG NHẬP (SIGN IN) --- */}
           {authMode === 'login' && (
             <>
               <h2>Sign in to your account</h2>
-              <p className="top-switch-sub">Don't have an account? <span onClick={() => setAuthMode('signup')}>Join here</span></p>
+              <p className="top-switch-sub">Don't have an account? <span onClick={() => {setAuthMode('signup'); setMessage({text:'',type:''})}}>Join here</span></p>
               
               <div className="method-selector">
-                <button 
-                  type="button"
-                  className={`method-btn ${method === 'email' ? 'active' : ''}`} 
-                  onClick={() => setMethod('email')}
-                >
-                  Email
-                </button>
-                <button 
-                  type="button"
-                  className={`method-btn ${method === 'phone' ? 'active' : ''}`} 
-                  onClick={() => setMethod('phone')}
-                >
-                  Số điện thoại
-                </button>
-                <button 
-                  type="button"
-                  className={`method-btn ${method === 'username' ? 'active' : ''}`} 
-                  onClick={() => setMethod('username')}
-                >
-                  Username
-                </button>
+                {['email', 'phone', 'username'].map((m) => (
+                  <button 
+                    key={m}
+                    type="button"
+                    className={`method-btn ${method === m ? 'active' : ''}`} 
+                    onClick={() => setMethod(m)}
+                  >
+                    {m.charAt(0).toUpperCase() + m.slice(1)}
+                  </button>
+                ))}
               </div>
 
               <div className="input-group">
                 <label>{currentMethod.label}</label>
                 <div className="input-wrapper">
                   {currentMethod.icon}
-                  <input 
-                    name="identifier" 
-                    type="text" 
-                    placeholder={currentMethod.placeholder} 
-                    onChange={handleChange} 
-                  />
+                  <input name="identifier" type="text" placeholder={currentMethod.placeholder} onChange={handleChange} />
                 </div>
               </div>
 
@@ -136,18 +135,18 @@ const AuthPage = () => {
 
               <div className="form-options">
                 <label className="checkbox-label"><input type="checkbox" /> Ghi nhớ đăng nhập</label>
-                <span className="forgot-link" onClick={() => setAuthMode('forgot')}>Forgot password?</span>
+                <span className="forgot-link" onClick={() => {setAuthMode('forgot'); setMessage({text:'',type:''})}}>Forgot password?</span>
               </div>
 
               <button className="btn-auth" onClick={handleLogin}>Continue</button>
+              <StatusMessage />
             </>
           )}
 
-          {/* --- GIAO DIỆN ĐĂNG KÝ (SIGN UP) --- */}
           {authMode === 'signup' && (
             <>
               <h2>Join our community</h2>
-              <p className="top-switch-sub">Already have an account? <span onClick={() => setAuthMode('login')}>Sign In</span></p>
+              <p className="top-switch-sub">Already have an account? <span onClick={() => {setAuthMode('login'); setMessage({text:'',type:''})}}>Sign In</span></p>
               
               <div className="input-group">
                 <label>Full Name</label>
@@ -182,7 +181,6 @@ const AuthPage = () => {
                 <div className="input-wrapper"><Lock size={18} /><input name="confirmPassword" type="password" placeholder="Confirm your password" onChange={handleChange} /></div>
               </div>
 
-              {/* --- PHẦN CHỌN ROLE MỚI THÊM --- */}
               <div className="input-group">
                 <label>Bạn tham gia với vai trò:</label>
                 <div className="method-selector">
@@ -204,14 +202,14 @@ const AuthPage = () => {
               </div>
 
               <button className="btn-auth" onClick={handleRegister}>Join Now</button>
+              <StatusMessage />
             </>
           )}
 
-          {/* --- QUÊN MẬT KHẨU --- */}
           {authMode === 'forgot' && (
             <>
               <h2>Reset Password</h2>
-              <div className="back-link" onClick={() => setAuthMode('login')}><ArrowLeft size={16} /> Back to Sign in</div>
+              <div className="back-link" onClick={() => {setAuthMode('login'); setMessage({text:'',type:''})}}><ArrowLeft size={16} /> Back to Sign in</div>
               <div className="input-group">
                 <label>Email or Phone</label>
                 <div className="input-wrapper">
@@ -228,6 +226,7 @@ const AuthPage = () => {
                 </div>
               </div>
               <button className="btn-auth" style={{marginTop: '20px'}}>Verify OTP</button>
+              <StatusMessage />
             </>
           )}
 
