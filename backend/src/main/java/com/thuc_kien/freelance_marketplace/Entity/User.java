@@ -1,10 +1,7 @@
 package com.thuc_kien.freelance_marketplace.Entity;
 import org.hibernate.annotations.CreationTimestamp;
 import jakarta.persistence.*;
-import jakarta.transaction.Transactional;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.Getter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -22,7 +19,7 @@ import lombok.Setter;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id; // int, PRI, auto_increment
+    private Long id; // int, PRI, auto_increment
 
     @Column(nullable = false, unique = true, length = 50)
     private String username; // varchar(50), NO NULL, UNI

@@ -11,6 +11,8 @@ import com.thuc_kien.freelance_marketplace.Entity.User;
 public interface UserRepository extends JpaRepository<User, Long>{
     Optional<User> findByPhone(String phone);
 
+    Optional<User> findByEmail(String email);
+
     // kiem tra su ton tai cua email 
     boolean existsByPhone (String phone);
 

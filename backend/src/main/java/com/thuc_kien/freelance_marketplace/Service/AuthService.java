@@ -7,8 +7,11 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import jakarta.validation.ValidationException;
+import lombok.RequiredArgsConstructor;
 
-import org.springframework.beans.factory.annotation.Autowired;
+
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -19,24 +22,27 @@ import com.thuc_kien.freelance_marketplace.DTO.ResetPasswordRequest;
 import com.thuc_kien.freelance_marketplace.Exception.AppException;
 import com.thuc_kien.freelance_marketplace.Exception.ConflictException;
 import com.thuc_kien.freelance_marketplace.Repository.UserRepository;
+import com.thuc_kien.freelance_marketplace.security.CustomUserDetails;
+import com.thuc_kien.freelance_marketplace.security.JwtService;
 import com.thuc_kien.freelance_marketplace.Entity.*;
 
 import jakarta.transaction.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class AuthService {
-    @Autowired
-    private UserRepository userRepo;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-    @Autowired
-    private JwtService jwtService;
-    @Autowired
-    private OtpService otpService;
-    @Autowired
-    private EmailService emailService;
+
+    private final UserRepository userRepo;
+
+    private final PasswordEncoder passwordEncoder;
+
+    private final JwtService jwtService;
+
+    private final OtpService otpService;
+    private final EmailService emailService;
     
-    private SmsService smsService;
+    private final SmsService smsService;
+    private final AuthenticationManager authenticationManager;
 
     @Transactional
     public void register(RegisterRequest rq){
@@ -76,14 +82,19 @@ public class AuthService {
     }
 
     public LoginResponse login(LoginRequest lr){
+        // 1. Xác thực người dùng (Spring sẽ tự gọi UserDetailsService và check Password)
+        authenticationManager.authenticate(
+            new UsernamePasswordAuthenticationToken(lr.getIdentifier(), lr.getPassword())
+        );
         User user = userRepo.findByUsernameOrEmailOrPhone(lr.getIdentifier(), lr.getIdentifier() , lr.getIdentifier()
                                                             ).orElseThrow(() -> new AppException("\"Tên đăng nhập hoặc mật khẩu không chính xác\""));
-        if (!passwordEncoder.matches(lr.getPassword(), user.getPasswordHash())) {
-            throw new AppException("Tên đăng nhập hoặc mật khẩu không chính xác");
-        }
-
-        String token = jwtService.generateToken(user.getUsername());
-        long expiresIn = jwtService.getExpirationTimeInSeconds(); // Lấy 86400 gi
+        // if (!passwordEncoder.matches(lr.getPassword(), user.getPasswordHash())) {
+        //     throw new AppException("Tên đăng nhập hoặc mật khẩu không chính xác");
+        // }
+        CustomUserDetails userDetails = new CustomUserDetails(user);
+        String token = jwtService.generateToken(userDetails);
+    
+        long expiresIn = jwtService.getExpirationTimeInSeconds(); // 
 
         // Chuyển đổi Set Enum thành Set String
         Set<String> roles = user.getRoles().stream()
