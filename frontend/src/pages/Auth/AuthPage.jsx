@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, ArrowLeft, Phone, CheckCircle2, AtSign } from 'lucide-react';
 import { authService } from '../../services/authService';
 import './Auth.css';
 
 const AuthPage = () => {
+  const navigate = useNavigate();
   const [authMode, setAuthMode] = useState('login'); 
-  const [method, setMethod] = useState('email'); // 'email', 'phone', hoặc 'username'
+  const [method, setMethod] = useState('email'); // Dùng cho Login: 'email', 'phone', hoặc 'username'
   const [loading, setLoading] = useState(false);
   
   const [formData, setFormData] = useState({
@@ -13,7 +15,6 @@ const AuthPage = () => {
     password: '', confirmPassword: '', identifier: '', otp: '', role: 'ROLE_BUYER'
   });
 
-  // State mới để lưu thông báo lỗi hoặc thành công
   const [message, setMessage] = useState({ text: '', type: '' });
 
   const handleChange = (e) => {
@@ -24,60 +25,101 @@ const AuthPage = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     setMessage({ text: '', type: '' });
+    setLoading(true);
     try {
       const res = await authService.login({ 
         identifier: formData.identifier, 
         password: formData.password 
       });
+
+      // --- SỬA ĐỔI & ĐỒNG BỘ LOCALSTORAGE VỚI HOMEPAGE.JSX ---
+      if (res.data.data?.token) {
+        localStorage.setItem('token', res.data.data.token);
+        localStorage.setItem('fullname', res.data.data.fullname || '');
+        
+        // Lấy vai trò đầu tiên từ mảng roles của API (ví dụ: "ROLE_BUYER" hoặc "ROLE_SELLER")
+        // Lưu trực tiếp vào key 'role' dưới dạng Chuỗi (String) để HomePage.jsx đọc trực tiếp
+        if (res.data.data.roles && res.data.data.roles.length > 0) {
+          localStorage.setItem('role', res.data.data.roles[0]);
+        } else {
+          localStorage.setItem('role', 'ROLE_BUYER'); // Vai trò mặc định nếu mảng rỗng
+        }
+      }
+
       setMessage({ text: "Đăng nhập thành công!", type: 'success' });
-      if (res.data.data?.token) localStorage.setItem('token', res.data.data.token);
+
+      // --- PHẦN CHỈNH SỬA: ĐIỀU HƯỚNG CHUẨN VỀ TRANG CHỦ "/" ---
+      setTimeout(() => {
+        navigate('/'); 
+      }, 1000);
+
     } catch (err) {
-      setMessage({ text: err.response?.data?.message || "Đăng nhập thất bại", type: 'error' });
+      const serverRes = err.response?.data;
+      let errorMsg = serverRes?.message || "Đăng nhập thất bại";
+      if (serverRes?.data) {
+        errorMsg = Object.values(serverRes.data)[0];
+      } else if (errorMsg === "Bad credentials") {
+        errorMsg = "Tên đăng nhập hoặc mật khẩu không chính xác";
+      }
+      setMessage({ text: errorMsg, type: 'error' });
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleRegister = async (e) => {
     e.preventDefault();
     setMessage({ text: '', type: '' });
-    if (formData.password !== formData.confirmPassword) {
-      return setMessage({ text: "Mật khẩu xác nhận không khớp", type: 'error' });
+    
+    if (!formData.email || !formData.phone) {
+      return setMessage({ text: "Vui lòng nhập đầy đủ Email và Số điện thoại", type: 'error' });
     }
+
+    if (formData.password !== formData.confirmPassword) {
+      return setMessage({ text: "Mật khẩu xác nhận không trùng khớp", type: 'error' });
+    }
+
+    setLoading(true);
     try {
       const res = await authService.register({ ...formData });
-      setMessage({ text: "Đăng ký thành công! Đang chuyển hướng...", type: 'success' });
-      setTimeout(() => setAuthMode('login'), 2000);
+      setMessage({ text: res.data.message || "Đăng ký thành công!", type: 'success' });
+      setTimeout(() => {
+        setAuthMode('login');
+        setMessage({ text: '', type: '' });
+      }, 2000);
     } catch (err) {
-      setMessage({ text: err.response?.data?.message || "Đăng ký thất bại", type: 'error' });
+      const serverRes = err.response?.data;
+      let errorMsg = serverRes?.data ? Object.values(serverRes.data)[0] : (serverRes?.message || "Đăng ký thất bại");
+      setMessage({ text: errorMsg, type: 'error' });
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleForgotPassword = async () => {
     setMessage({ text: '', type: '' });
+    setLoading(true);
     try {
       const res = await authService.forgotPassword({ identifier: formData.identifier });
       setMessage({ text: res.data.message || "Đã gửi mã OTP!", type: 'success' });
     } catch (err) {
-      setMessage({ text: err.response?.data?.message || "Không thể gửi mã OTP", type: 'error' });
+      const serverRes = err.response?.data;
+      let errorMsg = serverRes?.data?.identifier || (serverRes?.message || "Không thể gửi mã OTP");
+      setMessage({ text: errorMsg, type: 'error' });
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Helper component hiển thị thông báo
   const StatusMessage = () => (
-    message.text ? (
-      <div className={`status-msg ${message.type}`}>
-        {message.text}
-      </div>
-    ) : null
+    message.text ? <div className={`status-msg ${message.type}`}>{message.text}</div> : null
   );
 
   const getMethodDetails = () => {
     switch (method) {
-      case 'phone':
-        return { label: 'Số điện thoại', icon: <Phone size={18} />, placeholder: 'Enter your phone number' };
-      case 'username':
-        return { label: 'Username', icon: <AtSign size={18} />, placeholder: 'Enter your username' };
-      default:
-        return { label: 'Email', icon: <Mail size={18} />, placeholder: 'Enter your email' };
+      case 'phone': return { label: 'Số điện thoại', icon: <Phone size={18} />, placeholder: 'Nhập số điện thoại' };
+      case 'username': return { label: 'Username', icon: <AtSign size={18} />, placeholder: 'Nhập tên đăng nhập' };
+      default: return { label: 'Email', icon: <Mail size={18} />, placeholder: 'Nhập địa chỉ email' };
     }
   };
 
@@ -99,50 +141,44 @@ const AuthPage = () => {
       <div className="auth-form-side">
         <div className="form-box">
           
+          {/* --- LOGIN MODE --- */}
           {authMode === 'login' && (
             <>
               <h2>Sign in to your account</h2>
               <p className="top-switch-sub">Don't have an account? <span onClick={() => {setAuthMode('signup'); setMessage({text:'',type:''})}}>Join here</span></p>
-              
               <div className="method-selector">
                 {['email', 'phone', 'username'].map((m) => (
-                  <button 
-                    key={m}
-                    type="button"
-                    className={`method-btn ${method === m ? 'active' : ''}`} 
-                    onClick={() => setMethod(m)}
-                  >
+                  <button key={m} type="button" className={`method-btn ${method === m ? 'active' : ''}`} onClick={() => setMethod(m)}>
                     {m.charAt(0).toUpperCase() + m.slice(1)}
                   </button>
                 ))}
               </div>
-
-              <div className="input-group">
-                <label>{currentMethod.label}</label>
-                <div className="input-wrapper">
-                  {currentMethod.icon}
-                  <input name="identifier" type="text" placeholder={currentMethod.placeholder} onChange={handleChange} />
+              <form onSubmit={handleLogin}> {/* Bọc form để nhấn Enter cũng kích hoạt login */}
+                <div className="input-group">
+                  <label>{currentMethod.label}</label>
+                  <div className="input-wrapper">
+                    {currentMethod.icon}
+                    <input name="identifier" type="text" placeholder={currentMethod.placeholder} onChange={handleChange} />
+                  </div>
                 </div>
-              </div>
-
-              <div className="input-group">
-                <label>Password</label>
-                <div className="input-wrapper">
-                  <Lock size={18} />
-                  <input name="password" type="password" placeholder="Enter password" onChange={handleChange} />
+                <div className="input-group">
+                  <label>Password</label>
+                  <div className="input-wrapper">
+                    <Lock size={18} />
+                    <input name="password" type="password" placeholder="Nhập mật khẩu" onChange={handleChange} />
+                  </div>
                 </div>
-              </div>
-
-              <div className="form-options">
-                <label className="checkbox-label"><input type="checkbox" /> Ghi nhớ đăng nhập</label>
-                <span className="forgot-link" onClick={() => {setAuthMode('forgot'); setMessage({text:'',type:''})}}>Forgot password?</span>
-              </div>
-
-              <button className="btn-auth" onClick={handleLogin}>Continue</button>
+                <div className="form-options">
+                  <label className="checkbox-label"><input type="checkbox" /> Ghi nhớ đăng nhập</label>
+                  <span className="forgot-link" onClick={() => {setAuthMode('forgot'); setMessage({text:'',type:''})}}>Forgot password?</span>
+                </div>
+                <button type="submit" className="btn-auth" disabled={loading}>{loading ? "Processing..." : "Continue"}</button>
+              </form>
               <StatusMessage />
             </>
           )}
 
+          {/* --- SIGNUP MODE --- */}
           {authMode === 'signup' && (
             <>
               <h2>Join our community</h2>
@@ -157,55 +193,41 @@ const AuthPage = () => {
                 <label>Username</label>
                 <div className="input-wrapper"><AtSign size={18} /><input name="username" type="text" placeholder="vana_nguyen" onChange={handleChange} /></div>
               </div>
-              
-              <div className="method-selector">
-                <button type="button" className={`method-btn ${method === 'email' ? 'active' : ''}`} onClick={() => setMethod('email')}>Email</button>
-                <button type="button" className={`method-btn ${method === 'phone' ? 'active' : ''}`} onClick={() => setMethod('phone')}>Số điện thoại</button>
-              </div>
-              
+
               <div className="input-group">
-                <label>{method === 'email' ? 'Email' : 'Số điện thoại'}</label>
-                <div className="input-wrapper">
-                  {method === 'email' ? <Mail size={18} /> : <Phone size={18} />}
-                  <input name={method === 'email' ? "email" : "phone"} type="text" placeholder={method === 'email' ? "yourname@example.com" : "0987654321"} onChange={handleChange} />
-                </div>
+                <label>Email</label>
+                <div className="input-wrapper"><Mail size={18} /><input name="email" type="text" placeholder="yourname@example.com" onChange={handleChange} /></div>
+              </div>
+
+              <div className="input-group">
+                <label>Số điện thoại</label>
+                <div className="input-wrapper"><Phone size={18} /><input name="phone" type="text" placeholder="0987654321" onChange={handleChange} /></div>
               </div>
               
               <div className="input-group">
                 <label>Password</label>
-                <div className="input-wrapper"><Lock size={18} /><input name="password" type="password" placeholder="Create a password" onChange={handleChange} /></div>
+                <div className="input-wrapper"><Lock size={18} /><input name="password" type="password" placeholder="Tạo mật khẩu" onChange={handleChange} /></div>
               </div>
               
               <div className="input-group">
                 <label>Confirm Password</label>
-                <div className="input-wrapper"><Lock size={18} /><input name="confirmPassword" type="password" placeholder="Confirm your password" onChange={handleChange} /></div>
+                <div className="input-wrapper"><Lock size={18} /><input name="confirmPassword" type="password" placeholder="Xác nhận mật khẩu" onChange={handleChange} /></div>
               </div>
 
               <div className="input-group">
                 <label>Bạn tham gia với vai trò:</label>
                 <div className="method-selector">
-                  <button 
-                    type="button"
-                    className={`method-btn ${formData.role === 'ROLE_BUYER' ? 'active' : ''}`} 
-                    onClick={() => setFormData({ ...formData, role: 'ROLE_BUYER' })}
-                  >
-                    Người mua (Buyer)
-                  </button>
-                  <button 
-                    type="button"
-                    className={`method-btn ${formData.role === 'ROLE_SELLER' ? 'active' : ''}`} 
-                    onClick={() => setFormData({ ...formData, role: 'ROLE_SELLER' })}
-                  >
-                    Người bán (Seller)
-                  </button>
+                  <button type="button" className={`method-btn ${formData.role === 'ROLE_BUYER' ? 'active' : ''}`} onClick={() => setFormData({ ...formData, role: 'ROLE_BUYER' })}>Người mua (Buyer)</button>
+                  <button type="button" className={`method-btn ${formData.role === 'ROLE_SELLER' ? 'active' : ''}`} onClick={() => setFormData({ ...formData, role: 'ROLE_SELLER' })}>Người bán (Seller)</button>
                 </div>
               </div>
 
-              <button className="btn-auth" onClick={handleRegister}>Join Now</button>
+              <button className="btn-auth" onClick={handleRegister} disabled={loading}>{loading ? "Processing..." : "Join Now"}</button>
               <StatusMessage />
             </>
           )}
 
+          {/* --- FORGOT MODE --- */}
           {authMode === 'forgot' && (
             <>
               <h2>Reset Password</h2>
@@ -214,25 +236,21 @@ const AuthPage = () => {
                 <label>Email or Phone</label>
                 <div className="input-wrapper">
                   <Mail size={18} />
-                  <input name="identifier" type="text" placeholder="Enter your email or phone" onChange={handleChange} />
+                  <input name="identifier" type="text" placeholder="Nhập email hoặc số điện thoại" onChange={handleChange} />
                 </div>
               </div>
-              <button className="btn-auth" onClick={handleForgotPassword}>Send OTP</button>
+              <button className="btn-auth" onClick={handleForgotPassword} disabled={loading}>{loading ? "Sending..." : "Send OTP"}</button>
               <div className="otp-container">
                 <div className="otp-inputs">
-                  {[...Array(6)].map((_, i) => (
-                    <input key={i} type="text" maxLength="1" className="otp-field" />
-                  ))}
+                  {[...Array(6)].map((_, i) => (<input key={i} type="text" maxLength="1" className="otp-field" />))}
                 </div>
               </div>
-              <button className="btn-auth" style={{marginTop: '20px'}}>Verify OTP</button>
+              <button className="btn-auth" style={{marginTop: '20px'}} disabled={loading}>Verify OTP</button>
               <StatusMessage />
             </>
           )}
 
-          <p className="auth-footer">
-            By joining, you agree to our <b>Terms of Service</b> and <b>Privacy Policy</b>.
-          </p>
+          <p className="auth-footer">By joining, you agree to our <b>Terms of Service</b> and <b>Privacy Policy</b>.</p>
         </div>
       </div>
     </div>
