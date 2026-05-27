@@ -18,8 +18,17 @@
   justify-content: flex-end;
 }
 
-.banner-content { text-align: right; color: white; }
-.banner-content h1 { font-size: 3rem; margin-bottom: 20px; color: white !important; }
+.banner-content { 
+  text-align: right; 
+  color: white; 
+}
+
+.banner-content h1 { 
+  font-size: 3rem; 
+  margin-bottom: 20px; 
+  color: white !important; 
+}
+
 .banner-features li { 
   display: flex; 
   align-items: center; 
@@ -36,154 +45,213 @@
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  background-color: #ffffff;
-  height: 100vh;
+  padding: 60px;
   overflow-y: auto;
+  height: 100%;
 }
 
-.form-box { 
-  width: 100%; 
-  max-width: 400px; 
-  padding: 60px 20px;
-  margin: auto;
+/* Khung nội dung form chính - Hiện đại hơn với bo góc mềm mại và bóng đổ mờ */
+.form-box {
+  width: 100%;
+  max-width: 440px;
+  background: #ffffff;
+  padding: 20px 10px;
+  transition: all 0.3s ease;
 }
 
-.form-box h2 {
+.auth-form-side h2 {
   font-size: 28px;
-  color: #404145 !important;
-  font-weight: 700;
-  margin-bottom: 4px;
+  font-weight: 800;
+  color: #222325 !important;
+  margin-bottom: 10px;
 }
 
 .top-switch-sub {
-  font-size: 14px;
+  font-size: 15px;
   color: #74767e !important;
-  margin-bottom: 25px;
+  margin-bottom: 30px;
 }
 
 .top-switch-sub span {
-  color: #1dbf73 !important;
-  font-weight: 700;
+  color: #1dbf73;
+  font-weight: 600;
   cursor: pointer;
+  margin-left: 5px;
 }
 
-/* --- METHOD SELECTOR --- */
+/* --- CỤM ĐIỀU HƯỚNG PHƯƠNG THỨC (EMAIL, PHONE, USERNAME) --- */
 .method-selector {
   display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
+  background-color: #f4f5f7;
+  border-radius: 30px;
+  padding: 4px;
+  margin-bottom: 25px;
+  border: none;
 }
 
 .method-btn {
-  padding: 8px 20px;
-  border-radius: 20px;
-  border: none;
-  background-color: #f1f1f2;
-  color: #62646a !important;
-  cursor: pointer;
-  font-weight: 600;
+  flex: 1;
+  padding: 10px 0;
   font-size: 14px;
+  font-weight: 600;
+  color: #74767e;
+  background: transparent;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   transition: all 0.2s ease;
 }
 
 .method-btn.active {
-  background-color: #7dbb8e;
-  color: white !important;
+  background-color: #ffffff;
+  color: #1dbf73;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
-/* --- INPUTS --- */
-.input-group { margin-bottom: 15px; }
+/* --- KHUNG NHẬP LIỆU (INPUT GROUPS) --- */
+.input-group {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
 .input-group label {
-  display: block;
-  font-weight: 700;
   font-size: 14px;
-  margin-bottom: 8px;
+  font-weight: 600;
   color: #404145 !important;
+  margin-bottom: 8px;
+  text-align: left;
 }
 
+/* Khung bao bọc Input bo tròn cao cấp */
 .input-wrapper {
   display: flex;
   align-items: center;
-  border: 1px solid #dadbdd;
-  border-radius: 4px;
-  padding: 12px;
-  background: #ffffff !important;
-}
-
-.input-wrapper input {
-  border: none;
-  outline: none;
-  width: 100%;
-  margin-left: 10px;
-  font-size: 15px;
-  color: #222325 !important;
-  background: transparent;
-}
-
-.input-wrapper input::placeholder {
-  color: #b5b6ba !important;
+  background-color: #f7f7f8;
+  border: 1px solid transparent;
+  border-radius: 30px;
+  padding: 0 18px;
+  height: 50px;
+  transition: all 0.2s ease;
 }
 
 .input-wrapper svg {
   color: #b5b6ba;
+  margin-right: 12px;
+  flex-shrink: 0;
 }
 
-/* --- BUTTONS --- */
-.btn-auth {
-  width: 100%;
-  padding: 14px;
-  background-color: #7dbb8e;
-  color: white !important;
+.input-wrapper input {
+  flex: 1;
   border: none;
-  border-radius: 4px;
-  font-weight: 700;
-  cursor: pointer;
-  margin-top: 10px;
-  font-size: 16px;
+  background: transparent;
+  outline: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: #222325;
+  width: 100%;
 }
 
-.btn-auth:hover {
-  filter: brightness(0.9);
+.input-wrapper input::placeholder {
+  color: #b5b6ba;
 }
 
-/* --- OTP --- */
+/* Hiệu ứng viền phát sáng nhẹ khi click chọn ô nhập */
+.input-wrapper:focus-within {
+  background-color: #ffffff;
+  border-color: #1dbf73;
+  box-shadow: 0 0 0 3px rgba(29, 191, 115, 0.12);
+}
+
+/* Ô nhập mã OTP dạng mảng */
 .otp-container {
-  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
 }
 
 .otp-inputs {
   display: flex;
-  gap: 8px;
-  justify-content: space-between;
+  gap: 10px;
+  justify-content: center;
 }
 
 .otp-field {
-  width: 50px;
+  width: 45px;
   height: 50px;
-  border: 1px solid #dadbdd;
-  border-radius: 4px;
   text-align: center;
   font-size: 20px;
-  background: #f1f1f2;
-  color: #404145 !important;
   font-weight: 700;
+  border: 1px solid #e4e5e7;
+  border-radius: 12px;
+  background-color: #f7f7f8;
+  outline: none;
+  transition: all 0.2s ease;
 }
 
-/* --- LINKS & FOOTER --- */
+.otp-field:focus {
+  background-color: #ffffff;
+  border-color: #1dbf73;
+  box-shadow: 0 0 0 3px rgba(29, 191, 115, 0.12);
+}
+
+/* --- NÚT BẤM CHÍNH (BUTTON AUTH) --- */
+.btn-auth {
+  width: 100%;
+  height: 50px;
+  background-color: #1dbf73;
+  color: white;
+  border: none;
+  border-radius: 30px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-auth:hover {
+  background-color: #19a463;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(29, 191, 115, 0.2);
+}
+
+.btn-auth:disabled {
+  background-color: #a6ebd0;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* --- TÙY CHỌN PHỤ (GHI NHỚ, QUÊN MẬT KHẨU) --- */
 .form-options {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 25px;
   font-size: 14px;
-  margin-bottom: 20px;
-  color: #404145 !important;
+  color: #62646a;
 }
 
-.checkbox-label {
+.form-options label {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.form-options input[type="checkbox"] {
+  accent-color: #1dbf73;
+  width: 16px;
+  height: 16px;
   cursor: pointer;
 }
 
@@ -191,14 +259,20 @@
   color: #62646a !important; 
   font-weight: 600; 
   cursor: pointer; 
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.forgot-link:hover {
+  color: #1dbf73 !important;
 }
 
 .auth-footer {
-  margin-top: 30px;
-  font-size: 12px;
+  margin-top: 35px;
+  font-size: 13px;
   color: #95979d !important;
   text-align: center;
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
 .auth-footer b {
@@ -206,56 +280,48 @@
   cursor: pointer;
 }
 
+.auth-footer b:hover {
+  text-decoration: underline;
+}
+
 .back-link {
   color: #1dbf73 !important;
   font-weight: 600;
   cursor: pointer;
-  margin-bottom: 20px;
+  margin-bottom: 25px;
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   font-size: 14px;
+  transition: opacity 0.2s;
 }
 
-/* --- HIỂN THỊ THÔNG BÁO (MỚI THÊM) --- */
+.back-link:hover {
+  opacity: 0.8;
+}
+
+/* --- HIỂN THỊ THÔNG BÁO --- */
 .status-msg {
   margin-top: 15px;
-  padding: 10px;
-  border-radius: 4px;
+  padding: 12px 16px;
+  border-radius: 25px;
   font-size: 14px;
   font-weight: 500;
   text-align: center;
-  animation: slideDown 0.3s ease-out;
-}
-
-.status-msg.error {
-  background-color: #fff2f0;
-  color: #ff4d4f !important;
-  border: 1px solid #ffccc7;
+  animation: fadeIn 0.3s ease;
 }
 
 .status-msg.success {
-  background-color: #f6ffed;
-  color: #52c41a !important;
-  border: 1px solid #b7eb8f;
+  background-color: #e8f7f0;
+  color: #1dbf73;
 }
 
-@keyframes slideDown {
-  from { opacity: 0; transform: translateY(-10px); }
+.status-msg.error {
+  background-color: #fff0f0;
+  color: #f43f5e;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
   to { opacity: 1; transform: translateY(0); }
-}
-
-/* --- TÙY CHỈNH THANH CUỘN --- */
-.auth-form-side::-webkit-scrollbar {
-  width: 6px;
-}
-.auth-form-side::-webkit-scrollbar-track {
-  background: #f1f1f2;
-}
-.auth-form-side::-webkit-scrollbar-thumb {
-  background: #b5b6ba;
-  border-radius: 10px;
-}
-.auth-form-side::-webkit-scrollbar-thumb:hover {
-  background: #7dbb8e;
 }
