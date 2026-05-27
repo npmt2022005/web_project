@@ -39,7 +39,6 @@ public class GigSearchResponseDTO {
     @Schema(description = "Thời gian dự kiến hoàn thành dịch vụ (đơn vị ngày)", example = "10")
     private Integer deliveryTime;
 
-   
     
     @Schema(description = "Tên danh mục con trực tiếp chứa bài đăng này", example = "Web Development")
     private String categoryName;

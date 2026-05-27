@@ -43,4 +43,8 @@ public class GigDoc {
     @Field(type = FieldType.Keyword)
     private String country;  
 
+    @Field(type = FieldType.Keyword)
+    private String language;
+    
+
 }

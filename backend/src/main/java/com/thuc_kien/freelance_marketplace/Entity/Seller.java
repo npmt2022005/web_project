@@ -32,14 +32,19 @@ public class Seller {
     @Column(name = "level")
     private String level = "New Seller"; 
 
+    @Column(name = "language")
+    private String language;
+
     @Column(name = "response_time")
     private String responseTime;
 
+    
     @Column(name = "is_active")
     private Boolean isActive = true;
 
     
     @OneToMany(mappedBy = "seller", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Gig> gigs;
+
 }
     

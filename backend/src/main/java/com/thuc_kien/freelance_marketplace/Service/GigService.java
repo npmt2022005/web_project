@@ -9,6 +9,7 @@ import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
@@ -78,8 +79,6 @@ public class GigService {
         gigElasticRepo.saveAll(elasticDocs);
     }
     public List<GigSearchResponseDTO> searchGigs(GigSearchRequestDTO rq) {
-        Pageable pageable = PageRequest.of(rq.getPage(), rq.getSize());
-
         String kw = (rq.getKeyword() != null) ? rq.getKeyword().trim() : "";
         Criteria criteria;
         if (kw != null && !kw.trim().isEmpty()) {
@@ -98,6 +97,11 @@ public class GigService {
         if (rq.getLevel() != null && !rq.getLevel().trim().isEmpty()) {
             criteria = criteria.and("level").is(rq.getLevel().trim()); 
         }
+        // Thêm đoạn này vào khu vực xử lý bộ lọc động (Multi-Filter) của bạn
+            if (rq.getLanguage() != null && !rq.getLanguage().trim().isEmpty()) {
+                // Elasticsearch sẽ tìm chính xác tài liệu có trường language khớp với chuỗi truyền lên
+                criteria = criteria.and("language").is(rq.getLanguage().trim());
+            }
         if (rq.getDeliveryTime() != null && !rq.getDeliveryTime().trim().isEmpty()) {
             Integer days = null;
             switch (rq.getDeliveryTime().trim()) {
@@ -117,9 +121,29 @@ public class GigService {
                 criteria = criteria.and("deliveryTime").lessThanEqual(days);
             }
         }
+        Sort sort = Sort.by(Sort.Direction.DESC, "_score");
+        if (rq.getSortBy() != null && !rq.getSortBy().trim().isEmpty()) {
+            switch (rq.getSortBy().trim()) {
+                case "BestSeller":
+                    // Sắp xếp theo số lượng đánh giá giảm dần
+                    sort = Sort.by(Sort.Direction.DESC, "reviews");
+                    break;
+                case "NewArrivals":
+                    // Sắp xếp theo ID giảm dần (bài mới lên đầu)
+                    sort = Sort.by(Sort.Direction.DESC, "id"); 
+                    break;
+                case "Recommended":
+                default:
+                    // Giữ nguyên sắp xếp theo độ khớp từ khóa
+                    sort = Sort.by(Sort.Direction.DESC, "_score");
+                    break;
+            }
+        }
         if (rq.getMinPrice() != null && rq.getMaxPrice() != null) {
             criteria = criteria.and("price").between(rq.getMinPrice(), rq.getMaxPrice());
         }
+        Pageable pageable = PageRequest.of(rq.getPage(), rq.getSize(), sort);
+
         Query query = new CriteriaQuery(criteria).setPageable(pageable);
         SearchHits<GigDoc> searchHits = elasticsearchOperations.search(query, GigDoc.class);
 

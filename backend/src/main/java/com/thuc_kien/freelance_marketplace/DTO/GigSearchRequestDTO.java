@@ -11,7 +11,10 @@ public class GigSearchRequestDTO {
     private String level;
     private String location;
     private String deliveryTime;
+    private String language;
+    private String sortBy; // Nhận giá trị: "Recommended", "BestSeller", "NewArrivals"
     private int page = 0;
     private int size = 100; 
 
 }
+    

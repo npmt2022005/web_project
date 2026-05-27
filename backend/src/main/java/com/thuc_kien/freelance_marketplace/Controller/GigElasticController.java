@@ -82,7 +82,13 @@ public class GigElasticController {
         // Trả về kèm các cấu hình hệ thống (Nếu không muốn hardcode ở React)
         meta.put("sellerLevels", List.of("New Seller", "Level One", "Level Two", "Top Rated"));
         meta.put("deliveryTimes", List.of("Express 24h", "Up to 3 days", "Up to 7 days"));
-
+        meta.put("languages", List.of("English", "Vietnamese", "Spanish", "French", "Chinese"));
+        List<Map<String, String>> sortOptions = List.of(
+            Map.of("value", "Recommended", "label", "Đề xuất cho bạn"),
+            Map.of("value", "BestSeller", "label", "Bán chạy nhất"),
+            Map.of("value", "NewArrivals", "label", "Mới nhất")
+        );
+        meta.put("sortOptions", sortOptions);
         return ResponseEntity.ok(new APIResponse<>("success", "Lấy metadata bộ lọc thành công", meta));
     }
 
