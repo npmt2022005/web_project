@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios'; // --- Thêm Axios để gọi API ---
 import { 
   Search, Star, Globe, Bell, Mail, 
   User, LayoutGrid, Info, ShieldCheck, ChevronDown,
@@ -14,11 +15,6 @@ import marketingImg from '../assets/images/marketing.jpg';
 import videoImg from '../assets/images/video.jpg';
 import writingImg from '../assets/images/writing.jpg';
 
-import logoDesignGig from '../assets/images/Logo Design.jpg';
-import webDevGig from '../assets/images/Web Development.jpg';
-import seoWritingGig from '../assets/images/SEO Writing.png';
-import videoEditingGig from '../assets/images/Video Editing.png'; 
-
 // --- IMPORT PARTNER LOGOS FROM ICONS FOLDER ---
 import googleLogo from '../assets/icons/google-logo.png';
 import metaLogo from '../assets/icons/meta-logo.png';
@@ -29,12 +25,17 @@ import paypalLogo from '../assets/icons/paypal-logo.jpg';
 const HomePage = () => {
   const navigate = useNavigate();
   
-  // SỬA ĐỔI: Đưa dữ liệu đăng nhập vào State để kích hoạt React render lại giao diện kịp thời
+  // Trạng thái đăng nhập
   const [role, setRole] = useState(null);
   const [fullname, setFullname] = useState('');
 
+  // --- TRẠNG THÁI CHỨA DỮ LIỆU ĐỘNG TỪ BACKEND ---
+  const [featuredGigs, setFeaturedGigs] = useState([]); // Chứa danh sách bài đăng dịch vụ
+  const [categories, setCategories] = useState([]);     // Chứa danh sách danh mục đa cấp
+  const [loadingGigs, setLoadingGigs] = useState(true);  // Trạng thái chờ tải dữ liệu
+
   useEffect(() => {
-    // Ép React đọc lại dữ liệu mới nhất từ localStorage ngay khi nạp trang chủ
+    // 1. Kiểm tra trạng thái đăng nhập từ localStorage
     const storedRole = localStorage.getItem('role');
     const storedFullname = localStorage.getItem('fullname');
     
@@ -42,50 +43,48 @@ const HomePage = () => {
       setRole(storedRole);
       setFullname(storedFullname || '');
     }
+
+    // 2. GỌI API LẤY DANH SÁCH DỊCH VỤ NỔI BẬT (/api/v1/gigs/featured)
+    const fetchFeaturedGigs = async () => {
+      try {
+        setLoadingGigs(true);
+        // Mặc định gọi lấy 4 phần tử theo layout hiện tại
+        const response = await axios.get('http://localhost:8080/api/v1/gigs/featured?limit=4');
+        if (response.data && response.data.status === 'success') {
+          setFeaturedGigs(response.data.data); // Gán mảng dữ liệu vào State
+        }
+      } catch (error) {
+        console.error("Lỗi khi kết nối API lấy Featured Gigs:", error);
+      } finally {
+        setLoadingGigs(false);
+      }
+    };
+
+    // 3. GỌI API LẤY DANH SÁCH CÂY DANH MỤC (/api/v1/categories)
+    const fetchCategories = async () => {
+      try {
+        const response = await axios.get('http://localhost:8080/api/v1/categories');
+        if (response.data && response.data.status === 'success') {
+          setCategories(response.data.data); // Gán mảng danh mục vào State
+        }
+      } catch (error) {
+        console.error("Lỗi khi kết nối API lấy danh sách danh mục:", error);
+      }
+    };
+
+    // Kích hoạt gọi dữ liệu
+    fetchFeaturedGigs();
+    fetchCategories();
   }, []);
 
-  const featuredGigs = [
-    { 
-      id: 1, 
-      title: "I will design a modern minimalist logo", 
-      seller: "Alex Rivers", 
-      level: "Level 2", 
-      rating: 5.0, 
-      reviews: 154, 
-      price: 35, 
-      img: logoDesignGig 
-    },
-    { 
-      id: 2, 
-      title: "I will build a responsive React website", 
-      seller: "David Pham", 
-      level: "Top Rated", 
-      rating: 4.9, 
-      reviews: 89, 
-      price: 200, 
-      img: webDevGig
-    },
-    { 
-      id: 3, 
-      title: "I will write SEO friendly blog posts", 
-      seller: "Emma Watson", 
-      level: "Level 1", 
-      rating: 4.8, 
-      reviews: 42, 
-      price: 15, 
-      img: seoWritingGig
-    },
-    { 
-      id: 4, 
-      title: "I will edit your YouTube videos", 
-      seller: "Lucas Scott", 
-      level: "Level 2", 
-      rating: 5.0, 
-      reviews: 210, 
-      price: 50, 
-      img: videoEditingGig
-    },
-  ];
+  // Hàm ánh xạ hình ảnh tĩnh dự phòng dựa trên slug danh mục nếu Backend không có imgUrl
+  const getCategoryImage = (slug) => {
+    if (slug.includes('design')) return designImg;
+    if (slug.includes('programming') || slug.includes('tech')) return codeImg;
+    if (slug.includes('marketing')) return marketingImg;
+    if (slug.includes('video')) return videoImg;
+    return writingImg;
+  };
 
   return (
     <div className="common-home">
@@ -97,14 +96,23 @@ const HomePage = () => {
             <h1 className="logo" onClick={() => navigate('/')}>vance<span>.</span></h1>
           </div>
           <nav className="header-right">
+            
+            {/* ĐỔI THÀNH DỮ LIỆU DANH MỤC ĐỘNG TRONG DROPDOWN */}
             <div className="nav-item-dropdown">
               <span className="nav-link">Categories <ChevronDown size={14} /></span>
               <div className="dropdown-content">
-                <span onClick={() => navigate('/categories/graphics-design')}>Graphics & Design</span>
-                <span onClick={() => navigate('/categories/programming-tech')}>Programming & Tech</span>
-                <span onClick={() => navigate('/categories/digital-marketing')}>Digital Marketing</span>
-                <span onClick={() => navigate('/categories/video-animation')}>Video & Animation</span>
-                <span onClick={() => navigate('/categories/writing-translation')}>Writing & Translation</span>
+                {categories.length > 0 ? (
+                  categories.map((cat) => (
+                    <span key={cat.id} onClick={() => navigate(`/categories/${cat.slug}`)}>
+                      {cat.name}
+                    </span>
+                  ))
+                ) : (
+                  <>
+                    <span onClick={() => navigate('/categories/graphics-design')}>Graphics & Design</span>
+                    <span onClick={() => navigate('/categories/programming-tech')}>Programming & Tech</span>
+                  </>
+                )}
               </div>
             </div>
 
@@ -127,7 +135,6 @@ const HomePage = () => {
             <span className="nav-link" onClick={() => navigate('/pages')}>Pages</span>
             <span className="nav-link"><Globe size={16} /> English</span>
             
-            {/* LOGIC ĐIỀU KHIỂN AVATAR / SIGN IN */}
             {role ? (
               <div className="auth-nav">
                 <Mail size={20} className="nav-icon" style={{ cursor: 'pointer', color: '#74767e' }} /> 
@@ -148,15 +155,19 @@ const HomePage = () => {
           </nav>
         </div>
         
-        {/* THANH DANH MỤC PHỤ PHÍA DƯỚI HEADER */}
+        {/* THANH DANH MỤC PHỤ ĐỘNG PHÍA DƯỚI HEADER */}
         <div className="category-menu hide-mobile">
           <div className="container">
             <ul>
-              <li onClick={() => navigate('/categories/graphics-design')} style={{ cursor: 'pointer' }}>Graphics & Design</li>
-              <li onClick={() => navigate('/categories/programming-tech')} style={{ cursor: 'pointer' }}>Programming & Tech</li>
-              <li onClick={() => navigate('/categories/digital-marketing')} style={{ cursor: 'pointer' }}>Digital Marketing</li>
-              <li onClick={() => navigate('/categories/video-animation')} style={{ cursor: 'pointer' }}>Video & Animation</li>
-              <li onClick={() => navigate('/categories/writing-translation')} style={{ cursor: 'pointer' }}>Writing & Translation</li>
+              {categories.map((cat) => (
+                <li 
+                  key={cat.id} 
+                  onClick={() => navigate(`/categories/${cat.slug}`)} 
+                  style={{ cursor: 'pointer' }}
+                >
+                  {cat.name}
+                </li>
+              ))}
             </ul>
           </div>
         </div>
@@ -180,8 +191,9 @@ const HomePage = () => {
                 <div className="category-select">
                   <select>
                     <option>All Categories</option>
-                    <option>Graphics & Design</option>
-                    <option>Programming & Tech</option>
+                    {categories.map(cat => (
+                      <option key={cat.id} value={cat.slug}>{cat.name}</option>
+                    ))}
                   </select>
                   <ChevronDown size={14} className="select-icon" />
                 </div>
@@ -202,52 +214,73 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* 3. CATEGORY CAROUSEL */}
+      {/* 3. CATEGORY CAROUSEL TỰ ĐỘNG THEO BACKEND */}
       <section className="category-carousel">
         <div className="container">
           <h2>Popular professional services</h2>
           <div className="carousel-grid">
-            {[
-              { name: "Design", img: designImg, path: '/categories/graphics-design' },
-              { name: "Code", img: codeImg, path: '/categories/programming-tech' },
-              { name: "Marketing", img: marketingImg, path: '/categories/digital-marketing' },
-              { name: "Video", img: videoImg, path: '/categories/video-animation' },
-              { name: "Writing", img: writingImg, path: '/categories/writing-translation' }
-            ].map((item) => (
-              <div key={item.name} className="carousel-card" onClick={() => navigate(item.path)} style={{ cursor: 'pointer' }}>
-                <img src={item.img} alt={item.name} />
+            {categories.slice(0, 5).map((cat) => (
+              <div 
+                key={cat.id} 
+                className="carousel-card" 
+                onClick={() => navigate(`/categories/${cat.slug}`)} 
+                style={{ cursor: 'pointer' }}
+              >
+                <img 
+                  src={cat.imgUrl && cat.imgUrl !== "đường link" ? cat.imgUrl : getCategoryImage(cat.slug)} 
+                  alt={cat.name} 
+                />
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* 4. FEATURED GIGS */}
+      {/* 4. FEATURED GIGS LIÊN KẾT DATABASE THẬT */}
       <section className="featured-section">
         <div className="container">
           <h2 className="section-title">Inspirational work made on our platform</h2>
-          <div className="gig-grid">
-            {featuredGigs.map(gig => (
-              <div className="gig-card" key={gig.id}>
-                <img src={gig.img} alt={gig.title} className="gig-thumbnail" />
-                <div className="gig-info">
-                  <div className="seller-row">
-                    <div className="seller-avatar">{gig.seller[0]}</div>
-                    <p className="seller-name"><b>{gig.seller}</b> • {gig.level}</p>
+          
+          {loadingGigs ? (
+            <div style={{ textAlign: 'center', padding: '40px', color: '#1dbf73', fontWeight: 'bold' }}>
+              Đang kết nối hệ thống dữ liệu...
+            </div>
+          ) : featuredGigs.length > 0 ? (
+            <div className="gig-grid">
+              {featuredGigs.map(gig => (
+                <div className="gig-card" key={gig.id} onClick={() => navigate(`/gigs/${gig.id}`)} style={{ cursor: 'pointer' }}>
+                  <img 
+                    src={gig.thumbnailUrl || "https://images.pexels.com/photos/3182811/pexels-photo-3182811.jpeg"} 
+                    alt={gig.title} 
+                    className="gig-thumbnail" 
+                  />
+                  <div className="gig-info">
+                    <div className="seller-row">
+                      <div className="seller-avatar">
+                        {gig.seller ? gig.seller[0].toUpperCase() : 'F'}
+                      </div>
+                      <p className="seller-name"><b>{gig.seller || "Freelancer"}</b></p>
+                    </div>
+                    <p className="gig-title">{gig.title}</p>
+                    <div className="rating-row">
+                      <Star size={14} fill="#ffb33e" color="#ffb33e" />
+                      <span>
+                        <b>{gig.rating ? gig.rating.toFixed(1) : "0.0"}</b> ({gig.reviews || 0})
+                      </span>
+                    </div>
                   </div>
-                  <p className="gig-title">{gig.title}</p>
-                  <div className="rating-row">
-                    <Star size={14} fill="#ffb33e" color="#ffb33e" />
-                    <span><b>{gig.rating}</b> ({gig.reviews})</span>
+                  <div className="gig-footer">
+                    <span className="price-label">STARTING AT</span>
+                    <span className="price-value">${gig.price}</span>
                   </div>
                 </div>
-                <div className="gig-footer">
-                  <span className="price-label">STARTING AT</span>
-                  <span className="price-value">${gig.price}</span>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center', padding: '40px', color: '#74767e' }}>
+              Hiện chưa có dịch vụ nổi bật nào được đăng tải.
+            </div>
+          )}
         </div>
       </section>
 
@@ -390,11 +423,11 @@ const HomePage = () => {
           <div className="footer-col">
             <h2>Categories</h2>
             <ul>
-              <li onClick={() => navigate('/categories/graphics-design')} style={{ cursor: 'pointer' }}>Graphics & Design</li>
-              <li onClick={() => navigate('/categories/programming-tech')} style={{ cursor: 'pointer' }}>Programming & Tech</li>
-              <li onClick={() => navigate('/categories/digital-marketing')} style={{ cursor: 'pointer' }}>Digital Marketing</li>
-              <li onClick={() => navigate('/categories/video-animation')} style={{ cursor: 'pointer' }}>Video & Animation</li>
-              <li onClick={() => navigate('/categories/writing-translation')} style={{ cursor: 'pointer' }}>Writing & Translation</li>
+              {categories.map((cat) => (
+                <li key={cat.id} onClick={() => navigate(`/categories/${cat.slug}`)} style={{ cursor: 'pointer' }}>
+                  {cat.name}
+                </li>
+              ))}
             </ul>
           </div>
           <div className="footer-col">
