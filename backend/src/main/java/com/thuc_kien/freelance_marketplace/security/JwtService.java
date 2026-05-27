@@ -21,7 +21,7 @@ import io.jsonwebtoken.security.Keys;
 public class JwtService {
     private static final String SECRET_KEY = "amF2YWRldmVsb3BlcnRhc2tiYXNlNjRzZWNyZXRreXByb2plY3RmcmVlbGFuY2U=";
     // Thời gian sống của Token (ví dụ: 24 giờ)
-    private static final long EXPIRATION_TIME = 86400000;
+    private static final long EXPIRATION_TIME = 8600000;
 
 
     // tạo access token từ thông tin username
@@ -82,14 +82,13 @@ public class JwtService {
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
     }
-   
+
 
     // kiểm tra tính hợp lệ
     private Boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
 
-  
     public Boolean validateToken(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));

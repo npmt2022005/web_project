@@ -1,7 +1,5 @@
 package com.thuc_kien.freelance_marketplace.Service;
-
 import java.time.LocalDateTime;
-import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -21,6 +19,7 @@ import com.thuc_kien.freelance_marketplace.DTO.RegisterRequest;
 import com.thuc_kien.freelance_marketplace.DTO.ResetPasswordRequest;
 import com.thuc_kien.freelance_marketplace.Exception.AppException;
 import com.thuc_kien.freelance_marketplace.Exception.ConflictException;
+import com.thuc_kien.freelance_marketplace.Repository.SellerRepository;
 import com.thuc_kien.freelance_marketplace.Repository.UserRepository;
 import com.thuc_kien.freelance_marketplace.security.CustomUserDetails;
 import com.thuc_kien.freelance_marketplace.security.JwtService;
@@ -31,16 +30,12 @@ import jakarta.transaction.Transactional;
 @Service
 @RequiredArgsConstructor
 public class AuthService {
-
     private final UserRepository userRepo;
-
     private final PasswordEncoder passwordEncoder;
-
     private final JwtService jwtService;
-
     private final OtpService otpService;
     private final EmailService emailService;
-    
+    private final SellerRepository sellerRepo;
     private final SmsService smsService;
     private final AuthenticationManager authenticationManager;
 
@@ -72,28 +67,38 @@ public class AuthService {
         newUser.setUsername(rq.getUsername());
         newUser.setPasswordHash(passwordEncoder.encode(rq.getPassword()));
         newUser.setCreatedAt(LocalDateTime.now());
-        if (rq.getRole() == UserRole.ROLE_SELLER){
+        boolean isSeller = (rq.getRole() == UserRole.ROLE_SELLER);
+        if (isSeller){
             newUser.getRoles().add(UserRole.ROLE_SELLER);
             newUser.setCurrentRole(UserRole.ROLE_SELLER);
         } else {
             newUser.setCurrentRole(UserRole.ROLE_BUYER);
         }
-        userRepo.save(newUser);
+        User savedUser = userRepo.save(newUser);
+        if (isSeller) {
+            Seller newSeller = new Seller();
+            newSeller.setUser(savedUser); // Liên kết khóa ngoại user_id
+            
+            
+            newSeller.setBio(""); // Mới đăng ký nên để trống tiểu sử
+            newSeller.setRatingAvg(Double.valueOf(0.0)); // Điểm đánh giá ban đầu = 0.0
+            newSeller.setTotalReviews(0); // Khớp với cột total_reviews trong DB
+            newSeller.setResponseTime("N/A"); // Khớp với cột reponse_time, ban đầu chưa có dữ liệu
+            newSeller.setIsActive(true); // Khớp với cột is_active
+            
+            sellerRepo.save(newSeller); 
+        }
     }
 
     public LoginResponse login(LoginRequest lr){
-        // 1. Xác thực người dùng (Spring sẽ tự gọi UserDetailsService và check Password)
         authenticationManager.authenticate(
             new UsernamePasswordAuthenticationToken(lr.getIdentifier(), lr.getPassword())
         );
         User user = userRepo.findByUsernameOrEmailOrPhone(lr.getIdentifier(), lr.getIdentifier() , lr.getIdentifier()
                                                             ).orElseThrow(() -> new AppException("\"Tên đăng nhập hoặc mật khẩu không chính xác\""));
-        // if (!passwordEncoder.matches(lr.getPassword(), user.getPasswordHash())) {
-        //     throw new AppException("Tên đăng nhập hoặc mật khẩu không chính xác");
-        // }
         CustomUserDetails userDetails = new CustomUserDetails(user);
         String token = jwtService.generateToken(userDetails);
-    
+                                                            
         long expiresIn = jwtService.getExpirationTimeInSeconds(); // 
 
         // Chuyển đổi Set Enum thành Set String

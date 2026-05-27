@@ -15,10 +15,11 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class UserDetailsServiceImpl implements UserDetailsService{
     private final UserRepository userRepo;
-    
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException{
-        User user = userRepo.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
+
+    @Override
+    public UserDetails loadUserByUsername(String identifier) throws UsernameNotFoundException{
+        User user = userRepo.findByUsernameOrEmailOrPhone(identifier, identifier, identifier)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with identifier: " + identifier));
         return new CustomUserDetails(user); 
     }
 }

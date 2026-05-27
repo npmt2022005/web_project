@@ -24,10 +24,14 @@ public class Category {
     @Column(nullable = false, unique = true, length = 255)
     private String slug;
 
+    @Column(name = "img_url", length = 255)
+    private String imgUrl;
+
     // Mối quan hệ Self-Reference: Một danh mục có thể có một danh mục cha
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")
     private Category parent;
+
 
     // Một danh mục có thể có nhiều danh mục con
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)

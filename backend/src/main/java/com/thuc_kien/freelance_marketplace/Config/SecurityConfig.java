@@ -70,7 +70,8 @@ public class SecurityConfig {
                 "/swagger-ui/**",           // Giao diện Swagger UI
                 "/swagger-ui.html",         // Trang chính Swagger
                 "/swagger-resources/**",
-                "/webjars/**"
+                "/webjars/**",
+                "/api/v1/**"
             ).permitAll()
                 .requestMatchers("/api//admin/**").hasRole("ADMIN")   // Chỉ ADMIN mới vào được các link này
                 

@@ -6,9 +6,6 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
-
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 @Data
 @Entity
 @Table(name = "users")
@@ -22,10 +19,10 @@ public class User {
     private Long id; // int, PRI, auto_increment
 
     @Column(nullable = false, unique = true, length = 50)
-    private String username; // varchar(50), NO NULL, UNI
+    private String username; 
 
     @Column(length = 50)
-    private String fullname; // varchar(50), YES NULL
+    private String fullname; 
 
     @Column(nullable = false, unique = true, length = 100)
     private String email; // varchar(100), NO NULL, UNI
@@ -48,7 +45,10 @@ public class User {
 
     @Column(unique = true)
     private String phone;
-
+    
+    @Column(name = "country", length = 100)
+    private String country;
+    
     @Column(name = "created_at", updatable = false)
     @CreationTimestamp // Tự động lấy thời gian hiện tại khi insert
     private LocalDateTime createdAt; // timestamp, Default: CURRENT_TIMESTAMP

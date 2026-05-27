@@ -21,7 +21,7 @@ public class Gig {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "seller_id", nullable = false)
-    private Sellers seller;
+    private Seller seller;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
@@ -36,19 +36,11 @@ public class Gig {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    private String thumbnail_url;
-
-
+    private String thumbnailUrl;
     private Double price;
-
     private Integer deliveryTime = 1; // Số ngày tối thiểu hoàn thành
-
     private Double ratingAvg ;
-
-
     private Integer totalReviews = 0;
-
-
     private Boolean isPaused = false;
 
     @Column(name = "created_at", updatable = false)
