@@ -1,6 +1,4 @@
 package com.thuc_kien.freelance_marketplace.Controller;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -12,12 +10,13 @@ import com.thuc_kien.freelance_marketplace.DTO.*;
 import com.thuc_kien.freelance_marketplace.Service.AuthService;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/auth")
+@RequiredArgsConstructor
 public class AuthController implements AuthApi{
-    @Autowired
-    private AuthService authService;
+    private final AuthService authService;
 
     @PostMapping("/register")
     public ResponseEntity<APIResponse<Void>> register(@Valid @RequestBody RegisterRequest request){
@@ -35,7 +34,7 @@ public class AuthController implements AuthApi{
     @PostMapping("/login")
     public ResponseEntity<APIResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest lr){
         LoginResponse loginResponse = authService.login(lr);
-
+        
         return ResponseEntity.ok(
                 APIResponse.<LoginResponse>builder()
                         .status("success")
