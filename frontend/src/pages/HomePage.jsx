@@ -34,6 +34,10 @@ const HomePage = () => {
   const [categories, setCategories] = useState([]);     // Chứa danh sách danh mục đa cấp
   const [loadingGigs, setLoadingGigs] = useState(true);  // Trạng thái chờ tải dữ liệu
 
+  // --- TRẠNG THÁI CHO TÍNH NĂNG TÌM KIẾM (NEW ELASTICSEARCH INTEGRATION) ---
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All Categories');
+
   useEffect(() => {
     // 1. Kiểm tra trạng thái đăng nhập từ localStorage
     const storedRole = localStorage.getItem('role');
@@ -76,6 +80,17 @@ const HomePage = () => {
     fetchFeaturedGigs();
     fetchCategories();
   }, []);
+
+  // --- HÀM XỬ LÝ ĐIỀU HƯỚNG SANG TRANG SEARCH ---
+  const handleSearchSubmit = () => {
+    if (searchKeyword.trim()) {
+      let url = `/search?query=${encodeURIComponent(searchKeyword.trim())}`;
+      if (selectedCategory !== 'All Categories') {
+        url += `&category=${encodeURIComponent(selectedCategory)}`;
+      }
+      navigate(url);
+    }
+  };
 
   // Hàm ánh xạ hình ảnh tĩnh dự phòng dựa trên slug danh mục nếu Backend không có imgUrl
   const getCategoryImage = (slug) => {
@@ -189,8 +204,11 @@ const HomePage = () => {
             <div className="hero-search-container">
               <div className="search-wrapper">
                 <div className="category-select">
-                  <select>
-                    <option>All Categories</option>
+                  <select 
+                    value={selectedCategory} 
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                  >
+                    <option value="All Categories">All Categories</option>
                     {categories.map(cat => (
                       <option key={cat.id} value={cat.slug}>{cat.name}</option>
                     ))}
@@ -198,8 +216,16 @@ const HomePage = () => {
                   <ChevronDown size={14} className="select-icon" />
                 </div>
                 <div className="search-input-group">
-                  <input type="text" placeholder="What service are you looking for today?" />
-                  <button className="hero-search-btn"><Search size={20} /></button>
+                  <input 
+                    type="text" 
+                    placeholder="What service are you looking for today?" 
+                    value={searchKeyword}
+                    onChange={(e) => setSearchKeyword(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit()}
+                  />
+                  <button className="hero-search-btn" onClick={handleSearchSubmit}>
+                    <Search size={20} />
+                  </button>
                 </div>
               </div>
             </div>
@@ -207,7 +233,15 @@ const HomePage = () => {
             <div className="popular-tags">
               <span>Popular:</span>
               {["Website Design", "WordPress", "Logo Design", "AI Services"].map(tag => (
-                <button key={tag}>{tag}</button>
+                <button 
+                  key={tag} 
+                  onClick={() => {
+                    setSearchKeyword(tag);
+                    navigate(`/search?query=${encodeURIComponent(tag)}`);
+                  }}
+                >
+                  {tag}
+                </button>
               ))}
             </div>
           </div>
@@ -255,13 +289,19 @@ const HomePage = () => {
                     className="gig-thumbnail" 
                   />
                   <div className="gig-info">
-                    <div className="seller-row">
+                    {/* Khối thông tin Người bán */}
+                    <div className="seller-row" style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
                       <div className="seller-avatar">
                         {gig.seller ? gig.seller[0].toUpperCase() : 'F'}
                       </div>
-                      <p className="seller-name"><b>{gig.seller || "Freelancer"}</b></p>
+                      <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
+                        <p className="seller-name" style={{ margin: 0, lineHeight: 1.2 }}><b>{gig.seller || "Freelancer"}</b></p>
+                        <span className="seller-meta" style={{ fontSize: '12px', color: '#74767e' }}>
+                          {gig.level ? gig.level : 'New Seller'} {gig.country ? ` • ${gig.country}` : ''}
+                        </span>
+                      </div>
                     </div>
-                    <p className="gig-title">{gig.title}</p>
+                    <p className="gig-title" style={{ minHeight: '44px' }}>{gig.title}</p>
                     <div className="rating-row">
                       <Star size={14} fill="#ffb33e" color="#ffb33e" />
                       <span>
@@ -269,9 +309,15 @@ const HomePage = () => {
                       </span>
                     </div>
                   </div>
-                  <div className="gig-footer">
-                    <span className="price-label">STARTING AT</span>
-                    <span className="price-value">${gig.price}</span>
+                  {/* Chân đế thẻ */}
+                  <div className="gig-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span className="delivery-time" style={{ fontSize: '12px', color: '#74767e', fontWeight: '500' }}>
+                      {gig.deliveryTime ? `Giao trong: ${gig.deliveryTime} ngày` : 'Giao linh hoạt'}
+                    </span>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                      <span className="price-label">STARTING AT</span>
+                      <span className="price-value">${gig.price}</span>
+                    </div>
                   </div>
                 </div>
               ))}
