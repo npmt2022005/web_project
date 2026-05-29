@@ -38,7 +38,6 @@ const AuthPage = () => {
         localStorage.setItem('fullname', res.data.data.fullname || '');
         
         // Lấy vai trò đầu tiên từ mảng roles của API (ví dụ: "ROLE_BUYER" hoặc "ROLE_SELLER")
-        // Lưu trực tiếp vào key 'role' dưới dạng Chuỗi (String) để HomePage.jsx đọc trực tiếp
         if (res.data.data.roles && res.data.data.roles.length > 0) {
           localStorage.setItem('role', res.data.data.roles[0]);
         } else {
@@ -81,7 +80,17 @@ const AuthPage = () => {
 
     setLoading(true);
     try {
-      const res = await authService.register({ ...formData });
+      // ĐỒNG BỘ ĐÚNG DATABASE MỚI: Đổi trường fullname -> full_name, phone -> phone_number
+      const payload = {
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+        full_name: formData.fullname,    
+        phone_number: formData.phone,    
+        role: formData.role
+      };
+
+      const res = await authService.register(payload);
       setMessage({ text: res.data.message || "Đăng ký thành công!", type: 'success' });
       setTimeout(() => {
         setAuthMode('login');
@@ -153,7 +162,7 @@ const AuthPage = () => {
                   </button>
                 ))}
               </div>
-              <form onSubmit={handleLogin}> {/* Bọc form để nhấn Enter cũng kích hoạt login */}
+              <form onSubmit={handleLogin}>
                 <div className="input-group">
                   <label>{currentMethod.label}</label>
                   <div className="input-wrapper">
@@ -242,6 +251,7 @@ const AuthPage = () => {
               <button className="btn-auth" onClick={handleForgotPassword} disabled={loading}>{loading ? "Sending..." : "Send OTP"}</button>
               <div className="otp-container">
                 <div className="otp-inputs">
+                  {/* ĐÃ SỬA LỖI: Loại bỏ ký tự gạch chéo ngược gây lỗi cú pháp cú pháp React tại đây */}
                   {[...Array(6)].map((_, i) => (<input key={i} type="text" maxLength="1" className="otp-field" />))}
                 </div>
               </div>
