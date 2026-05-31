@@ -2,6 +2,7 @@ package com.thuc_kien.freelance_marketplace.Service;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,9 +18,11 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import com.thuc_kien.freelance_marketplace.DTO.GigDetailResponseDTO;
 import com.thuc_kien.freelance_marketplace.DTO.GigFeaturedResponseDTO;
 import com.thuc_kien.freelance_marketplace.DTO.GigSearchRequestDTO;
 import com.thuc_kien.freelance_marketplace.DTO.GigSearchResponseDTO;
+import com.thuc_kien.freelance_marketplace.DTO.GigDetailResponseDTO.*;
 import com.thuc_kien.freelance_marketplace.Entity.*;
 import com.thuc_kien.freelance_marketplace.Repository.*;
 
@@ -203,5 +206,65 @@ public class GigService {
             result.add(category);
         }
         return result;
+    }
+
+    public GigDetailResponseDTO getDetailGig(Long gigId) {
+        Gig gig = gigRepo.findGigById(gigId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy Gig với ID: " + gigId));
+        GigDetailResponseDTO.SellerSummaryDTO sellerDTO = null;
+        if (gig.getSeller() != null) {
+            sellerDTO = GigDetailResponseDTO.SellerSummaryDTO.builder()
+                    .id(gig.getSeller().getId())
+                    .fullName(gig.getSeller().getUser().getFullname())
+                    .avatarUrl(gig.getSeller().getUser().getAvatarUrl())
+                    .role("FREELANCER")
+                    .location(gig.getSeller().getUser().getCountry())
+                    .build();
+        }
+        
+        GigDetailResponseDTO.GigStatsDTO statsDTO = null;
+        statsDTO = GigDetailResponseDTO.GigStatsDTO.builder()
+                    .rating(gig.getRatingAvg())
+                    .reviewCount(Integer.valueOf(10))
+                    .salesCount(Integer.valueOf(10))
+                    .viewsCount(Integer.valueOf(10))
+                    .build();
+        
+        List<GigDetailResponseDTO.PackageDTO> packageDTOs = new ArrayList<>();
+        if (gig.getPackages() != null) {
+            packageDTOs = gig.getPackages().stream()
+                    .sorted(Comparator.comparing(GigPackages::getId))
+                    // THÊM ĐOẠN NÀY VÀO TRƯỚC CHỮ MAP
+                    .<GigDetailResponseDTO.PackageDTO>map(pkg -> {
+                        
+                        Map<String, Boolean> featureMap = pkg.getFeatures() == null ? new HashMap<>() 
+                            : pkg.getFeatures().stream()
+                                .collect(Collectors.toMap(
+                                        PackageFeature::getName, 
+                                        PackageFeature::getIsIncluded, 
+                                        (existing, replacement) -> existing
+                                ));
+
+                        return GigDetailResponseDTO.PackageDTO.builder()
+                                .id(pkg.getId())
+                                .type(pkg.getName()) 
+                                .price(pkg.getPrice())
+                                .shortDescription(pkg.getDescription())
+                                .deliveryDays(pkg.getDeliveryDays())
+                                .revisions(pkg.getRevisions() != null ? pkg.getRevisions() : 0)
+                                .features(featureMap)
+                                .build();
+                                
+                    }).collect(Collectors.toList());
+        }
+        return GigDetailResponseDTO.builder()
+                .id(gig.getId())
+                .title(gig.getTitle())
+                .description(gig.getDescription())
+                .isFeatured(false) 
+                .stats(statsDTO)
+                .seller(sellerDTO)
+                .packages(packageDTOs) 
+                .build();
     }
 }

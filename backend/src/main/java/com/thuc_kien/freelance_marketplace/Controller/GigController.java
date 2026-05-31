@@ -4,11 +4,13 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.*;
 import com.thuc_kien.freelance_marketplace.DTO.APIResponse;
+import com.thuc_kien.freelance_marketplace.DTO.GigDetailResponseDTO;
 import com.thuc_kien.freelance_marketplace.DTO.GigFeaturedResponseDTO;
 import com.thuc_kien.freelance_marketplace.Service.GigService;
 
@@ -39,5 +41,14 @@ public class GigController {
         
         return ResponseEntity.ok(response);
     }
+    @GetMapping("/{gigId}")
+    public ResponseEntity<GigDetailResponseDTO> getGigDetail(@PathVariable Long gigId) {
+        GigDetailResponseDTO response = gigService.getDetailGig(gigId);
+        
+        
+        return ResponseEntity.ok(response);
+    }
+
+    
     
 }
