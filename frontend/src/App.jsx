@@ -1,36 +1,58 @@
+// src/App.jsx
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import AuthPage from './pages/Auth/AuthPage';
 import HomePage from './pages/HomePage'; // Import trang chủ chung
 import BuyerHome from './pages/Marketplace/BuyerHome';   // Import trang Buyer
 import SellerHome from './pages/Dashboard/SellerHome'; // Import trang Seller
 import Profile from './pages/Profile/Profile'; // Import trang Profile vừa tạo mới
-import GigsPage from './pages/Gigs/GigsPage'
+import GigsPage from './pages/Gigs/GigsPage';
 import Header from './pages/Components/Header';
+
+// 1. Tích hợp Import trang chi tiết bài đăng dịch vụ vào đây
+import GigDetailPage from './pages/Gigs/GigDetailPage';
+
 // Component giữ chỗ tạm thời cho các trang danh mục chưa phát triển xong
 const PlaceholderPage = ({ title }) => (
   <div style={{ padding: '100px', textAlign: 'center', fontFamily: 'sans-serif' }}>
     <h2>{title} Page</h2>
     <p style={{ color: '#74767e', margin: '20px 0' }}>Trang này hiện đang được phát triển...</p>
     <a href="/" style={{ color: '#1dbf73', fontWeight: 'bold', textDecoration: 'none' }}>
-      ← Quay lại Trang chủ
+      &larr; Quay lại Trang chủ
     </a>
   </div>
 );
 
-function App() {
+// Thành phần phụ trợ xử lý ẩn/hiện Header động dựa theo URL hiện tại
+const AppContent = () => {
+  const location = useLocation();
+
+  // Danh sách các đường dẫn (URL) mà bạn muốn ẨN thanh Header đi
+  const hideHeaderPaths = ['/login', '/signup'];
+
+  // Kiểm tra xem trang hiện tại có thuộc danh sách cần ẩn hay không
+  const shouldHideHeader = hideHeaderPaths.includes(location.pathname);
+
   return (
-    <Router>
-      <Header />
+    <>
+      {/* Nếu KHÔNG phải trang đăng nhập/đăng ký thì mới hiển thị Header */}
+      {!shouldHideHeader && <Header />}
+
       <Routes>
         {/* 1. Trang đầu tiên xuất hiện khi truy cập link hệ thống */}
         <Route path="/" element={<HomePage />} />
         
-        {/* Trang thông tin cá nhân (Profile) nằm trong src/pages/Profile/ */}
+        {/* Trang thông tin cá nhân (Profile của chính mình) */}
         <Route path="/profile" element={<Profile />} />
 
+        {/* Giữ lại Route động xem Profile người khác của bạn */}
+        <Route path="/profile/:username" element={<Profile />} /> 
+
+        {/* Giữ lại Route Tìm kiếm từ code trên GitHub về */}
         <Route path="/search" element={<GigsPage />} />
+
+        {/* 2. Tích hợp cấu hình Route động cho trang xem chi tiết thông tin bài đăng */}
+        <Route path="/gigs/:id" element={<GigDetailPage />} />
         
         {/* 2. Các trang Home quản trị theo vai trò hệ thống */}
         <Route path="/buyer-home" element={<BuyerHome />} />
@@ -62,6 +84,14 @@ function App() {
         {/* 5. Điều hướng dự phòng: Nếu người dùng gõ sai đường dẫn URL thì tự động quay về trang chủ */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+    </>
+  );
+};
+
+function App() {
+  return (
+    <Router>
+      <AppContent />
     </Router>
   );
 }

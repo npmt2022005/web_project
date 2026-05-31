@@ -39,16 +39,17 @@ const AuthPage = ({ isLoginDefault = true }) => {
         password: formData.password 
       });
 
-      // --- SỬA ĐỔI & ĐỒNG BỘ LOCALSTORAGE VỚI HOMEPAGE.JSX ---
       if (res.data.data?.token) {
         localStorage.setItem('token', res.data.data.token);
         localStorage.setItem('fullname', res.data.data.fullname || '');
         
-        // Lấy vai trò đầu tiên từ mảng roles của API (ví dụ: "ROLE_BUYER" hoặc "ROLE_SELLER")
+        // 🌟 ĐÃ SỬA: Lưu thêm username vào bộ nhớ trình duyệt để Profile.jsx kiểm tra
+        localStorage.setItem('username', res.data.data.username || '');
+        
         if (res.data.data.roles && res.data.data.roles.length > 0) {
           localStorage.setItem('role', res.data.data.roles[0]);
         } else {
-          localStorage.setItem('role', 'ROLE_BUYER'); // Vai trò mặc định nếu mảng rỗng
+          localStorage.setItem('role', 'ROLE_BUYER');
         }
       }
 
@@ -72,12 +73,13 @@ const AuthPage = ({ isLoginDefault = true }) => {
     }
   };
 
+  // --- LOGIC ĐĂNG KÝ ĐÃ ĐƯỢC CHỈNH SỬA BẮT LỖI CHI TIẾT TỪ BACKEND ---
   const handleRegister = async (e) => {
     e.preventDefault();
     setMessage({ text: '', type: '' });
     
-    if (!formData.email || !formData.phone) {
-      return setMessage({ text: "Vui lòng nhập đầy đủ Email và Số điện thoại", type: 'error' });
+    if (!formData.email || !formData.phone || !formData.username || !formData.fullname || !formData.password || !formData.confirmPassword) {
+      return setMessage({ text: "Vui lòng nhập đầy đủ tất cả các trường thông tin", type: 'error' });
     }
 
     if (formData.password !== formData.confirmPassword) {
@@ -86,25 +88,48 @@ const AuthPage = ({ isLoginDefault = true }) => {
 
     setLoading(true);
     try {
-      // ĐỒNG BỘ ĐÚNG DATABASE MỚI: Đổi trường fullname -> full_name, phone -> phone_number
+      // ĐỒNG BỘ CHUẨN ĐÚNG CÁC TRƯỜNG TRONG FILE SWAGGER API-DOCS
       const payload = {
         username: formData.username,
         email: formData.email,
         password: formData.password,
-        full_name: formData.fullname,    
-        phone_number: formData.phone,    
+        confirmPassword: formData.confirmPassword,
+        fullname: formData.fullname,     
+        phone: formData.phone,           
         role: formData.role
       };
 
       const res = await authService.register(payload);
-      setMessage({ text: res.data.message || "Đăng ký thành công!", type: 'success' });
-      setTimeout(() => {
-        setAuthMode('login');
-        setMessage({ text: '', type: '' });
-      }, 2000);
+      
+      if (res.data && res.data.status === 'success') {
+        setMessage({ text: res.data.message || "Đăng ký thành công!", type: 'success' });
+        setTimeout(() => {
+          setAuthMode('login');
+          setMessage({ text: '', type: '' });
+        }, 2000);
+      } else {
+        setMessage({ text: res.data.message || "Đăng ký thất bại", type: 'error' });
+      }
+
     } catch (err) {
+      console.error("Lỗi chi tiết từ Server:", err);
+      
       const serverRes = err.response?.data;
-      let errorMsg = serverRes?.data ? Object.values(serverRes.data)[0] : (serverRes?.message || "Đăng ký thất bại");
+      let errorMsg = "Đăng ký thất bại. Vui lòng thử lại!";
+
+      if (serverRes) {
+        if (serverRes.data && typeof serverRes.data === 'object') {
+          const errors = Object.values(serverRes.data);
+          if (errors.length > 0) {
+            errorMsg = errors[0]; 
+          }
+        } else if (serverRes.message) {
+          errorMsg = serverRes.message;
+        }
+      } else if (err.request) {
+        errorMsg = "Không thể kết nối đến máy chủ. Vui lòng thử lại sau!";
+      }
+
       setMessage({ text: errorMsg, type: 'error' });
     } finally {
       setLoading(false);
@@ -206,45 +231,65 @@ const AuthPage = ({ isLoginDefault = true }) => {
               <h2>Join our community</h2>
               <p className="top-switch-sub">Already have an account? <span onClick={() => {setAuthMode('login'); setMessage({text:'',type:''})}}>Sign In</span></p>
               
-              <div className="input-group">
-                <label>Full Name</label>
-                <div className="input-wrapper"><User size={18} /><input name="fullname" type="text" placeholder="Ví dụ: Phan Trung Kiên" onChange={handleChange} /></div>
-              </div>
-              
-              <div className="input-group">
-                <label>Username</label>
-                <div className="input-wrapper"><AtSign size={18} /><input name="username" type="text" placeholder="vana_nguyen" onChange={handleChange} /></div>
-              </div>
-
-              <div className="input-group">
-                <label>Email</label>
-                <div className="input-wrapper"><Mail size={18} /><input name="email" type="text" placeholder="yourname@example.com" onChange={handleChange} /></div>
-              </div>
-
-              <div className="input-group">
-                <label>Số điện thoại</label>
-                <div className="input-wrapper"><Phone size={18} /><input name="phone" type="text" placeholder="0987654321" onChange={handleChange} /></div>
-              </div>
-              
-              <div className="input-group">
-                <label>Password</label>
-                <div className="input-wrapper"><Lock size={18} /><input name="password" type="password" placeholder="Tạo mật khẩu" onChange={handleChange} /></div>
-              </div>
-              
-              <div className="input-group">
-                <label>Confirm Password</label>
-                <div className="input-wrapper"><Lock size={18} /><input name="confirmPassword" type="password" placeholder="Xác nhận mật khẩu" onChange={handleChange} /></div>
-              </div>
-
-              <div className="input-group">
-                <label>Bạn tham gia với vai trò:</label>
-                <div className="method-selector">
-                  <button type="button" className={`method-btn ${formData.role === 'ROLE_BUYER' ? 'active' : ''}`} onClick={() => setFormData({ ...formData, role: 'ROLE_BUYER' })}>Người mua (Buyer)</button>
-                  <button type="button" className={`method-btn ${formData.role === 'ROLE_SELLER' ? 'active' : ''}`} onClick={() => setFormData({ ...formData, role: 'ROLE_SELLER' })}>Người bán (Seller)</button>
+              <form onSubmit={handleRegister}>
+                <div className="input-group">
+                  <label>Full Name</label>
+                  <div className="input-wrapper">
+                    <User size={18} />
+                    <input name="fullname" type="text" placeholder="Ví dụ: Phan Trung Kiên" value={formData.fullname} onChange={handleChange} />
+                  </div>
                 </div>
-              </div>
+                
+                <div className="input-group">
+                  <label>Username</label>
+                  <div className="input-wrapper">
+                    <AtSign size={18} />
+                    <input name="username" type="text" placeholder="vana_nguyen" value={formData.username} onChange={handleChange} />
+                  </div>
+                </div>
 
-              <button className="btn-auth" onClick={handleRegister} disabled={loading}>{loading ? "Processing..." : "Join Now"}</button>
+                <div className="input-group">
+                  <label>Email</label>
+                  <div className="input-wrapper">
+                    <Mail size={18} />
+                    <input name="email" type="text" placeholder="yourname@example.com" value={formData.email} onChange={handleChange} />
+                  </div>
+                </div>
+
+                <div className="input-group">
+                  <label>Số điện thoại</label>
+                  <div className="input-wrapper">
+                    <Phone size={18} />
+                    <input name="phone" type="text" placeholder="0987654321" value={formData.phone} onChange={handleChange} />
+                  </div>
+                </div>
+                
+                <div className="input-group">
+                  <label>Password</label>
+                  <div className="input-wrapper">
+                    <Lock size={18} />
+                    <input name="password" type="password" placeholder="Tạo mật khẩu" value={formData.password} onChange={handleChange} />
+                  </div>
+                </div>
+                
+                <div className="input-group">
+                  <label>Confirm Password</label>
+                  <div className="input-wrapper">
+                    <Lock size={18} />
+                    <input name="confirmPassword" type="password" placeholder="Xác nhận mật khẩu" value={formData.confirmPassword} onChange={handleChange} />
+                  </div>
+                </div>
+
+                <div className="input-group">
+                  <label>Bạn tham gia với vai trò:</label>
+                  <div className="method-selector">
+                    <button type="button" className={`method-btn ${formData.role === 'ROLE_BUYER' ? 'active' : ''}`} onClick={() => setFormData({ ...formData, role: 'ROLE_BUYER' })}>Người mua (Buyer)</button>
+                    <button type="button" className={`method-btn ${formData.role === 'ROLE_SELLER' ? 'active' : ''}`} onClick={() => setFormData({ ...formData, role: 'ROLE_SELLER' })}>Người bán (Seller)</button>
+                  </div>
+                </div>
+
+                <button type="submit" className="btn-auth" disabled={loading}>{loading ? "Processing..." : "Join Now"}</button>
+              </form>
               <StatusMessage />
             </>
           )}
@@ -264,7 +309,6 @@ const AuthPage = ({ isLoginDefault = true }) => {
               <button className="btn-auth" onClick={handleForgotPassword} disabled={loading}>{loading ? "Sending..." : "Send OTP"}</button>
               <div className="otp-container">
                 <div className="otp-inputs">
-                  {/* ĐÃ SỬA LỖI: Loại bỏ ký tự gạch chéo ngược gây lỗi cú pháp cú pháp React tại đây */}
                   {[...Array(6)].map((_, i) => (<input key={i} type="text" maxLength="1" className="otp-field" />))}
                 </div>
               </div>
