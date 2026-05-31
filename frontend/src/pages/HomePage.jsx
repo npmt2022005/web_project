@@ -21,23 +21,34 @@ import metaLogo from '../assets/icons/meta-logo.png';
 import netflixLogo from '../assets/icons/netflix-logo.jpg';
 import pgLogo from '../assets/icons/pg-logo.jpg';
 import paypalLogo from '../assets/icons/paypal-logo.jpg';
-
+import Header from '../pages/components/Header';
 const HomePage = () => {
   const navigate = useNavigate();
   
-  // Trạng thái đăng nhập
-  const [role, setRole] = useState(null);
-  const [fullname, setFullname] = useState('');
 
   // --- TRẠNG THÁI CHỨA DỮ LIỆU ĐỘNG TỪ BACKEND ---
   const [featuredGigs, setFeaturedGigs] = useState([]); // Chứa danh sách bài đăng dịch vụ
   const [categories, setCategories] = useState([]);     // Chứa danh sách danh mục đa cấp
   const [loadingGigs, setLoadingGigs] = useState(true);  // Trạng thái chờ tải dữ liệu
+  const [role, setRole] = useState(null);
+  const [fullname, setFullname] = useState('');
 
-  // --- TRẠNG THÁI CHO TÍNH NĂNG TÌM KIẾM (NEW ELASTICSEARCH INTEGRATION) ---
   const [searchKeyword, setSearchKeyword] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All Categories');
-
+  const [popularCategories, setPopularCategories] = useState([]);
+  useEffect(() => {
+      const fetchMetadata = async () => {
+        try {
+          const response = await axios.get('http://localhost:8080/api/v1/gigs_v1/meta/filters');
+          const apiData = response.data.data;
+          setPopularCategories(apiData.popularTags);
+        } catch (error) {
+          console.error("Lỗi lấy metadata ở Trang chủ:", error);
+        }
+      };
+      fetchMetadata();
+    }, []);
+  
   useEffect(() => {
     // 1. Kiểm tra trạng thái đăng nhập từ localStorage
     const storedRole = localStorage.getItem('role');
@@ -69,7 +80,7 @@ const HomePage = () => {
       try {
         const response = await axios.get('http://localhost:8080/api/v1/categories');
         if (response.data && response.data.status === 'success') {
-          setCategories(response.data.data); // Gán mảng danh mục vào State
+          setCategories(response.data.data); 
         }
       } catch (error) {
         console.error("Lỗi khi kết nối API lấy danh sách danh mục:", error);
@@ -84,7 +95,7 @@ const HomePage = () => {
   // --- HÀM XỬ LÝ ĐIỀU HƯỚNG SANG TRANG SEARCH ---
   const handleSearchSubmit = () => {
     if (searchKeyword.trim()) {
-      let url = `/search?query=${encodeURIComponent(searchKeyword.trim())}`;
+      let url = `/search?keyword=${encodeURIComponent(searchKeyword.trim())}`;
       if (selectedCategory !== 'All Categories') {
         url += `&category=${encodeURIComponent(selectedCategory)}`;
       }
@@ -103,91 +114,6 @@ const HomePage = () => {
 
   return (
     <div className="common-home">
-      
-      {/* 1. HEADER */}
-      <header className="main-header">
-        <div className="container header-flex">
-          <div className="header-left">
-            <h1 className="logo" onClick={() => navigate('/')}>vance<span>.</span></h1>
-          </div>
-          <nav className="header-right">
-            
-            {/* ĐỔI THÀNH DỮ LIỆU DANH MỤC ĐỘNG TRONG DROPDOWN */}
-            <div className="nav-item-dropdown">
-              <span className="nav-link">Categories <ChevronDown size={14} /></span>
-              <div className="dropdown-content">
-                {categories.length > 0 ? (
-                  categories.map((cat) => (
-                    <span key={cat.id} onClick={() => navigate(`/categories/${cat.slug}`)}>
-                      {cat.name}
-                    </span>
-                  ))
-                ) : (
-                  <>
-                    <span onClick={() => navigate('/categories/graphics-design')}>Graphics & Design</span>
-                    <span onClick={() => navigate('/categories/programming-tech')}>Programming & Tech</span>
-                  </>
-                )}
-              </div>
-            </div>
-
-            <div className="nav-item-dropdown">
-              <span className="nav-link">Listings <ChevronDown size={14} /></span>
-              <div className="dropdown-content">
-                <span onClick={() => navigate('/listings/services')}>Services</span>
-                <span onClick={() => navigate('/listings/projects')}>Projects</span>
-              </div>
-            </div>
-
-            <div className="nav-item-dropdown">
-              <span className="nav-link">Users <ChevronDown size={14} /></span>
-              <div className="dropdown-content">
-                <span onClick={() => navigate('/users/seller')}>Seller</span>
-                <span onClick={() => navigate('/users/buyer')}>Buyer</span>
-              </div>
-            </div>
-
-            <span className="nav-link" onClick={() => navigate('/pages')}>Pages</span>
-            <span className="nav-link"><Globe size={16} /> English</span>
-            
-            {role ? (
-              <div className="auth-nav">
-                <Mail size={20} className="nav-icon" style={{ cursor: 'pointer', color: '#74767e' }} /> 
-                <Bell size={20} className="nav-icon" style={{ cursor: 'pointer', color: '#74767e' }} />
-                <div 
-                  className="user-avatar" 
-                  onClick={() => navigate('/profile')} 
-                  style={{ cursor: 'pointer' }}
-                >
-                  {fullname ? fullname[0].toUpperCase() : <User size={16}/>}
-                </div>
-              </div>
-            ) : (
-              <div className="guest-nav">
-                <span className="btn-signin" onClick={() => navigate('/login')}>Sign In</span>
-              </div>
-            )}
-          </nav>
-        </div>
-        
-        {/* THANH DANH MỤC PHỤ ĐỘNG PHÍA DƯỚI HEADER */}
-        <div className="category-menu hide-mobile">
-          <div className="container">
-            <ul>
-              {categories.map((cat) => (
-                <li 
-                  key={cat.id} 
-                  onClick={() => navigate(`/categories/${cat.slug}`)} 
-                  style={{ cursor: 'pointer' }}
-                >
-                  {cat.name}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </header>
-
       {/* 2. HERO SECTION */}
       <section className="hero-section">
         <div className="hero-bg-wrapper">
@@ -232,17 +158,27 @@ const HomePage = () => {
 
             <div className="popular-tags">
               <span>Popular:</span>
-              {["Website Design", "WordPress", "Logo Design", "AI Services"].map(tag => (
-                <button 
-                  key={tag} 
-                  onClick={() => {
-                    setSearchKeyword(tag);
-                    navigate(`/search?query=${encodeURIComponent(tag)}`);
-                  }}
-                >
-                  {tag}
-                </button>
-              ))}
+              {(popularCategories && popularCategories.length > 0 
+                  ? popularCategories 
+                  : [
+                      { name: "Website Design", categorySlug: "website-design" },
+                      { name: "WordPress", categorySlug: "wordpress" },
+                      { name: "Logo Design", categorySlug: "logo-design" },
+                      { name: "AI Services", categorySlug: "ai-services" }
+                    ]
+                ).map((category, index) => (
+                  <button 
+                    key={category.categorySlug || index} 
+                    onClick={() => {
+                      setSearchKeyword(category.name);
+                      
+                      // 2. Chuyển hướng. 
+                      navigate(`/search?category=${encodeURIComponent(category.categorySlug)}`);
+                    }}
+                  >
+                    {category.name}
+                  </button>
+                ))}
             </div>
           </div>
         </div>
