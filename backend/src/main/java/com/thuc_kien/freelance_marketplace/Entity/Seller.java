@@ -32,8 +32,14 @@ public class Seller {
     @Column(name = "level")
     private String level = "New Seller"; 
 
+
+    @ElementCollection
+    @CollectionTable(
+        name = "seller_languages", // Tên bảng phụ sẽ được tạo trong DB
+        joinColumns = @JoinColumn(name = "seller_id")
+    )
     @Column(name = "language")
-    private String language;
+    private List<String> languages;
 
     @Column(name = "response_time")
     private String responseTime;

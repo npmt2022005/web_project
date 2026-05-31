@@ -1,0 +1,135 @@
+.gig-card {
+    background-color: #ffffff;
+    border: 1px solid #e4e5e7;
+    border-radius: 8px; /* Bo góc hiện đại */
+    overflow: hidden; /* Giấu phần ảnh bị dư ra ở các góc bo */
+    display: flex;
+    flex-direction: column;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+    cursor: pointer;
+    height: 100%; /* Để các thẻ trong Grid luôn cao bằng nhau */
+}
+
+/* Hiệu ứng nổi lên khi di chuột */
+.gig-card:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+/* 2. Ảnh bìa */
+.card-thumbnail {
+    width: 100%;
+    height: 180px; /* Cố định chiều cao ảnh */
+    overflow: hidden;
+}
+
+.card-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Ép ảnh lấp đầy khung mà không bị méo tỷ lệ */
+    transition: transform 0.3s ease;
+}
+
+/* Phóng to ảnh nhẹ nhàng khi hover vào thẻ */
+.gig-card:hover .card-thumbnail img {
+    transform: scale(1.05);
+}
+
+/* 3. Phần thân chứa thông tin */
+.card-body {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1; /* Đẩy phần footer xuống dưới cùng */
+}
+
+/* 4. Khối Avatar và Tên người bán */
+.seller-avatar-mock {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background-color: #1dbf73; /* Màu xanh đặc trưng */
+    color: #ffffff;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 13px;
+    font-weight: bold;
+    margin-right: 10px;
+    vertical-align: middle;
+}
+
+.seller-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #222325;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+.seller-level-badge {
+    font-size: 13px;
+    color: #74767e;
+    vertical-align: middle;
+}
+
+/* 5. Tiêu đề dịch vụ (Cắt chữ tự động) */
+.gig-brand-title {
+    font-size: 16px;
+    line-height: 1.4;
+    color: #222325;
+    font-weight: 500;
+    margin: 12px 0;
+    
+    /* Thủ thuật CSS cắt chữ thành dấu ... nếu vượt quá 2 dòng */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    height: 44px; /* Fix cứng chiều cao 2 dòng để các thẻ không bị thò thụt */
+}
+
+.gig-brand-title:hover {
+    color: #1dbf73;
+}
+
+/* 6. Khối đánh giá sao */
+.rating-info {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 16px;
+    font-size: 14px;
+}
+
+.star-icon {
+    color: #ffb33e; /* Màu vàng cam của sao */
+    font-weight: 600;
+    color: #222325;
+}
+
+.rating-info span:last-child {
+    color: #b5b6ba; /* Màu xám cho số lượng đánh giá */
+}
+
+/* 7. Chân thẻ (Giá tiền) */
+.card-footer {
+    border-top: 1px solid #e4e5e7;
+    padding-top: 12px;
+    margin-top: auto; /* Tự động đẩy footer dính sát xuống đáy thẻ */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.price-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #74767e;
+    text-transform: uppercase; /* IN HOA CHỮ */
+}
+
+.price-value {
+    font-size: 18px;
+    font-weight: 600;
+    color: #222325;
+}

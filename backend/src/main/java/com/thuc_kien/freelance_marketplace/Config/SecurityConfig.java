@@ -9,7 +9,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -66,9 +65,9 @@ public class SecurityConfig {
                 // Cho phép tất cả các API liên quan đến Auth và Quên mật khẩu
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers(
-                "/v3/api-docs/**",          // Dữ liệu API thô
-                "/swagger-ui/**",           // Giao diện Swagger UI
-                "/swagger-ui.html",         // Trang chính Swagger
+                "/v3/api-docs/**",        
+                "/swagger-ui/**",          
+                "/swagger-ui.html",         
                 "/swagger-resources/**",
                 "/webjars/**",
                 "/api/v1/**"

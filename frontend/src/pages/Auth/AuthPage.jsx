@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, ArrowLeft, Phone, CheckCircle2, AtSign } from 'lucide-react';
 import { authService } from '../../services/authService';
 import './Auth.css';
 
-const AuthPage = () => {
+const AuthPage = ({ isLoginDefault = true }) => {
   const navigate = useNavigate();
-  const [authMode, setAuthMode] = useState('login'); 
+  const [authMode, setAuthMode] = useState(isLoginDefault ? 'login' : 'signup'); 
   const [method, setMethod] = useState('email'); // Dùng cho Login: 'email', 'phone', hoặc 'username'
   const [loading, setLoading] = useState(false);
   
@@ -20,6 +20,13 @@ const AuthPage = () => {
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      navigate('/', { replace: true });
+    }
+  }, [navigate]);
 
   // --- API HANDLERS ---
   const handleLogin = async (e) => {
@@ -47,9 +54,8 @@ const AuthPage = () => {
 
       setMessage({ text: "Đăng nhập thành công!", type: 'success' });
 
-      // --- PHẦN CHỈNH SỬA: ĐIỀU HƯỚNG CHUẨN VỀ TRANG CHỦ "/" ---
       setTimeout(() => {
-        navigate('/'); 
+        navigate('/', { replace: true }); 
       }, 1000);
 
     } catch (err) {
@@ -123,6 +129,13 @@ const AuthPage = () => {
   const StatusMessage = () => (
     message.text ? <div className={`status-msg ${message.type}`}>{message.text}</div> : null
   );
+
+  React.useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      navigate('/', { replace: true });
+    }
+  }, [navigate]);
 
   const getMethodDetails = () => {
     switch (method) {

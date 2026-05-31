@@ -18,4 +18,7 @@ public interface CategoryRepository extends JpaRepository<Category, Long>{
             "LEFT JOIN FETCH c.children " +
             "WHERE c.parent IS NULL")
     List<Category> findRootCategoriesWithSubCategories();
+
+
+    
 }

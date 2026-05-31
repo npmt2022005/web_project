@@ -1,11 +1,13 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import AuthPage from './pages/Auth/AuthPage';
 import HomePage from './pages/HomePage'; // Import trang chủ chung
 import BuyerHome from './pages/Marketplace/BuyerHome';   // Import trang Buyer
 import SellerHome from './pages/Dashboard/SellerHome'; // Import trang Seller
 import Profile from './pages/Profile/Profile'; // Import trang Profile vừa tạo mới
-
+import GigsPage from './pages/Gigs/GigsPage'
+import Header from './pages/Components/Header';
 // Component giữ chỗ tạm thời cho các trang danh mục chưa phát triển xong
 const PlaceholderPage = ({ title }) => (
   <div style={{ padding: '100px', textAlign: 'center', fontFamily: 'sans-serif' }}>
@@ -20,12 +22,15 @@ const PlaceholderPage = ({ title }) => (
 function App() {
   return (
     <Router>
+      <Header />
       <Routes>
         {/* 1. Trang đầu tiên xuất hiện khi truy cập link hệ thống */}
         <Route path="/" element={<HomePage />} />
         
         {/* Trang thông tin cá nhân (Profile) nằm trong src/pages/Profile/ */}
         <Route path="/profile" element={<Profile />} />
+
+        <Route path="/search" element={<GigsPage />} />
         
         {/* 2. Các trang Home quản trị theo vai trò hệ thống */}
         <Route path="/buyer-home" element={<BuyerHome />} />

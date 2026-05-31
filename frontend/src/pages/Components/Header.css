@@ -1,0 +1,410 @@
+/* ============================================================
+   HEADER — Main navigation bar
+   ============================================================ */
+
+/* --- Container & Layout --- */
+.main-header {
+    background: #fff;
+    position: sticky;
+    top: 0;
+    z-index: 9999; /* Ép nổi lên trên mọi Filter hay phần tử khác */
+}
+
+.main-header .container {
+    max-width: 100%;
+    padding: 0 40px;
+}
+
+.header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 80px;
+}
+
+/* --- Logo --- */
+.logo {
+    font-size: 32px;
+    font-weight: 900;
+    letter-spacing: -1.5px;
+    cursor: pointer;
+}
+
+.logo span {
+    color: #1dbf73;
+}
+
+/* --- Left & Right sections --- */
+.header-left {
+    display: flex;
+    align-items: center;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+}
+
+/* ============================================================
+   NAV LINKS & AUTH
+   ============================================================ */
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #62646a;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.nav-link:hover {
+    color: #1dbf73;
+}
+
+.btn-signin {
+    font-weight: 600;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.btn-signin:hover {
+    color: #1dbf73;
+}
+
+.auth-nav {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.nav-icon {
+    cursor: pointer;
+    color: #74767e;
+    transition: color 0.2s ease;
+}
+
+.nav-icon:hover {
+    color: #1dbf73;
+}
+
+.user-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 35px;
+    height: 35px;
+    background: #1dbf73;
+    color: #fff;
+    border-radius: 50%;
+    font-weight: bold;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+
+.user-avatar:hover {
+    opacity: 0.85;
+}
+
+/* ============================================================
+   DROPDOWN MENU (RIGHT CORNER)
+   ============================================================ */
+
+.nav-item-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 1001;
+    min-width: 220px;
+    padding: 10px 0;
+    background-color: #fff;
+    border: 1px solid #e4e5e7;
+    border-radius: 8px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.dropdown-content span {
+    display: block;
+    padding: 12px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #62646a;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.dropdown-content span:hover {
+    background-color: #f5f5f5;
+    color: #1dbf73;
+}
+
+.nav-item-dropdown:hover .dropdown-content {
+    display: block;
+}
+
+/* Menu Categories xổ ngang từ phải (Level 1) */
+.categories-dropdown-wrapper {
+    padding: 0 !important;
+}
+
+.categories-dropdown-menu {
+    list-style: none;
+    padding: 8px 0;
+    margin: 0;
+    min-width: 260px;
+}
+
+.menu-item-parent {
+    position: relative;
+    cursor: pointer;
+}
+
+.parent-link {
+    display: block;
+    padding: 12px 20px;
+    color: #62646a;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.menu-item-parent:hover .parent-link {
+    background-color: #f5f5f5;
+    color: #1dbf73;
+}
+
+/* Menu con góc phải (Level 2) */
+.sub-menu-flyout {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 100%;
+    list-style: none;
+    padding: 8px 0;
+    margin: 0;
+    background: #fff;
+    min-width: 280px;
+    max-height: 60vh;
+    overflow-y: auto;
+    border-radius: 4px;
+    border: 1px solid #e4e5e7;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    z-index: 1000;
+}
+
+.menu-item-parent:hover .sub-menu-flyout {
+    display: block;
+    animation: slideIn 0.2s ease forwards;
+}
+
+.menu-item-child {
+    padding: 10px 20px;
+    color: #62646a;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.menu-item-child:hover {
+    background-color: #fafafa;
+    color: #1dbf73;
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+/* ============================================================
+   CATEGORY MENU — SCROLL HORIZONTAL (THANH DƯỚI HEADER)
+   ============================================================ */
+
+.category-menu {
+    position: relative;
+    border-top: 1px solid #e4e5e7;
+    border-bottom: 1px solid #e4e5e7;
+    background-color: #fff;
+    z-index: 999;
+}
+
+/* Hộp chứa thanh cuộn + 2 mũi tên */
+.menu-scroll-container {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    padding: 0 40px; /* Nhường chỗ 2 bên cho mũi tên */
+}
+
+/* Nút mũi tên kéo ngang */
+.scroll-arrow-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
+    background: #fff;
+    border: 1px solid #e4e5e7;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    color: #62646a;
+    transition: all 0.2s ease;
+    z-index: 1000; 
+    
+    /* THÊM DÒNG NÀY: Đảm bảo mũi tên luôn click được */
+    pointer-events: auto;
+
+}
+
+.scroll-arrow-btn:hover {
+    border-color: #1dbf73;
+    color: #1dbf73;
+    box-shadow: 0 2px 8px rgba(29, 191, 115, 0.2);
+}
+
+.scroll-arrow-btn.left {
+    left: 0;
+}
+
+.scroll-arrow-btn.right {
+    right: 0;
+}
+
+/* Danh sách cuộn ngang chính */
+.horizontal-category-list {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    gap: 28px;
+    list-style: none;
+    width: 100%;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+
+    /* 3 DÒNG PHÉP THUẬT GIẢI CỨU MENU CON */
+    padding: 4px 0 400px 0; /* Tạo một khoảng trống ảo 400px bên dưới */
+    margin-bottom: -400px;   /* Kéo nội dung trang web bên dưới giật ngược lên 400px */
+    pointer-events: none;    /* Cho phép click chuột xuyên thấu qua khoảng trống ảo này */
+}
+
+
+
+.horizontal-menu-item {
+    position: relative;
+    cursor: pointer;
+    white-space: nowrap;
+    padding: 8px 0;
+    
+    /* BẮT BUỘC THÊM DÒNG NÀY */
+    pointer-events: auto; /* Đánh thức lại khả năng click cho chữ Danh mục và menu con của nó */
+}
+
+.horizontal-parent-link {
+    color: #62646a;
+    font-weight: 500;
+    text-decoration: none;
+    font-size: 15px;
+    transition: color 0.2s ease;
+}
+
+.horizontal-menu-item:hover .horizontal-parent-link {
+    color: #1dbf73;
+}
+
+/* Menu con thả xuống */
+.horizontal-sub-menu {
+    display: none; /* Mặc định ẩn */
+    position: absolute;
+    top: 100%;
+    left: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    
+    background: #fff;
+    width: max-content; /* Hộp tự nở vừa với chữ dài nhất */
+    min-width: 240px;
+    max-height: 60vh; /* Tối đa 60% màn hình */
+    overflow-y: auto; /* Hiện thanh cuộn dọc nếu mục con quá nhiều */
+    
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e4e5e7;
+    border-top: 2px solid #1dbf73;
+    border-radius: 0 0 4px 4px;
+    padding: 8px 0;
+    z-index: 1000;
+    list-style: none;
+}
+
+.horizontal-menu-item:hover .horizontal-sub-menu {
+    display: flex !important; /* Dùng flex để kích column */
+}
+
+/* Custom thanh cuộn của menu dọc (Làm cho đẹp) */
+.horizontal-sub-menu::-webkit-scrollbar,
+.sub-menu-flyout::-webkit-scrollbar {
+    width: 6px;
+}
+.horizontal-sub-menu::-webkit-scrollbar-track,
+.sub-menu-flyout::-webkit-scrollbar-track {
+    background: transparent;
+}
+.horizontal-sub-menu::-webkit-scrollbar-thumb,
+.sub-menu-flyout::-webkit-scrollbar-thumb {
+    background-color: #d1d5db;
+    border-radius: 10px;
+}
+.horizontal-sub-menu::-webkit-scrollbar-thumb:hover,
+.sub-menu-flyout::-webkit-scrollbar-thumb:hover {
+    background-color: #9ca3af;
+}
+
+/* Chữ của menu con */
+.horizontal-child-link {
+    display: block;
+    width: 100%;
+    padding: 10px 20px;
+    color: #62646a;
+    font-size: 14px;
+    text-align: left;
+    white-space: nowrap; /* Cấm rớt dòng chữ */
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.horizontal-child-link:hover {
+    background-color: #f9f9f9;
+    color: #1dbf73;
+    padding-left: 24px;
+}
+.horizontal-category-list .horizontal-menu-item:nth-last-child(-n+4) .horizontal-sub-menu {
+    left: auto;  /* Gỡ bỏ lệnh neo lề trái mặc định */
+    right: 0;    /* Neo chặt vào mép phải của chữ, tự động xổ ngược sang trái */
+}
+/* ============================================================
+   RESPONSIVE (ĐIỆN THOẠI)
+   ============================================================ */
+
+@media (max-width: 768px) {
+    .hide-mobile {
+        display: none;
+    }
+
+    .main-header .container {
+        padding: 0 16px;
+    }
+
+    .header-right {
+        gap: 14px;
+    }
+} 
