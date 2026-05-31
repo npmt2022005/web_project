@@ -1,6 +1,10 @@
 package com.thuc_kien.freelance_marketplace.Service;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Pageable;
@@ -23,7 +27,9 @@ import jakarta.transaction.Transactional;
 
 import org.springframework.data.elasticsearch.core.query.Query;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class GigService {
@@ -33,25 +39,25 @@ public class GigService {
 
     public Double getMaximumPrice() {
         Double maxPrice = gigRepo.findMaximumPrice();
-        return (maxPrice != null) ? maxPrice : 20000000; 
+        return (maxPrice != null) ? maxPrice : 20000000;
     }
+
     public List<GigFeaturedResponseDTO> getFeaturedGigs(int limit) {
-        Pageable pageable = PageRequest.of(0, limit); 
+        Pageable pageable = PageRequest.of(0, limit);
 
         List<Gig> gigs = gigRepo.findTopFeaturedGigs(pageable);
 
         return gigs.stream().map(gig -> GigFeaturedResponseDTO.builder()
-                .title(gig.getTitle())      
-                .price(gig.getPrice())   
+                .title(gig.getTitle())
+                .price(gig.getPrice())
                 .thumbnailUrl(gig.getThumbnailUrl())
-                .rating(gig.getRatingAvg())      
-                .reviews(gig.getTotalReviews())  
+                .rating(gig.getRatingAvg())
+                .reviews(gig.getTotalReviews())
                 .seller(gig.getSeller().getUser().getFullname())
                 .deliveryTime(gig.getDeliveryTime())
                 .country(gig.getSeller().getUser().getCountry())
                 .level(gig.getSeller().getLevel())
-                .build()
-        ).collect(Collectors.toList());
+                .build()).collect(Collectors.toList());
     }
 
     @Transactional
@@ -73,18 +79,18 @@ public class GigService {
                 .deliveryTime(gig.getDeliveryTime())
                 .country(gig.getSeller().getUser().getCountry())
                 .level(gig.getSeller().getLevel())
-                .build()
-        ).collect(Collectors.toList());
+                .languages(gig.getSeller().getLanguages())
+                .build()).collect(Collectors.toList());
 
         gigElasticRepo.saveAll(elasticDocs);
     }
+
     public List<GigSearchResponseDTO> searchGigs(GigSearchRequestDTO rq) {
         String kw = (rq.getKeyword() != null) ? rq.getKeyword().trim() : "";
-        Criteria criteria;
-        if (kw != null && !kw.trim().isEmpty()) {
-            criteria = new Criteria("title").fuzzy(kw); 
-        } else {
-            criteria = new Criteria(); 
+        Criteria criteria = new Criteria();
+        // 1. TỪ KHÓA (KEYWORD)
+        if (kw != null && !kw.isEmpty()) {
+            criteria= new Criteria("title").matches(kw).or("description").matches(kw);
         }
 
         String cat = rq.getCategory(); 
@@ -97,11 +103,11 @@ public class GigService {
         if (rq.getLevel() != null && !rq.getLevel().trim().isEmpty()) {
             criteria = criteria.and("level").is(rq.getLevel().trim()); 
         }
-        // Thêm đoạn này vào khu vực xử lý bộ lọc động (Multi-Filter) của bạn
-            if (rq.getLanguage() != null && !rq.getLanguage().trim().isEmpty()) {
-                // Elasticsearch sẽ tìm chính xác tài liệu có trường language khớp với chuỗi truyền lên
-                criteria = criteria.and("language").is(rq.getLanguage().trim());
-            }
+        if (rq.getLanguages() != null && !rq.getLanguages().isEmpty()) {
+            criteria = criteria.and("languages.keyword").in(rq.getLanguages());
+            System.out.println(">>> [DEBUG] Dữ liệu mảng gửi lên: " + rq.getLanguages());
+            System.out.println(">>> [DEBUG] Trạng thái Criteria hiện tại: " + criteria.toString());
+        }
         if (rq.getDeliveryTime() != null && !rq.getDeliveryTime().trim().isEmpty()) {
             Integer days = null;
             switch (rq.getDeliveryTime().trim()) {
@@ -114,6 +120,7 @@ public class GigService {
                     case "Up to 7 days":
                         days = 7;
                         break;
+
                     default:
                         break;
                 }
@@ -145,7 +152,9 @@ public class GigService {
         Pageable pageable = PageRequest.of(rq.getPage(), rq.getSize(), sort);
 
         Query query = new CriteriaQuery(criteria).setPageable(pageable);
+
         SearchHits<GigDoc> searchHits = elasticsearchOperations.search(query, GigDoc.class);
+    
 
         return searchHits.stream()
                 .map(SearchHit::getContent)
@@ -164,6 +173,7 @@ public class GigService {
                         .build()
                 ).collect(Collectors.toList());
         }
+        
     // @Transactional
     // public void createGig(GigRequestDTO dto, Long sellerId) {
     //     // 1. Lưu vào MySQL để giữ toàn vẹn dữ liệu hệ thống
@@ -183,4 +193,15 @@ public class GigService {
                 
     //     gigElasticRepository.save(doc); // Đẩy lên Cloud Search
     // }
+    public List<Map<String, String>> getPopularCategoryNames() {
+        List<Object[]> rawData = gigRepo.findPopularCategoryNames(PageRequest.of(0, 4));
+        List<Map<String, String>> result = new ArrayList<>();
+        for (Object[] row : rawData) {
+            Map<String, String> category = new HashMap<>();
+            category.put("name", (String) row[0]);         
+            category.put("categorySlug", (String) row[1]); 
+            result.add(category);
+        }
+        return result;
+    }
 }

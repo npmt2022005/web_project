@@ -1,5 +1,7 @@
 package com.thuc_kien.freelance_marketplace.Entity;
 
+import java.util.List;
+
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
@@ -44,7 +46,7 @@ public class GigDoc {
     private String country;  
 
     @Field(type = FieldType.Keyword)
-    private String language;
+    private List<String> languages;
     
 
 }

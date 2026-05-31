@@ -13,9 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.thuc_kien.freelance_marketplace.DTO.APIResponse;
 import com.thuc_kien.freelance_marketplace.DTO.GigSearchRequestDTO;
 import com.thuc_kien.freelance_marketplace.DTO.GigSearchResponseDTO;
-import com.thuc_kien.freelance_marketplace.Service.CategoryService;
-import com.thuc_kien.freelance_marketplace.Service.GigService;
-import com.thuc_kien.freelance_marketplace.Service.UserService;
+import com.thuc_kien.freelance_marketplace.Service.*;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -34,9 +32,12 @@ public class GigElasticController {
 
     private final GigService gigService;
     private final UserService userService;
+    private final SellerService sellerService;
+
+
 
     @Operation(
-        summary = "Tìm kiếm và đa bộ lọc dịch vụ siêu tốc (Fuzzy Search)", 
+        summary = "Tìm kiếm và đa bộ lọc dịch vụ siêu tốc", 
         description = "API gộp đa năng: Phục vụ cả tìm kiếm ở trang chủ lẫn việc bấm chọn các bộ lọc (Budget, Level, Country, Delivery Time) ở trang kết quả."
     )
     @GetMapping("/search")
@@ -44,6 +45,10 @@ public class GigElasticController {
             @Parameter(description = "Cục đối tượng gom tất cả các điều kiện lọc và phân trang truyền từ URL")
             @ModelAttribute GigSearchRequestDTO searchRequest
     ) {
+        // IN RA CONSOLE ĐỂ KIỂM TRA
+        System.out.println("====== DỮ LIỆU TÌM KIẾM ======");
+        System.out.println(searchRequest);
+        System.out.println("==============================");
         // Gọi xuống hàm Service xử lý Criteria động đã sửa ở bước trước
         List<GigSearchResponseDTO> results = gigService.searchGigs(searchRequest);
 
@@ -78,17 +83,11 @@ public class GigElasticController {
         // Lấy động từ Database
         meta.put("locations", userService.getDistinctActiveCountries()); // "Vietnam", "USA"
         meta.put("maxSystemPrice", gigService.getMaximumPrice()); // Trả về ví dụ: 5000.0 để Frontend làm mốc kéo tối đa
-        
+        meta.put("languages", sellerService.getAllLanguage());
         // Trả về kèm các cấu hình hệ thống (Nếu không muốn hardcode ở React)
         meta.put("sellerLevels", List.of("New Seller", "Level One", "Level Two", "Top Rated"));
-        meta.put("deliveryTimes", List.of("Express 24h", "Up to 3 days", "Up to 7 days"));
-        meta.put("languages", List.of("English", "Vietnamese", "Spanish", "French", "Chinese"));
-        List<Map<String, String>> sortOptions = List.of(
-            Map.of("value", "Recommended", "label", "Đề xuất cho bạn"),
-            Map.of("value", "BestSeller", "label", "Bán chạy nhất"),
-            Map.of("value", "NewArrivals", "label", "Mới nhất")
-        );
-        meta.put("sortOptions", sortOptions);
+        meta.put("deliveryTimes", List.of("Express 24h", "Up to 3 days", "Up to 7 days", "Over 7 days"));
+        meta.put("popularTags", gigService.getPopularCategoryNames());
         return ResponseEntity.ok(new APIResponse<>("success", "Lấy metadata bộ lọc thành công", meta));
     }
 
