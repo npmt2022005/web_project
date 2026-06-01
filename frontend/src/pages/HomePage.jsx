@@ -21,11 +21,10 @@ import metaLogo from '../assets/icons/meta-logo.png';
 import netflixLogo from '../assets/icons/netflix-logo.jpg';
 import pgLogo from '../assets/icons/pg-logo.jpg';
 import paypalLogo from '../assets/icons/paypal-logo.jpg';
-import Header from '../pages/components/Header';
+
 const HomePage = () => {
   const navigate = useNavigate();
   
-
   // --- TRẠNG THÁI CHỨA DỮ LIỆU ĐỘNG TỪ BACKEND ---
   const [featuredGigs, setFeaturedGigs] = useState([]); // Chứa danh sách bài đăng dịch vụ
   const [categories, setCategories] = useState([]);     // Chứa danh sách danh mục đa cấp
@@ -36,18 +35,19 @@ const HomePage = () => {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All Categories');
   const [popularCategories, setPopularCategories] = useState([]);
+
   useEffect(() => {
-      const fetchMetadata = async () => {
-        try {
-          const response = await axios.get('http://localhost:8080/api/v1/gigs_v1/meta/filters');
-          const apiData = response.data.data;
-          setPopularCategories(apiData.popularTags);
-        } catch (error) {
-          console.error("Lỗi lấy metadata ở Trang chủ:", error);
-        }
-      };
-      fetchMetadata();
-    }, []);
+    const fetchMetadata = async () => {
+      try {
+        const response = await axios.get('http://localhost:8080/api/v1/gigs_v1/meta/filters');
+        const apiData = response.data.data;
+        setPopularCategories(apiData.popularTags);
+      } catch (error) {
+        console.error("Lỗi lấy metadata ở Trang chủ:", error);
+      }
+    };
+    fetchMetadata();
+  }, []);
   
   useEffect(() => {
     // 1. Kiểm tra trạng thái đăng nhập từ localStorage
@@ -63,10 +63,9 @@ const HomePage = () => {
     const fetchFeaturedGigs = async () => {
       try {
         setLoadingGigs(true);
-        // Mặc định gọi lấy 4 phần tử theo layout hiện tại
         const response = await axios.get('http://localhost:8080/api/v1/gigs/featured?limit=4');
         if (response.data && response.data.status === 'success') {
-          setFeaturedGigs(response.data.data); // Gán mảng dữ liệu vào State
+          setFeaturedGigs(response.data.data); 
         }
       } catch (error) {
         console.error("Lỗi khi kết nối API lấy Featured Gigs:", error);
@@ -87,7 +86,6 @@ const HomePage = () => {
       }
     };
 
-    // Kích hoạt gọi dữ liệu
     fetchFeaturedGigs();
     fetchCategories();
   }, []);
@@ -103,6 +101,16 @@ const HomePage = () => {
     }
   };
 
+  // --- HÀM ĐIỀU HƯỚNG AN TOÀN VÀO TRANG PROFILE ---
+  const handleAvatarClick = () => {
+    const storedUsername = localStorage.getItem('username');
+    if (storedUsername) {
+      navigate(`/profile/${storedUsername}`);
+    } else {
+      navigate('/profile');
+    }
+  };
+
   // Hàm ánh xạ hình ảnh tĩnh dự phòng dựa trên slug danh mục nếu Backend không có imgUrl
   const getCategoryImage = (slug) => {
     if (slug.includes('design')) return designImg;
@@ -114,7 +122,8 @@ const HomePage = () => {
 
   return (
     <div className="common-home">
-      {/* 2. HERO SECTION */}
+      
+      {/* 1. HERO SECTION (Bỏ Header cũ bị xung đột ở đây) */}
       <section className="hero-section">
         <div className="hero-bg-wrapper">
           <img 
@@ -171,8 +180,6 @@ const HomePage = () => {
                     key={category.categorySlug || index} 
                     onClick={() => {
                       setSearchKeyword(category.name);
-                      
-                      // 2. Chuyển hướng. 
                       navigate(`/search?category=${encodeURIComponent(category.categorySlug)}`);
                     }}
                   >
@@ -184,7 +191,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* 3. CATEGORY CAROUSEL TỰ ĐỘNG THEO BACKEND */}
+      {/* 2. CATEGORY CAROUSEL TỰ ĐỘNG THEO BACKEND */}
       <section className="category-carousel">
         <div className="container">
           <h2>Popular professional services</h2>
@@ -206,7 +213,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* 4. FEATURED GIGS LIÊN KẾT DATABASE THẬT */}
+      {/* 3. FEATURED GIGS LIÊN KẾT DATABASE THẬT */}
       <section className="featured-section">
         <div className="container">
           <h2 className="section-title">Inspirational work made on our platform</h2>
@@ -225,7 +232,6 @@ const HomePage = () => {
                     className="gig-thumbnail" 
                   />
                   <div className="gig-info">
-                    {/* Khối thông tin Người bán */}
                     <div className="seller-row" style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
                       <div className="seller-avatar">
                         {gig.seller ? gig.seller[0].toUpperCase() : 'F'}
@@ -245,7 +251,6 @@ const HomePage = () => {
                       </span>
                     </div>
                   </div>
-                  {/* Chân đế thẻ */}
                   <div className="gig-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span className="delivery-time" style={{ fontSize: '12px', color: '#74767e', fontWeight: '500' }}>
                       {gig.deliveryTime ? `Giao trong: ${gig.deliveryTime} ngày` : 'Giao linh hoạt'}
@@ -266,7 +271,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* 5. VALUE PROPOSITION */}
+      {/* 4. VALUE PROPOSITION */}
       <section className="value-prop">
         <div className="container prop-grid">
           <div className="prop-content">
@@ -307,7 +312,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* 6. SOCIAL PROOF & TESTIMONIALS */}
+      {/* 5. SOCIAL PROOF & TESTIMONIALS */}
       <section className="social-proof-section">
         <div className="partner-logos-wrapper">
           <div className="container partner-flex">
@@ -326,7 +331,6 @@ const HomePage = () => {
           <div className="container">
             <h2 className="section-title-center">What our customers say</h2>
             <div className="testimonials-grid">
-              
               <div className="testimonial-card">
                 <div className="client-info">
                   <div className="client-avatar">KT</div>
@@ -362,18 +366,16 @@ const HomePage = () => {
                 <p className="client-comment">"I hired a logo designer here. The freelancer was very dedicated and delivered revisions right on schedule. The approval process is as professional as global platforms."</p>
                 <div className="client-stars">⭐⭐⭐⭐⭐</div>
               </div>
-
             </div>
           </div>
         </div>
       </section>
 
-      {/* 7. NEW USER PROMO BANNER SECTION */}
+      {/* 6. NEW USER PROMO BANNER SECTION */}
       <section className="promo-banner-section">
         <div className="container">
           <h2 className="section-title">Special Offers for New Users</h2>
           <div className="promo-grid">
-            
             <div className="promo-card discount-main" onClick={() => navigate('/login')}>
               <div className="promo-content-left">
                 <span className="promo-badge">NEW USER ONLY</span>
@@ -394,12 +396,11 @@ const HomePage = () => {
                 <span className="promo-link" onClick={() => navigate('/pages')}>Learn how it works →</span>
               </div>
             </div>
-
           </div>
         </div>
       </section>
 
-      {/* 8. FOOTER */}
+      {/* 7. FOOTER */}
       <footer className="footer-section">
         <div className="container footer-top">
           <div className="footer-col">
