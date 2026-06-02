@@ -7,7 +7,6 @@ import {
 } from 'lucide-react';
 import './GigDetailPage.css'; 
 
-// 🔴 MOCK DATA DỰ PHÒNG CHUẨN ĐỊNH DẠNG (Tự động kích hoạt nếu API sập hoặc chưa bật Backend)
 const MOCK_GIG_DETAILS = {
   "1": {
     "id": 1,
@@ -102,18 +101,22 @@ const GigDetailPage = () => {
         ]);
 
         // 3. Nếu API trả dữ liệu thành công -> Cập nhật vào State hệ thống
-        if (detailRes.data) {
-          setGig(detailRes.data);
-          // Set hình ảnh hiển thị chính mặc định từ API
-          if (detailRes.data.media && detailRes.data.media.mainImage) {
-            setCurrentImage(detailRes.data.media.mainImage);
-          }
+        if (detailRes.data && detailRes.data.status === "success") {
+            const gigRealData = detailRes.data.data; 
+            setGig(gigRealData);
+            
+            // Set hình ảnh hiển thị chính
+            if (gigRealData.media && gigRealData.media.mainImage) {
+                setCurrentImage(gigRealData.media.mainImage);
+            }
         }
         
-        if (similarRes.data && similarRes.data.content) {
-          setSimilarGigs(similarRes.data.content);
+        if (similarRes.data && similarRes.data.status === "success") {
+            const similarRealData = similarRes.data.data; 
+            
+            setSimilarGigs(similarRealData.similarGigs || similarRealData || []);
         } else {
-          setSimilarGigs([]);
+            setSimilarGigs([]);
         }
 
       } catch (error) {

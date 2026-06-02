@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import com.thuc_kien.freelance_marketplace.Entity.*;
@@ -42,6 +43,11 @@ public class Gig {
     private String description;
 
     private String thumbnailUrl;
+    @ElementCollection
+    @CollectionTable(name = "gig_gallery", joinColumns = @JoinColumn(name = "gig_id"))
+    @Column(name = "image_url")
+    private List<String> galleryUrls;
+    
     private Double price;
     private Integer deliveryTime = 1; // Số ngày tối thiểu hoàn thành
     private Double ratingAvg ;

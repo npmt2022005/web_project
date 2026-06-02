@@ -39,5 +39,7 @@ public class CategoryService {
                 .imgUrl(category.getImgUrl())
                 .build();
     }
-    
+    public List<String> getAllChildSlugByParentSlug(String parentSlug){
+        return categoryRepository.findChildSlugsByParentSlug(parentSlug);
+    }
 }

@@ -42,4 +42,17 @@ public interface GigRepository extends JpaRepository<Gig, Long> {
                         "WHERE g.id = :gigId")
         Optional<Gig> findGigById(@Param("gigId") Long gigId);
 
-}
+
+        @Query("SELECT DISTINCT g FROM Gig g " +
+                "LEFT JOIN FETCH g.seller " +
+                "LEFT JOIN FETCH g.packages p " +
+                "WHERE g.id != :gigId " + 
+                "AND g.category.id = :categoryId " +
+                "ORDER BY g.id DESC") // Lấy bài mới nhất
+        List<Gig> findSimilarGigs(@Param("gigId") Long gigId, Long categoryId, Pageable pageable);
+
+
+        @Query("SELECT g FROM Gig g LEFT JOIN FETCH g.galleryUrls WHERE g.id = :gigId")
+        Optional<Gig> findGigWithImagesById(@Param("gigId") Long gigId);
+
+}       

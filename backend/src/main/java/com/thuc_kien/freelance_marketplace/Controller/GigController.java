@@ -1,6 +1,7 @@
 package com.thuc_kien.freelance_marketplace.Controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -9,7 +10,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.*;
+
 import com.thuc_kien.freelance_marketplace.DTO.APIResponse;
+import com.thuc_kien.freelance_marketplace.DTO.GigCardDTO;
 import com.thuc_kien.freelance_marketplace.DTO.GigDetailResponseDTO;
 import com.thuc_kien.freelance_marketplace.DTO.GigFeaturedResponseDTO;
 import com.thuc_kien.freelance_marketplace.Service.GigService;
@@ -42,12 +45,28 @@ public class GigController {
         return ResponseEntity.ok(response);
     }
     @GetMapping("/{gigId}")
-    public ResponseEntity<GigDetailResponseDTO> getGigDetail(@PathVariable Long gigId) {
-        GigDetailResponseDTO response = gigService.getDetailGig(gigId);
-        
-        
+    public ResponseEntity<APIResponse<GigDetailResponseDTO>> getGigDetail(@PathVariable Long gigId) {
+        GigDetailResponseDTO detailGig = gigService.getDetailGig(gigId);
+        APIResponse<GigDetailResponseDTO> response = new APIResponse<>();
+        response.setStatus("success");
+        response.setMessage("Lấy danh sách dịch vụ nổi bật thành công");
+        response.setData(detailGig);
+
         return ResponseEntity.ok(response);
     }
+    @GetMapping("/{gigId}/similar")
+        public ResponseEntity<APIResponse<Map<String, List<GigCardDTO>>>> getSimilarGigs(@PathVariable Long gigId) {
+        
+        Map<String, List<GigCardDTO>> similarGigs = gigService.getSimilarGigs(gigId);
+        
+        APIResponse<Map<String, List<GigCardDTO>>> response = new APIResponse<>();
+        response.setStatus("success");
+        response.setMessage("Lấy danh sách dịch vụ tương tự thành công");
+        response.setData(similarGigs); 
+
+        return ResponseEntity.ok(response);
+    }
+        
 
     
     

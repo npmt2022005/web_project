@@ -23,6 +23,7 @@ public class GigDetailResponseDTO {
     private SellerSummaryDTO seller;
     private List<PackageDTO> packages; 
 
+    private MediaDTO media;
     // --- CÁC CLASS CON TRỰC THUỘC ---
 
     @Data
@@ -56,5 +57,13 @@ public class GigDetailResponseDTO {
         
         // Map để vẽ dấu tick xanh: { "Source File": true, "Commercial Use": false }
         private Map<String, Boolean> features; 
+    }
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class MediaDTO {
+        private String mainImage;
+        private List<String> gallery;
     }
 }
