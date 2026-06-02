@@ -33,9 +33,6 @@ public class GigElasticController {
     private final GigService gigService;
     private final UserService userService;
     private final SellerService sellerService;
-
-
-
     @Operation(
         summary = "Tìm kiếm và đa bộ lọc dịch vụ siêu tốc", 
         description = "API gộp đa năng: Phục vụ cả tìm kiếm ở trang chủ lẫn việc bấm chọn các bộ lọc (Budget, Level, Country, Delivery Time) ở trang kết quả."
@@ -45,10 +42,6 @@ public class GigElasticController {
             @Parameter(description = "Cục đối tượng gom tất cả các điều kiện lọc và phân trang truyền từ URL")
             @ModelAttribute GigSearchRequestDTO searchRequest
     ) {
-        // IN RA CONSOLE ĐỂ KIỂM TRA
-        System.out.println("====== DỮ LIỆU TÌM KIẾM ======");
-        System.out.println(searchRequest);
-        System.out.println("==============================");
         // Gọi xuống hàm Service xử lý Criteria động đã sửa ở bước trước
         List<GigSearchResponseDTO> results = gigService.searchGigs(searchRequest);
 
