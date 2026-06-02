@@ -1,5 +1,11 @@
 {
   "dependencies": {
     "lucide-react": "^1.14.0"
-  }
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.1"
+  },
+  "scripts": {
+  "start:all": "concurrently --kill-others-on-fail --names \"DOCKER,BACKEND,FRONTEND\" -c \"bgBlue.bold,bgGreen.bold,bgMagenta.bold\" \"docker-compose up\" \"cd backend && ./mvnw spring-boot:run\" \"cd frontend && npm run dev\""
+}
 }

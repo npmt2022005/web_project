@@ -19,6 +19,9 @@ public interface CategoryRepository extends JpaRepository<Category, Long>{
             "WHERE c.parent IS NULL")
     List<Category> findRootCategoriesWithSubCategories();
 
+    @Query("SELECT c.slug FROM Category c WHERE c.parent.slug = :parentSlug")
+    List<String> findChildSlugsByParentSlug(String parentSlug);
+
 
     
 }

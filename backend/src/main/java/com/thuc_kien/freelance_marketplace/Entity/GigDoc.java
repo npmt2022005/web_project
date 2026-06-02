@@ -29,10 +29,11 @@ public class GigDoc {
     private String categorySlug; 
 
     private String thumbnailUrl; 
-    private String seller;     
+    private String seller;
     private Double rating;       
     private Integer reviews;
 
+    @Field(type = FieldType.Text)
     private String categoryName;
 
     private Double price;
@@ -47,6 +48,7 @@ public class GigDoc {
 
     @Field(type = FieldType.Keyword)
     private List<String> languages;
+
     
 
 }

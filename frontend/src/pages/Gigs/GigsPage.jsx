@@ -85,9 +85,12 @@ const GigsPage = () => {
                                 sp.append(key, value);
                             }
                         });
+                        // 🔴 1. XEM REACT ĐANG GỬI GÌ LÊN BACKEND
+                        console.log("👉 URL Params React gửi đi:", sp.toString()); 
                         return sp.toString();
                     }
                 });
+                
                 setGigs(response.data.content || response.data.data || []);
             } catch (error) {
                 console.error("Lỗi lấy dữ liệu:", error);
