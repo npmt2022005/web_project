@@ -94,6 +94,22 @@ const GigDetailPage = () => {
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
+
+      // 🟢 KHỐI ĐÓN NHẬN VÀ KIỂM TRA DỮ LIỆU CHẠY THỬ OFFLINE (LOCAL TEST MODE)
+      if (id === 'test-local') {
+        const localData = localStorage.getItem('LOCAL_TEST_GIG');
+        if (localData) {
+          const parsedGig = JSON.parse(localData);
+          setGig(parsedGig);
+          setSimilarGigs([]); // Không hiển thị danh sách tương tự khi đang ở chế độ Test
+          if (parsedGig.media && parsedGig.media.mainImage) {
+            setCurrentImage(parsedGig.media.mainImage);
+          }
+          setLoading(false);
+          return; // Ngắt hàm sớm, ngăn chặn hệ thống cố gọi API axios lên Backend khi đang test dữ liệu cục bộ
+        }
+      }
+
       try {
         // 2. Thực hiện gọi API song song từ Backend
         const [detailRes, similarRes] = await Promise.all([
@@ -351,7 +367,7 @@ const GigDetailPage = () => {
                 )}
 
                 <button className="continue-order-submit-btn" onClick={() => alert(`Bấm chọn mua gói dịch vụ ${selectedPackage.type} thành công!`)}>
-                  Tiếp tục với (${selectedPackage.price}$)
+                  Tiếp tục với ({selectedPackage.price}$)
                 </button>
               </div>
             )}

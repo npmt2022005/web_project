@@ -2,18 +2,21 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Globe, Mail, Bell, User, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Globe, Mail, Bell, User, ChevronDown, ChevronLeft, ChevronRight, LogOut, PlusCircle } from 'lucide-react'; 
 import './Header.css'
+
 const Header = () => {
     const navigate = useNavigate();
 
-    // Trạng thái đăng nhập
+    // Trạng thái đăng nhập có sẵn
     const [role, setRole] = useState(null);
     const [fullname, setFullname] = useState('');
 
-    // Trạng thái danh mục cho thanh Menu
+    // Trạng thái danh mục cho thanh Menu có sẵn
     const [categories, setCategories] = useState([]);
 
+    // 🟢 Trạng thái điều khiển đóng/mở Dropdown khi bấm vào Avatar người dùng
+    const [showUserDropdown, setShowUserDropdown] = useState(false);
 
     const scrollRef = useRef(null);
     const handleScroll = (direction) => {
@@ -25,6 +28,16 @@ const Header = () => {
             });
         }
     };
+
+    // 🟢 Hàm xử lý Đăng xuất nhanh cho người dùng
+    const handleLogout = () => {
+        localStorage.clear(); // Xóa sạch trạng thái phiên làm việc cũ
+        setRole(null);
+        setFullname('');
+        setShowUserDropdown(false);
+        navigate('/login');
+    };
+
     useEffect(() => {
         // 1. Kiểm tra trạng thái đăng nhập từ localStorage
         const storedRole = localStorage.getItem('role');
@@ -126,12 +139,55 @@ const Header = () => {
                         <div className="auth-nav">
                             <Mail size={20} className="nav-icon" style={{ cursor: 'pointer', color: '#74767e' }} />
                             <Bell size={20} className="nav-icon" style={{ cursor: 'pointer', color: '#74767e' }} />
-                            <div
-                                className="user-avatar"
-                                onClick={() => navigate('/profile')}
-                                style={{ cursor: 'pointer' }}
-                            >
-                                {fullname ? fullname[0].toUpperCase() : <User size={16} />}
+                            
+                            {/* KHU VỰC AVATAR ĐỂ THẢ MENU DOWN */}
+                            <div style={{ position: 'relative' }}>
+                                <div
+                                    className="user-avatar"
+                                    onClick={() => setShowUserDropdown(!showUserDropdown)} // Thay đổi trạng thái ẩn/hiện khi click
+                                    style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                >
+                                    {fullname ? fullname[0].toUpperCase() : <User size={16} />}
+                                </div>
+
+                                {/* Khối Menu Dropdown xuất hiện khi showUserDropdown === true */}
+                                {showUserDropdown && (
+                                    <div className="avatar-dropdown-box" style={{
+                                        position: 'absolute', right: 0, top: '45px', backgroundColor: '#fff',
+                                        border: '1px solid #e4e5e7', borderRadius: '4px', width: '170px', zIndex: 999,
+                                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)', padding: '6px 0'
+                                    }}>
+                                        <div 
+                                            onClick={() => { navigate('/profile'); setShowUserDropdown(false); }}
+                                            style={{ padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: '#333', fontSize: '14px' }}
+                                            onMouseEnter={(e) => e.target.style.backgroundColor = '#f7f7f7'}
+                                            onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                                        >
+                                            <User size={14} /> Profile
+                                        </div>
+
+                                        {/* 🌟 ĐÃ CHỈNH SỬA CHUẨN ĐỒNG BỘ: Kiểm tra role bằng cả chữ hoa và chữ thường để tránh sót điều kiện */}
+                                        {role && (role.toUpperCase() === 'ROLE_SELLER' || role.toLowerCase() === 'seller') && (
+                                            <div 
+                                                onClick={() => { navigate('/create-gig'); setShowUserDropdown(false); }}
+                                                style={{ padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: '#1dbf73', fontSize: '14px', fontWeight: '500', borderTop: '1px solid #f1f1f1' }}
+                                                onMouseEnter={(e) => e.target.style.backgroundColor = '#f7f7f7'}
+                                                onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                                            >
+                                                <PlusCircle size={14} /> Add Service
+                                            </div>
+                                        )}
+
+                                        <div 
+                                            onClick={handleLogout}
+                                            style={{ padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: '#f44336', fontSize: '14px', borderTop: '1px solid #f1f1f1' }}
+                                            onMouseEnter={(e) => e.target.style.backgroundColor = '#fff5f5'}
+                                            onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                                        >
+                                            <LogOut size={14} /> Logout
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     ) : (
@@ -171,7 +227,7 @@ const Header = () => {
                                                 }}
                                             >
                                                 {child.name}
-                                            </li>
+                                            </li> 
                                         ))}
                                     </ul>
                                 )}
