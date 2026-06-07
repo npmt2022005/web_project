@@ -12,6 +12,9 @@ import Header from './pages/Components/Header';
 // 1. Tích hợp Import trang chi tiết bài đăng dịch vụ vào đây
 import GigDetailPage from './pages/Gigs/GigDetailPage';
 
+// 🟢 TÍCH HỢP IMPORT TRANG TẠO BÀI ĐĂNG DỊCH VỤ (CHẾ ĐỘ TEST GIAO DIỆN)
+import CreateGigPage from './pages/Gigs/CreateGigPage';
+
 // Component giữ chỗ tạm thời cho các trang danh mục chưa phát triển xong
 const PlaceholderPage = ({ title }) => (
   <div style={{ padding: '100px', textAlign: 'center', fontFamily: 'sans-serif' }}>
@@ -53,6 +56,9 @@ const AppContent = () => {
 
         {/* 2. Tích hợp cấu hình Route động cho trang xem chi tiết thông tin bài đăng */}
         <Route path="/gigs/:id" element={<GigDetailPage />} />
+
+        {/* 🟢 TÍCH HỢP ROUTE DẪN ĐẾN TRANG TẠO BÀI ĐĂNG DỊCH VỤ MỚI ĐỂ CHẠY THỬ OFFLINE */}
+        <Route path="/create-gig" element={<CreateGigPage />} />
         
         {/* 2. Các trang Home quản trị theo vai trò hệ thống */}
         <Route path="/buyer-home" element={<BuyerHome />} />
