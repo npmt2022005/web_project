@@ -1,5 +1,6 @@
 package com.thuc_kien.freelance_marketplace.Entity;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -36,7 +37,7 @@ public class GigDoc {
     @Field(type = FieldType.Text)
     private String categoryName;
 
-    private Double price;
+    private BigDecimal price;
 
     @Field(type = FieldType.Keyword)
     private String level;

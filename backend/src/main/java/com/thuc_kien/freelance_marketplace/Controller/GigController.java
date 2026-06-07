@@ -4,8 +4,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -13,6 +16,7 @@ import io.swagger.v3.oas.annotations.*;
 
 import com.thuc_kien.freelance_marketplace.DTO.APIResponse;
 import com.thuc_kien.freelance_marketplace.DTO.GigCardDTO;
+import com.thuc_kien.freelance_marketplace.DTO.GigCreateRequestDTO;
 import com.thuc_kien.freelance_marketplace.DTO.GigDetailResponseDTO;
 import com.thuc_kien.freelance_marketplace.DTO.GigFeaturedResponseDTO;
 import com.thuc_kien.freelance_marketplace.Service.GigService;
@@ -66,8 +70,33 @@ public class GigController {
 
         return ResponseEntity.ok(response);
     }
-        
+    
+    @PostMapping("/create_gig")
+    public ResponseEntity<APIResponse<Long>> createGig(@RequestBody GigCreateRequestDTO request) {
 
-    
-    
+        Long currentSellerId = 1L;
+
+        Long newGigId = gigService.createGig(currentSellerId, request);
+
+        // Trả kết quả chuẩn JSON
+        APIResponse<Long> response = new APIResponse<>();
+        response.setStatus("success");
+        response.setMessage("Đăng bài dịch vụ thành công!");
+        response.setData(newGigId);
+
+        return ResponseEntity.ok(response);
+    } 
+    @DeleteMapping("/delete_gig/{gigId}")
+    public ResponseEntity<APIResponse<String>> deleteGig(@PathVariable Long gigId) {
+        
+        Long currentSellerId = 1L;
+        
+        gigService.deleteGig(gigId, currentSellerId);
+        
+        APIResponse<String> response = new APIResponse<>();
+        response.setStatus("success");
+        response.setMessage("Đã xóa bài dịch vụ thành công!");
+        
+        return ResponseEntity.ok(response);
+    }
 }

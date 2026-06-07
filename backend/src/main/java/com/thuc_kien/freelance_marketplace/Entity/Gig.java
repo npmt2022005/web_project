@@ -2,6 +2,7 @@ package com.thuc_kien.freelance_marketplace.Entity;
 
 import jakarta.persistence.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
@@ -48,7 +49,7 @@ public class Gig {
     @Column(name = "image_url")
     private List<String> galleryUrls;
     
-    private Double price;
+    private BigDecimal price;
     private Integer deliveryTime = 1; // Số ngày tối thiểu hoàn thành
     private Double ratingAvg ;
     private Integer totalReviews = 0;

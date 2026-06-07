@@ -1,5 +1,7 @@
 package com.thuc_kien.freelance_marketplace.DTO;
 
+import java.math.BigDecimal;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,7 +25,7 @@ public class GigSearchResponseDTO {
     private String thumbnailUrl;
 
     @Schema(description = "Giá khởi điểm của dịch vụ ($ USD)", example = "200.0")
-    private Double price;
+    private BigDecimal price;
 
     @Schema(description = "Điểm đánh giá trung bình (được tính toán từ các review trong hệ thống)", example = "4.9")
     private Double rating;

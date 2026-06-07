@@ -2,14 +2,10 @@ package com.thuc_kien.freelance_marketplace.Controller;
 
 import java.util.*;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
 import com.thuc_kien.freelance_marketplace.DTO.APIResponse;
 import com.thuc_kien.freelance_marketplace.DTO.GigSearchRequestDTO;
 import com.thuc_kien.freelance_marketplace.DTO.GigSearchResponseDTO;
