@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,6 +21,7 @@ import com.thuc_kien.freelance_marketplace.DTO.GigCreateRequestDTO;
 import com.thuc_kien.freelance_marketplace.DTO.GigDetailResponseDTO;
 import com.thuc_kien.freelance_marketplace.DTO.GigFeaturedResponseDTO;
 import com.thuc_kien.freelance_marketplace.Service.GigService;
+import com.thuc_kien.freelance_marketplace.security.CustomUserDetails;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -72,9 +74,9 @@ public class GigController {
     }
     
     @PostMapping("/create_gig")
-    public ResponseEntity<APIResponse<Long>> createGig(@RequestBody GigCreateRequestDTO request) {
+    public ResponseEntity<APIResponse<Long>> createGig(@AuthenticationPrincipal CustomUserDetails userDetails,@RequestBody GigCreateRequestDTO request) {
 
-        Long currentSellerId = 1L;
+        Long currentSellerId = userDetails.getUser().getId();
 
         Long newGigId = gigService.createGig(currentSellerId, request);
 
@@ -87,9 +89,9 @@ public class GigController {
         return ResponseEntity.ok(response);
     } 
     @DeleteMapping("/delete_gig/{gigId}")
-    public ResponseEntity<APIResponse<String>> deleteGig(@PathVariable Long gigId) {
+    public ResponseEntity<APIResponse<String>> deleteGig(@AuthenticationPrincipal CustomUserDetails userDetails,@PathVariable Long gigId) {
         
-        Long currentSellerId = 1L;
+        Long currentSellerId = userDetails.getUser().getId();
         
         gigService.deleteGig(gigId, currentSellerId);
         
