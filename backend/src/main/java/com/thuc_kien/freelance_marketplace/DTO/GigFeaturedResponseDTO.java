@@ -1,4 +1,6 @@
 package com.thuc_kien.freelance_marketplace.DTO;
+import java.math.BigDecimal;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,7 +18,7 @@ public class GigFeaturedResponseDTO {
     
     private String thumbnailUrl;   
     
-    private Double price;          
+    private BigDecimal price;          
     
     private Double rating;        
     
