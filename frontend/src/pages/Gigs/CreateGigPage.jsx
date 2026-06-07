@@ -9,27 +9,28 @@ const CreateGigPage = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   
-  // State lưu danh sách categories lấy từ Backend API
+  // State lưu danh sách categories gốc từ Backend API
   const [backendCategories, setBackendCategories] = useState([]);
+  // State quản lý danh mục cha được chọn hiện tại trên UI
+  const [selectedParentId, setSelectedParentId] = useState('');
+  // State lưu danh sách sub-categories (con) lọc ra từ danh mục cha
+  const [subCategories, setSubCategories] = useState([]);
+
+  // State lưu danh sách tất cả các Tags hệ thống (Hiện tại đang dùng Mock Data)
+  const [availableTags, setAvailableTags] = useState([]);
 
   // === STATE TỔNG QUAN (OVERVIEW), MÔ TẢ & HÌNH ẢNH ===
   const [generalInfo, setGeneralInfo] = useState({
     title: '',         // Chỉ nhập vế sau của "I will..."
-    categoryId: '',    // Lưu Id danh mục được chọn từ API
+    categoryId: '',    // Lưu Id danh mục được chọn từ API (ID của danh mục con cuối cùng)
     description: '',   // Mô tả chi tiết 
-    englishLevel: '',   
-    responseTime: '',
-    deliveryTime: '',
-    country: 'Vietnam',
-    city: 'HCMC',
   });
 
-  // Quản lý State cho danh sách kỹ năng tags
+  // Quản lý State cho danh sách kỹ năng tags đã chọn của bài đăng
   const [skills, setSkills] = useState([]);
   const [currentSkill, setCurrentSkill] = useState('');
 
   // Quản lý trạng thái danh sách ảnh đính kèm
-  // Mỗi item gồm: { previewUrl: '...', remoteUrl: '...', isUploading: false }
   const [uploadedImages, setUploadedImages] = useState([]);
 
   // === STATE CẤU HÌNH 3 GÓI DỊCH VỤ (SCOPE & PRICING) ===
@@ -66,15 +67,14 @@ const CreateGigPage = () => {
   useEffect(() => {
     const storedRole = localStorage.getItem('role');
     
-    // Nếu không tồn tại role hoặc giá trị role không khớp với phân quyền Seller
     if (!storedRole || (storedRole.toUpperCase() !== 'ROLE_SELLER' && storedRole.toLowerCase() !== 'seller')) {
       alert("Bạn không có quyền truy cập vào chức năng này. Vui lòng đăng nhập với tài khoản Seller!");
-      navigate('/'); // Điều hướng trả về trang chủ hệ thống
+      navigate('/'); 
     }
   }, [navigate]);
 
   // ==========================================================================
-  // EFFECT: GỌI API LẤY DANH SÁCH DANH MỤC KHI VỪA MỞ TRANG (Đã thêm địa chỉ Backend)
+  // EFFECT: GỌI API LẤY DANH SÁCH DANH MỤC & CÀI ĐẶT MOCK DATA CHO TAGS
   // ==========================================================================
   useEffect(() => {
     const fetchCategories = async () => {
@@ -89,15 +89,56 @@ const CreateGigPage = () => {
         }
       } catch (err) {
         console.error("Lỗi lấy danh mục danh mục từ hệ thống:", err);
+        // Mock dữ liệu có cấu trúc phân cấp Parent - Child mẫu để tránh crash giao diện
         setBackendCategories([
-          { id: 5, name: "Spring Boot & React" },
-          { id: 6, name: "Web Development" },
-          { id: 7, name: "Mobile Applications" }
+          { id: 1, name: "Programming & Tech", subCategories: [
+            { id: 5, name: "Spring Boot & React" },
+            { id: 6, name: "Web Development" }
+          ]},
+          { id: 2, name: "Design & Graphics", subCategories: [
+            { id: 7, name: "Logo Design" },
+            { id: 8, name: "UI/UX Mobile" }
+          ]}
         ]);
       }
     };
+
+    const fetchTags = async () => {
+      // Do chưa có API cho phần Tags, tạm thời gán luôn Mock Data vào state
+      // Sau này có API, bạn chỉ cần mở lại khối fetch này
+      console.log("Hệ thống đang sử dụng danh sách mẫu Mock Data cho Tags.");
+      setAvailableTags([
+        { id: 1, name: "Spring Boot" },
+        { id: 2, name: "ReactJS" },
+        { id: 3, name: "MySQL" },
+        { id: 4, name: "Java" },
+        { id: 5, name: "NodeJS" },
+        { id: 6, name: "Python" },
+        { id: 7, name: "Figma" },
+        { id: 8, name: "Tailwind CSS" }
+      ]);
+    };
+
     fetchCategories();
+    fetchTags();
   }, []);
+
+  // Xử lý khi thay đổi Category cha
+  const handleParentCategoryChange = (e) => {
+    const parentId = e.target.value;
+    setSelectedParentId(parentId);
+    
+    // Tìm danh mục cha tương ứng để trích xuất mảng con (subCategories hoặc children)
+    const selectedCategory = backendCategories.find(cat => cat.id === parseInt(parentId));
+    if (selectedCategory && (selectedCategory.subCategories || selectedCategory.children)) {
+      setSubCategories(selectedCategory.subCategories || selectedCategory.children || []);
+    } else {
+      setSubCategories([]);
+    }
+    
+    // Reset lại giá trị danh mục con đã chọn trước đó
+    setGeneralInfo(prev => ({ ...prev, categoryId: '' }));
+  };
 
   // Xử lý thay đổi Input thông tin chung
   const handleInputChange = (e) => {
@@ -105,7 +146,7 @@ const CreateGigPage = () => {
     setGeneralInfo(prev => ({ ...prev, [name]: value }));
   };
 
-  // Xử lý kỹ năng (Tags)
+  // Xử lý kỹ năng (Tags) chọn từ danh sách dropdown
   const handleAddSkill = () => {
     if (currentSkill.trim() && !skills.includes(currentSkill.trim())) {
       setSkills([...skills, currentSkill.trim()]);
@@ -117,13 +158,12 @@ const CreateGigPage = () => {
   };
 
   // ==========================================================================
-  // LUỒNG XỬ LÝ: UPLOAD HÌNH ẢNH (Đã thêm địa chỉ Backend)
+  // LUỒNG XỬ LÝ: UPLOAD HÌNH ẢNH (Đã cập nhật Endpoint mới)
   // ==========================================================================
   const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
 
-    // Reset lại lỗi cũ trước khi thực hiện tải loạt ảnh mới
     setError('');
 
     for (const file of files) {
@@ -141,7 +181,8 @@ const CreateGigPage = () => {
       formData.append('file', file);
 
       try {
-        const response = await fetch('http://localhost:8080/api/v1/gigs/upload_image', {
+        // Cập nhật endpoint mới theo yêu cầu của bạn
+        const response = await fetch('http://localhost:8080/api/v1/uploads/image', {
           method: 'POST',
           body: formData 
         });
@@ -151,7 +192,6 @@ const CreateGigPage = () => {
         const result = await response.json();
         
         if (result.status === "success" && result.data) {
-          // Cập nhật đường dẫn URL trả về từ API Cloud vào item tương ứng
           setUploadedImages(prev => 
             prev.map(img => img.id === localId 
               ? { ...img, remoteUrl: result.data, isUploading: false } 
@@ -163,31 +203,26 @@ const CreateGigPage = () => {
         }
       } catch (err) {
         console.error("Lỗi khi đẩy ảnh lên server:", err);
-        setError('Có lỗi xảy ra trong quá trình tải ảnh lên hệ thống.');
-        // Loại bỏ ảnh bị lỗi khỏi danh sách xem trước trên UI
+        setError('Có lỗi xảy ra trong quá trình tải ảnh lên hệ thống. Kiểm tra lại dung lượng hoặc thư mục uploads.');
         setUploadedImages(prev => prev.filter(img => img.id !== localId));
       }
     }
-    // Clear thẻ input để có thể chọn lại cùng một file ảnh nếu muốn
     e.target.value = '';
   };
 
-  // Xóa ảnh khỏi danh sách gallery preview
-  const handleRemoveUploadedImage = (indexToRemove) => {
-    setUploadedImages(prev => prev.filter((_, idx) => idx !== indexToRemove));
+  const handleRemoveUploadedImage = (idToRemove) => {
+    setUploadedImages(prev => prev.filter(img => img.id !== idToRemove));
   };
 
-  // Xử lý thay đổi dữ liệu trong các gói giá
   const handlePackageChange = (packageIdx, field, value) => {
     setPackages(prevPackages => {
       const updated = [...prevPackages];
       
-      // Nếu là trường price và người dùng xóa trống, cho phép lưu chuỗi rỗng để không bị khóa số 0
       let finalValue = value;
       if (field === 'price') {
         finalValue = value === '' ? '' : (parseFloat(value) || 0);
       } else if (field === 'revisions' || field === 'deliveryDays') {
-        finalValue = parseInt(value) || 0;
+        finalValue = value === '' ? '' : (parseInt(value) || 0);
       }
 
       updated[packageIdx] = { ...updated[packageIdx], [field]: finalValue };
@@ -195,19 +230,17 @@ const CreateGigPage = () => {
     });
   };
 
-  // Xử lý thay đổi nhanh ô nhập giá "Starting Price" ở Khối 1 (Cho phép xóa trống)
   const handleStartingPriceChange = (val) => {
     const numericValue = val === '' ? '' : (parseFloat(val) || 0);
     setPackages(prevPackages => {
       const updated = [...prevPackages];
       if (updated[0]) {
-        updated[0].price = numericValue; // Cập nhật trực tiếp vào gói BASIC
+        updated[0].price = numericValue; 
       }
       return updated;
     });
   };
 
-  // Xử lý thay đổi checkbox tính năng phụ động trong gói giá
   const handleFeatureToggle = (packageIdx, featureKey) => {
     setPackages(prevPackages => {
       const updated = [...prevPackages];
@@ -221,14 +254,14 @@ const CreateGigPage = () => {
   };
 
   // ==========================================================================
-  // THAO TÁC CUỐI CÙNG: ĐĂNG BÀI DỊCH VỤ (CREATE GIG - Đã thêm Token Auth bảo mật)
+  // THAO TÁC CUỐI CÙNG: ĐĂNG BÀI DỊCH VỤ (CREATE GIG)
   // ==========================================================================
   const handleSubmit = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
     setError('');
 
     if (!generalInfo.title || !generalInfo.categoryId) {
-      setError('Vui lòng nhập tiêu đề dịch vụ và lựa chọn danh mục chính.');
+      setError('Vui lòng nhập tiêu đề dịch vụ và lựa chọn đầy đủ danh mục chính.');
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
@@ -261,7 +294,6 @@ const CreateGigPage = () => {
     setLoading(true);
     SystemLogTest(finalPayload);
 
-    // Lấy Token xác thực từ localStorage để đính kèm vào Header gửi lên hệ thống Spring Boot
     const token = localStorage.getItem('token');
 
     try {
@@ -269,7 +301,6 @@ const CreateGigPage = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // Đính kèm token xác thực phiên làm việc của Seller
           'Authorization': token ? `Bearer ${token}` : ''
         },
         body: JSON.stringify(finalPayload)
@@ -279,7 +310,7 @@ const CreateGigPage = () => {
       
       const result = await response.json();
       
-      if (result.status === "success") {
+      if (result.status === "success" && result.data) {
         navigate(`/gigs/${result.data}`);
       } else {
         setError(result.message || 'Đăng bài thất bại từ hệ thống phản hồi.');
@@ -350,7 +381,6 @@ const CreateGigPage = () => {
                 <input 
                   type="number" 
                   name="startingPrice"
-                  // Cho phép ô input hiển thị trống hoàn toàn khi xóa sạch thay vì giữ lại số 0 cứng
                   value={packages[0]?.price === '' ? '' : (packages[0]?.price ?? '')}
                   onChange={(e) => handleStartingPriceChange(e.target.value)}
                   placeholder="50"
@@ -361,18 +391,18 @@ const CreateGigPage = () => {
             </div>
           </div>
 
-          <div className="form-row-grid two-columns">
+          {/* SỬA ĐỔI: Chọn Category Cha & Con */}
+          <div className="form-row-grid two-columns" style={{ marginTop: '15px' }}>
             <div className="form-group">
-              <label>Category *</label>
+              <label>Main Category *</label>
               <select 
-                name="categoryId" 
-                value={generalInfo.categoryId} 
-                onChange={handleInputChange}
+                value={selectedParentId} 
+                onChange={handleParentCategoryChange}
                 required
               >
-                <option value="">Select Category</option>
+                <option value="">Select Main Category</option>
                 {backendCategories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
+                  <option key={`parent-${cat.id}`} value={cat.id}>
                     {cat.name}
                   </option>
                 ))}
@@ -380,53 +410,45 @@ const CreateGigPage = () => {
             </div>
 
             <div className="form-group">
-              <label>English Level</label>
-              <select name="englishLevel" value={generalInfo.englishLevel} onChange={handleInputChange}>
-                <option value="">Select</option>
-                <option value="Basic">Basic</option>
-                <option value="Conversational">Conversational</option>
-                <option value="Fluent">Fluent</option>
-                <option value="Native">Native</option>
+              <label>Sub Category *</label>
+              <select 
+                name="categoryId" 
+                value={generalInfo.categoryId} 
+                onChange={handleInputChange}
+                disabled={!selectedParentId}
+                required
+              >
+                <option value="">Select Sub Category</option>
+                {subCategories.map((sub) => (
+                  <option key={`sub-${sub.id}`} value={sub.id}>
+                    {sub.name}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
 
-          <div className="form-row-grid two-columns">
-            <div className="form-group">
-              <label>Response Time</label>
-              <select name="responseTime" value={generalInfo.responseTime} onChange={handleInputChange}>
-                <option value="">Select</option>
-                <option value="1h">Within 1 Hour</option>
-                <option value="24h">Within 24 Hours</option>
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label>Global Target Delivery</label>
-              <select name="deliveryTime" value={generalInfo.deliveryTime} onChange={handleInputChange}>
-                <option value="">Select</option>
-                <option value="1d">1 Day</option>
-                <option value="3d">3 Days</option>
-                <option value="7d">7 Days</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label>Skills & Tags (Press Add or Enter)</label>
+          {/* SỬA ĐỔI: Skills & Tags lấy trực tiếp từ API thay vì gõ tay */}
+          <div className="form-group" style={{ marginTop: '15px' }}>
+            <label>Skills & Tags (Select and Add)</label>
             <div className="skills-input-wrapper-ui">
-              <input 
-                type="text" 
+              <select
                 value={currentSkill}
                 onChange={(e) => setCurrentSkill(e.target.value)}
-                placeholder="Nhập thẻ kỹ năng ví dụ: Spring Boot"
-                onKeyDown={(e) => { if(e.key === 'Enter') { e.preventDefault(); handleAddSkill(); } }}
-              />
+                style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
+              >
+                <option value="">-- Choose a Skill --</option>
+                {availableTags.map((tag) => (
+                  <option key={`tag-opt-${tag.id}`} value={tag.name}>
+                    {tag.name}
+                  </option>
+                ))}
+              </select>
               <button type="button" onClick={handleAddSkill} className="btn-add-tag-inline">Add</button>
             </div>
             <div className="skills-tags-preview inline-tags">
               {skills.map((skill, index) => (
-                <span key={index} className="form-skill-tag">
+                <span key={`skill-${index}`} className="form-skill-tag">
                   {skill}
                   <button type="button" onClick={() => handleRemoveSkill(index)}>&times;</button>
                 </span>
@@ -464,7 +486,7 @@ const CreateGigPage = () => {
                 <tr>
                   <th width="25%">Phân loại gói</th>
                   {packages.map((pkg, idx) => (
-                    <th key={idx} width="25%">
+                    <th key={`pkg-th-${idx}`} width="25%">
                       <div className="pkg-header-cell-edit">
                         <span className="pkg-title-bold text-green">{pkg.type}</span>
                         <textarea 
@@ -482,7 +504,7 @@ const CreateGigPage = () => {
                 <tr>
                   <td className="row-header-label">Source Code</td>
                   {packages.map((pkg, idx) => (
-                    <td key={idx} className="text-center">
+                    <td key={`sc-${idx}`} className="text-center">
                       <input 
                         type="checkbox" 
                         checked={pkg.features["Source Code"] || false}
@@ -494,7 +516,7 @@ const CreateGigPage = () => {
                 <tr>
                   <td className="row-header-label">Commercial Use</td>
                   {packages.map((pkg, idx) => (
-                    <td key={idx} className="text-center">
+                    <td key={`cu-${idx}`} className="text-center">
                       <input 
                         type="checkbox" 
                         checked={pkg.features["Commercial Use"] || false}
@@ -506,7 +528,7 @@ const CreateGigPage = () => {
                 <tr>
                   <td className="row-header-label">Revisions</td>
                   {packages.map((pkg, idx) => (
-                    <td key={idx} className="text-center">
+                    <td key={`rev-${idx}`} className="text-center">
                       <div className="inline-numeric-edit">
                         <input 
                           type="number" 
@@ -520,27 +542,26 @@ const CreateGigPage = () => {
                 <tr>
                   <td className="row-header-label">Delivery Days</td>
                   {packages.map((pkg, idx) => (
-                    <td key={idx} className="text-center">
+                    <td key={`del-${idx}`} className="text-center">
                       <div className="inline-numeric-edit">
                         <input 
                           type="number" 
                           value={pkg.deliveryDays}
                           onChange={(e) => handlePackageChange(idx, 'deliveryDays', e.target.value)}
                         />
-                        <span style={{ fontSize: '11px', display: 'block', color: '#777' }}>Days</span>
                       </div>
+                      <span style={{ fontSize: '11px', display: 'block', color: '#777' }}>Days</span>
                     </td>
                   ))}
                 </tr>
                 <tr>
                   <td className="row-header-label font-bold">Total Price</td>
                   {packages.map((pkg, idx) => (
-                    <td key={idx} className="text-center font-bold text-green">
+                    <td key={`price-${idx}`} className="text-center font-bold text-green">
                       <div className="price-input-table-container">
                         <span>$</span>
                         <input 
                           type="number" 
-                          // Cho phép ô nhập giá ở ma trận bảng giá hiển thị trống hoàn toàn khi người dùng xóa hết kí tự
                           value={pkg.price === '' ? '' : pkg.price}
                           className="table-price-clean-input"
                           onChange={(e) => handlePackageChange(idx, 'price', e.target.value)}
@@ -562,7 +583,7 @@ const CreateGigPage = () => {
           
           <div className="gallery-upload-grid-flow">
             {uploadedImages.map((img, index) => (
-              <div key={index} className="gallery-preview-item-box" style={{ position: 'relative' }}>
+              <div key={img.id} className="gallery-preview-item-box" style={{ position: 'relative' }}>
                 <img src={img.previewUrl} alt="Product upload preview" />
                 
                 {img.isUploading && (
@@ -578,7 +599,7 @@ const CreateGigPage = () => {
                 <button 
                   type="button" 
                   className="btn-delete-image-preview" 
-                  onClick={() => handleRemoveUploadedImage(index)}
+                  onClick={() => handleRemoveUploadedImage(img.id)}
                   disabled={img.isUploading}
                 >
                   &times;
