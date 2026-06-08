@@ -1,4 +1,3 @@
-// src/App.jsx
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import AuthPage from './pages/Auth/AuthPage';
@@ -14,6 +13,9 @@ import GigDetailPage from './pages/Gigs/GigDetailPage';
 
 // 🟢 TÍCH HỢP IMPORT TRANG TẠO BÀI ĐĂNG DỊCH VỤ (CHẾ ĐỘ TEST GIAO DIỆN)
 import CreateGigPage from './pages/Gigs/CreateGigPage';
+
+// 🔵 TÍCH HỢP IMPORT TRANG THANH TOÁN / XÁC NHẬN ĐƠN HÀNG (CHECKOUT PAGE)
+import CheckoutPage from './pages/Orders/CheckoutPage';
 
 // Component giữ chỗ tạm thời cho các trang danh mục chưa phát triển xong
 const PlaceholderPage = ({ title }) => (
@@ -45,7 +47,7 @@ const AppContent = () => {
         {/* 1. Trang đầu tiên xuất hiện khi truy cập link hệ thống */}
         <Route path="/" element={<HomePage />} />
         
-        {/* Trang thông tin cá nhân (Profile của chính mình) */}
+        /* Trang thông tin cá nhân (Profile của chính mình) */
         <Route path="/profile" element={<Profile />} />
 
         {/* Giữ lại Route động xem Profile người khác của bạn */}
@@ -59,6 +61,9 @@ const AppContent = () => {
 
         {/* 🟢 TÍCH HỢP ROUTE DẪN ĐẾN TRANG TẠO BÀI ĐĂNG DỊCH VỤ MỚI ĐỂ CHẠY THỬ OFFLINE */}
         <Route path="/create-gig" element={<CreateGigPage />} />
+        
+        {/* 🔵 TÍCH HỢP ROUTE DẪN ĐẾN TRANG THANH TOÁN XÁC NHẬN ĐƠN HÀNG THỰC TẾ */}
+        <Route path="/checkout/:orderId" element={<CheckoutPage />} />
         
         {/* 2. Các trang Home quản trị theo vai trò hệ thống */}
         <Route path="/buyer-home" element={<BuyerHome />} />
