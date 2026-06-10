@@ -157,32 +157,30 @@ const Header = () => {
                                         border: '1px solid #e4e5e7', borderRadius: '4px', width: '170px', zIndex: 999,
                                         boxShadow: '0 4px 12px rgba(0,0,0,0.1)', padding: '6px 0'
                                     }}>
+                                        {/* 🌟 ĐÃ CHỈNH SỬA: Sửa lại hàm onClick để kích hoạt route sang trang profile */}
                                         <div 
+                                            className="avatar-dropdown-item"
                                             onClick={() => { navigate('/profile'); setShowUserDropdown(false); }}
                                             style={{ padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: '#333', fontSize: '14px' }}
-                                            onMouseEnter={(e) => e.target.style.backgroundColor = '#f7f7f7'}
-                                            onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
                                         >
-                                            <User size={14} /> Profile
+                                            <User size={14} /> My Profile
                                         </div>
 
-                                        {/* 🌟 ĐÃ CHỈNH SỬA CHUẨN ĐỒNG BỘ: Kiểm tra role bằng cả chữ hoa và chữ thường để tránh sót điều kiện */}
+                                        {/* Chuyển đổi tên sang Manage Services phù hợp với vai trò Seller */}
                                         {role && (role.toUpperCase() === 'ROLE_SELLER' || role.toLowerCase() === 'seller') && (
                                             <div 
-                                                onClick={() => { navigate('/create-gig'); setShowUserDropdown(false); }}
+                                                className="avatar-dropdown-item"
+                                                onClick={() => { navigate('/manage-services'); setShowUserDropdown(false); }}
                                                 style={{ padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: '#1dbf73', fontSize: '14px', fontWeight: '500', borderTop: '1px solid #f1f1f1' }}
-                                                onMouseEnter={(e) => e.target.style.backgroundColor = '#f7f7f7'}
-                                                onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
                                             >
-                                                <PlusCircle size={14} /> Add Service
+                                                <PlusCircle size={14} /> Manage Services
                                             </div>
                                         )}
 
                                         <div 
+                                            className="avatar-dropdown-item logout-action"
                                             onClick={handleLogout}
                                             style={{ padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: '#f44336', fontSize: '14px', borderTop: '1px solid #f1f1f1' }}
-                                            onMouseEnter={(e) => e.target.style.backgroundColor = '#fff5f5'}
-                                            onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
                                         >
                                             <LogOut size={14} /> Logout
                                         </div>
