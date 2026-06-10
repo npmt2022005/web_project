@@ -4,7 +4,7 @@ import AuthPage from './pages/Auth/AuthPage';
 import HomePage from './pages/HomePage'; // Import trang chủ chung
 import BuyerHome from './pages/Marketplace/BuyerHome';   // Import trang Buyer
 import SellerHome from './pages/Dashboard/SellerHome'; // Import trang Seller
-import Profile from './pages/Profile/Profile'; // Import trang Profile vừa tạo mới
+import MyProfile from './pages/Profile/MyProfile'; // 🌟 Đã cập nhật import sang file MyProfile mới
 import GigsPage from './pages/Gigs/GigsPage';
 import Header from './pages/Components/Header';
 
@@ -12,7 +12,13 @@ import Header from './pages/Components/Header';
 import GigDetailPage from './pages/Gigs/GigDetailPage';
 
 // 🟢 TÍCH HỢP IMPORT TRANG TẠO BÀI ĐĂNG DỊCH VỤ (CHẾ ĐỘ TEST GIAO DIỆN)
-import CreateGigPage from './pages/Gigs/CreateGigPage';
+import CreateGigPage  from './pages/Gigs/CreateGigPage';
+
+// 🔵 TÍCH HỢP IMPORT TRANG THANH TOÁN / XÁC NHẬN ĐƠN HÀNG (CHECKOUT PAGE)
+import CheckoutPage from './pages/Orders/CheckoutPage';
+
+// 🌟 TÍCH HỢP IMPORT TRANG QUẢN LÝ DỊCH VỤ CỦA SELLER (MANAGE SERVICES)
+import ManageServices from './pages/Services/ManageServices';
 
 // 🔵 TÍCH HỢP IMPORT TRANG THANH TOÁN / XÁC NHẬN ĐƠN HÀNG (CHECKOUT PAGE)
 import CheckoutPage from './pages/Orders/CheckoutPage';
@@ -51,7 +57,7 @@ const AppContent = () => {
         <Route path="/profile" element={<Profile />} />
 
         {/* Giữ lại Route động xem Profile người khác của bạn */}
-        <Route path="/profile/:username" element={<Profile />} /> 
+        <Route path="/profile/:username" element={<MyProfile />} /> 
 
         {/* Giữ lại Route Tìm kiếm từ code trên GitHub về */}
         <Route path="/search" element={<GigsPage />} />
@@ -59,7 +65,7 @@ const AppContent = () => {
         {/* 2. Tích hợp cấu hình Route động cho trang xem chi tiết thông tin bài đăng */}
         <Route path="/gigs/:id" element={<GigDetailPage />} />
 
-        {/* 🟢 TÍCH HỢP ROUTE DẪN ĐẾN TRANG TẠO BÀI ĐĂNG DỊCH VỤ MỚI ĐỂ CHẠY THỬ OFFLINE */}
+        {/* 🟢 ROUTE DẪN ĐẾN TRANG TẠO BÀI ĐĂNG DỊCH VỤ MỚI */}
         <Route path="/create-gig" element={<CreateGigPage />} />
         
         {/* 🔵 TÍCH HỢP ROUTE DẪN ĐẾN TRANG THANH TOÁN XÁC NHẬN ĐƠN HÀNG THỰC TẾ */}
