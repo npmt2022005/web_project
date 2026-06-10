@@ -231,6 +231,19 @@
     animation: dropdownFadeIn 0.15s ease-out forwards;
 }
 
+/* 🌟 BỔ SUNG MỚI: Xử lý hiệu ứng Hover trực tiếp cho các thẻ con bên trong hộp Avatar Dropdown */
+.avatar-dropdown-item {
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.avatar-dropdown-item:hover {
+    background-color: #f7f7f7 !important;
+}
+
+.avatar-dropdown-item.logout-action:hover {
+    background-color: #fff5f5 !important;
+}
+
 @keyframes dropdownFadeIn {
     from { opacity: 0; transform: translateY(-5px); }
     to { opacity: 1; transform: translateY(0); }
