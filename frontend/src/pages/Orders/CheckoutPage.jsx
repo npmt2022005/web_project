@@ -4,11 +4,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
-import CheckoutForm from './CheckoutForm'; // Import component form thẻ mới
+import CheckoutForm from './CheckoutForm'; 
 import './CheckoutPage.css';
 
 // Khởi tạo tiến trình kết nối Stripe
-const stripePromise = loadStripe('pk_test_51Nx...Điền_Key_Publishable_Stripe_Của_Bạn...');
+const stripePromise = loadStripe('pk_test_51Tg7eZGelijEYFpHsjaRXkO8OgpKAKccTJN7VqJ6xMo3THlfMRCgd3nH2VLiynqxnS2ePP1mQdPzLovSbqSt3yLb00LIFjyIcO');
 
 const CheckoutPage = () => {
     const { orderId } = useParams();
@@ -22,7 +22,6 @@ const CheckoutPage = () => {
     useEffect(() => {
         const fetchOrderData = async () => {
             try {
-                // --- 1. Gọi API lấy thông tin hóa đơn như cũ ---
                 const responseSummary = await fetch(`http://localhost:8080/api/v1/orders/${orderId}/summary`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -47,10 +46,12 @@ const CheckoutPage = () => {
                 if (!responseIntent.ok) {
                     throw new Error("API 2 trả về lỗi server.");
                 }
-
                 const resultIntent = await responseIntent.json();
-                if (resultIntent.clientSecret) {
-                    setClientSecret(resultIntent.clientSecret);
+                const actualSecret = resultIntent.data?.clientSecret || resultIntent.clientSecret;
+
+                if (actualSecret) {
+                    setClientSecret(actualSecret);
+                    console.log("Đã lấy được clientSecret thật từ Backend:", actualSecret);
                 } else {
                     console.warn("API không phản hồi kèm chuỗi clientSecret.");
                 }
@@ -91,7 +92,6 @@ const CheckoutPage = () => {
     // Cấu hình options cho Elements để hỗ trợ xử lý Split Elements an toàn
     const stripeOptions = {
         clientSecret: clientSecret.startsWith('mock_') ? undefined : clientSecret,
-        currency: summary.paymentDetails.currency?.toLowerCase() || 'usd',
     };
 
     return (

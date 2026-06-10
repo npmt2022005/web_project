@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@stripe/react-stripe-js": "^6.6.0",
-    "@stripe/stripe-js": "^9.7.0",
+    "@stripe/stripe-js": "^9.8.0",
     "axios": "^1.15.0",
     "lucide-react": "^1.8.0",
     "rc-slider": "^11.1.9",
