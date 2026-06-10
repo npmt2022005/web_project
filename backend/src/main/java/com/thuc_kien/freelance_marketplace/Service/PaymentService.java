@@ -44,6 +44,8 @@ public class PaymentService {
                 .setAutomaticPaymentMethods(
                         PaymentIntentCreateParams.AutomaticPaymentMethods.builder()
                                 .setEnabled(true)
+                                // Cấm chuyển hướng đòi mã OTP giả lập     
+                                .setAllowRedirects(PaymentIntentCreateParams.AutomaticPaymentMethods.AllowRedirects.NEVER)
                                 .build()
                 )
                 .build();
@@ -58,6 +60,6 @@ public class PaymentService {
 
         // 7. Trả về mã client_secret cho Frontend
         return intent.getClientSecret();
-    }
+}
 }
 

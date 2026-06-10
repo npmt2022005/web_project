@@ -61,6 +61,7 @@ public class OrderService {
         Orders saveOrders = orderRepo.save(draftOther);
         return saveOrders.getId();
     }
+    @Transactional
     public void updateOrderStatus(Long orderId, String newStatus){
         Orders order = orderRepo.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Lỗi: Không tìm thấy đơn hàng mã " + orderId));
@@ -68,7 +69,7 @@ public class OrderService {
             throw new RuntimeException("Đơn hàng đã bị hủy, không thể thay đổi trạng thái!");
         }
         switch (newStatus.toUpperCase()) {
-            case "PAID":
+            case "IN_PROGRESS":
                 if (order.getDeliveryDate() == null) {
                     GigPackages pkg = pkgRepo.findById(order.getPackageId())
                         .orElseThrow(() -> new RuntimeException("Không tìm thấy gói dịch vụ"));
@@ -98,7 +99,9 @@ public class OrderService {
             default:
                 // Các trạng thái khác (như IN_PROGRESS, LATE...) không cần xử lý đặc biệt
                 break;
-        }
+        }   
+        order.setStatus(newStatus.toUpperCase());
+        orderRepo.save(order);
 
     }
     @Transactional

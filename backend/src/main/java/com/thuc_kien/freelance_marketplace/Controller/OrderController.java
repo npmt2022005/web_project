@@ -1,5 +1,8 @@
 package com.thuc_kien.freelance_marketplace.Controller;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,37 +31,36 @@ public class OrderController {
     private final OrderService orderService;
 
     @PostMapping("")
-    public ResponseEntity<APIResponse<Long>> createDraftOrder(
-            @RequestBody CreateOrderRequest request,
-            @AuthenticationPrincipal CustomUserDetails currentUser
-    ) {
-        APIResponse<Long> apiResponse = new APIResponse<>();
+public ResponseEntity<APIResponse<Map<String, Object>>> createDraftOrder( // 🛠️ Vị trí 1: Kiểu trả về của hàm
+        @RequestBody CreateOrderRequest request,
+        @AuthenticationPrincipal CustomUserDetails currentUser
+) {
+    // 🛠️ Vị trí 2 & 3: Đổi Long thành Map<String, Object> ở dòng khởi tạo này
+    APIResponse<Map<String, Object>> apiResponse = new APIResponse<>(); 
 
-        try {
-            Long buyerId = currentUser.getUser().getId();
-            System.out.println("🚨 KIỂM TRA GIG ID TỪ POSTMAN: " + request.getGigId());
-    
-    
-            System.out.println("🚨 KIỂM TRA BUYER ID TỪ TOKEN: " + buyerId);
-            Long orderId = orderService.createDraftOrder(request, buyerId);
+    try {
+        Long buyerId = currentUser.getUser().getId();
+        Long orderId = orderService.createDraftOrder(request, buyerId);
 
-            // Đóng gói Response thành công
-            apiResponse.setStatus("success");
-            apiResponse.setMessage("Tạo đơn hàng nháp thành công");
-            apiResponse.setData(orderId); // 
+        // Tạo bản đồ (Map) để đóng gói ID thành Object
+        Map<String, Object> dataResult = new HashMap<>();
+        dataResult.put("orderId", orderId); 
 
-            return ResponseEntity.ok(apiResponse);
+        // Đóng gói Response thành công
+        apiResponse.setStatus("success");
+        apiResponse.setMessage("Tạo đơn hàng nháp thành công");
+        apiResponse.setData(dataResult); 
 
-        } catch (Exception e) {
-            // Đóng gói Response thất bại
-            apiResponse.setStatus("error");
-            apiResponse.setMessage(e.getMessage());
-            apiResponse.setData(null);
+        return ResponseEntity.ok(apiResponse);
 
-            return ResponseEntity.badRequest().body(apiResponse);
-        }
+    } catch (Exception e) {
+        apiResponse.setStatus("error");
+        apiResponse.setMessage(e.getMessage());
+        apiResponse.setData(null);
+
+        return ResponseEntity.badRequest().body(apiResponse);
     }
-
+}
     @GetMapping("/{orderId}/summary")
     public ResponseEntity<APIResponse<OrderSummaryDTO>> getOrderSummary(@PathVariable Long orderId) {
         

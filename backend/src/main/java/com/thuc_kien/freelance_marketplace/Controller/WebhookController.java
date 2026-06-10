@@ -35,6 +35,7 @@ public class WebhookController {
     ) {
 
         Event event = null;
+        System.out.println("🤖 Robot Stripe đã gõ cửa Endpoint Webhook!");
         try {
             event = Webhook.constructEvent(payload, sigHeader, endpointSecret);
         } catch (SignatureVerificationException e) {
@@ -42,30 +43,49 @@ public class WebhookController {
             System.out.println("⚠️ Cảnh báo: Phát hiện tin nhắn giả mạo Webhook!");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid signature");
         } catch (Exception e) {
+            System.out.println("⚠️ Lỗi giải mã Payload: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid payload");
         }
-
+        System.out.println("🔍 Gói tin vua vao mang ten la: [" + event.getType() + "]");
         if ("payment_intent.succeeded".equals(event.getType())) {
-            System.out.println("Đã nhận được Webhook từ Stripe!"); 
+            System.out.println("🟢 [1] Đã nhảy vào khối payment_intent.succeeded!");
             // Giải nén gói dữ liệu thành Object PaymentIntent
             EventDataObjectDeserializer dataObjectDeserializer = event.getDataObjectDeserializer();
+            PaymentIntent intent = null;
             if (dataObjectDeserializer.getObject().isPresent()) {
-                PaymentIntent intent = (PaymentIntent) dataObjectDeserializer.getObject().get();
-
+                intent = (PaymentIntent) dataObjectDeserializer.getObject().get();
+            } else {
+                System.out.println("⚠️ Cảnh báo lệch Version: Đang kích hoạt ép kiểu Unsafe!");
+                try {
+                    intent = (PaymentIntent) dataObjectDeserializer.deserializeUnsafe();
+                } catch (com.stripe.exception.EventDataObjectDeserializationException e) {
+                    System.out.println("🔴 [LỖI] Quá trình ép kiểu Unsafe thất bại: " + e.getMessage());
+                }
+            }
+            if (intent != null){
+                System.out.println("🟢 [2] Toàn bộ Metadata nhận được từ Stripe: " + intent.getMetadata());
                 // 3. MÓC ĐƠN HÀNG RA VÀ CẬP NHẬT DATABASE
                 // Lấy ra cái order_id mà chúng ta đã giấu ở API số 2
                 String orderIdStr = intent.getMetadata().get("order_id");
-                
+                System.out.println("🟢 [3] Giá trị orderIdStr lấy ra được là: " + orderIdStr);
                 if (orderIdStr != null) {
-                    Long orderId = Long.parseLong(orderIdStr);
+                    try {
+                        Long orderId = Long.parseLong(orderIdStr);
+                        System.out.println("🟢 [4] Chuẩn bị gọi Service cập nhật đơn: " + orderId);
+                        orderService.updateOrderStatus(orderId,"IN_PROGRESS");
+                        
+                        System.out.println("✅ Webhook đã xử lý xong. Tiền đã vào hệ thống: " + orderId);
+                    }
+                    catch (Exception e){
+                        System.out.println("🔴 [LỖI] Service updateOrderStatus đã bị sập: " + e.getMessage());
+                        e.printStackTrace();
+                    }
                     
-                    orderService.updateOrderStatus(orderId,"PAID");
-                    
-                    System.out.println("✅ Webhook đã xử lý xong. Tiền đã vào hệ thống: " + orderId);
+                } else {
+                    System.out.println("🔴 [LỖI] Metadata không chứa 'order_id'. Bị rớt từ API tạo Intent!");
                 }
             }
         }
         return ResponseEntity.ok("Received");
     }
-
 }

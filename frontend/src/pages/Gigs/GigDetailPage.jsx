@@ -187,7 +187,10 @@ const GigDetailPage = () => {
       }
     } catch (error) {
       console.warn("⚠️ Lỗi hệ thống hoặc lỗi kết nối Server API đơn hàng. Tự động chuyển sang Mock Đơn Hàng để test UI.");
-      
+      console.log("🚨 Chi tiết lỗi API:", error.response ? error.response.data : error.message);
+  
+      console.warn("⚠️ Lỗi hệ thống hoặc lỗi kết nối Server API đơn hàng. Tự động chuyển sang Mock Đơn Hàng để test UI.");
+      // ... phần điều hướng mock data tiếp theo ..
       const fallbackId = `mock-${id === 'test-local' ? '1' : id}-${packageType.toLowerCase()}`;
       navigate(`/checkout/${fallbackId}`);
     }
