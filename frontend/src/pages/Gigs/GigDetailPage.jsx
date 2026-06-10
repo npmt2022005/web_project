@@ -1,9 +1,10 @@
+// src/pages/Gigs/GigDetailPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios'; // 1. Tích hợp thư viện axios để gọi API thực tế
+import axios from 'axios'; // Tích hợp thư viện axios để gọi API thực tế
 import { 
   Star, Clock, RefreshCw, Check, ShieldCheck, 
-  MapPin, Globe, ThumbsUp, Heart, ChevronRight 
+  MapPin, Globe, ChevronRight 
 } from 'lucide-react';
 import './GigDetailPage.css'; 
 
@@ -94,34 +95,33 @@ const GigDetailPage = () => {
     const loadData = async () => {
       setLoading(true);
 
-      // 🟢 KHỐI ĐÓN NHẬN VÀ KIỂM TRA DỮ LIỆU CHẠY THỬ OFFLINE (LOCAL TEST MODE)
+      // KHỐI ĐÓN NHẬN VÀ KIỂM TRA DỮ LIỆU CHẠY THỬ OFFLINE (LOCAL TEST MODE)
       if (id === 'test-local') {
         const localData = localStorage.getItem('LOCAL_TEST_GIG');
         if (localData) {
           const parsedGig = JSON.parse(localData);
           setGig(parsedGig);
-          setSimilarGigs([]); // Không hiển thị danh sách tương tự khi đang ở chế độ Test
+          setSimilarGigs([]); 
           if (parsedGig.media && parsedGig.media.mainImage) {
             setCurrentImage(parsedGig.media.mainImage);
           }
           setLoading(false);
-          return; // Ngắt hàm sớm, ngăn chặn hệ thống cố gọi API axios lên Backend khi đang test dữ liệu cục bộ
+          return; 
         }
       }
 
       try {
-        // 2. Thực hiện gọi API song song từ Backend
+        // Thực hiện gọi API song song từ Backend
         const [detailRes, similarRes] = await Promise.all([
           axios.get(`http://localhost:8080/api/v1/gigs/${id}`),
           axios.get(`http://localhost:8080/api/v1/gigs/${id}/similar`)
         ]);
 
-        // 3. Nếu API trả dữ liệu thành công -> Cập nhật vào State hệ thống
+        // Nếu API trả dữ liệu thành công -> Cập nhật vào State hệ thống
         if (detailRes.data && detailRes.data.status === "success") {
             const gigRealData = detailRes.data.data; 
             setGig(gigRealData);
             
-            // Set hình ảnh hiển thị chính
             if (gigRealData.media && gigRealData.media.mainImage) {
                 setCurrentImage(gigRealData.media.mainImage);
             }
@@ -129,7 +129,6 @@ const GigDetailPage = () => {
         
         if (similarRes.data && similarRes.data.status === "success") {
             const similarRealData = similarRes.data.data; 
-            
             setSimilarGigs(similarRealData.similarGigs || similarRealData || []);
         } else {
             setSimilarGigs([]);
@@ -138,7 +137,6 @@ const GigDetailPage = () => {
       } catch (error) {
         console.warn("⚠️ Cảnh báo: Không thể kết nối API Backend. Tự động chuyển sang Mock Data mẫu.", error.message);
         
-        // 4. KHỐI CỨU HỘ: Nếu Backend lỗi, nạp lại Mock Data tương ứng để đảm bảo ứng dụng không crash
         const currentId = MOCK_GIG_DETAILS[id] ? id : "1";
         const targetGig = MOCK_GIG_DETAILS[currentId];
         
@@ -149,13 +147,54 @@ const GigDetailPage = () => {
         }
       } finally {
         setLoading(false);
-        setActiveTab(0); // Reset về tab gói dịch vụ đầu tiên khi đổi ID bài đăng
+        setActiveTab(0); 
       }
     };
 
     loadData();
     window.scrollTo(0, 0); 
   }, [id]);
+
+  // Hàm xử lý gọi API khởi tạo đơn hàng nháp khi chọn gói dịch vụ
+  const handleContinueOrder = async (packageType) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert("Vui lòng đăng nhập hệ thống để thực hiện đặt đơn hàng!");
+      navigate('/login');
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        'http://localhost:8080/api/v1/orders',
+        {
+          gigId: id === 'test-local' ? 1 : parseInt(id), 
+          packageType: packageType.toUpperCase(),       
+          quantity: 1
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+
+      if (response.data && response.data.status === "success") {
+        const orderId = response.data.data.orderId;
+        navigate(`/checkout/${orderId}`);
+      } else {
+        throw new Error(response.data.message || "Không thể khởi tạo phiên đơn hàng.");
+      }
+    } catch (error) {
+      console.warn("⚠️ Lỗi hệ thống hoặc lỗi kết nối Server API đơn hàng. Tự động chuyển sang Mock Đơn Hàng để test UI.");
+      console.log("🚨 Chi tiết lỗi API:", error.response ? error.response.data : error.message);
+  
+      console.warn("⚠️ Lỗi hệ thống hoặc lỗi kết nối Server API đơn hàng. Tự động chuyển sang Mock Đơn Hàng để test UI.");
+      // ... phần điều hướng mock data tiếp theo ..
+      const fallbackId = `mock-${id === 'test-local' ? '1' : id}-${packageType.toLowerCase()}`;
+      navigate(`/checkout/${fallbackId}`);
+    }
+  };
 
   if (loading) {
     return <div className="gig-detail-loading">Đang tải cấu trúc thông tin dịch vụ...</div>;
@@ -174,7 +213,6 @@ const GigDetailPage = () => {
         {/* === KHỐI BÊN TRÁI: CHI TIẾT BÀI ĐĂNG === */}
         <div className="gig-detail-main-content">
           
-          {/* Đường dẫn Breadcrumb */}
           <div className="breadcrumb-nav">
             <span onClick={() => navigate('/')}>Trang chủ</span> <ChevronRight size={14} />
             <span onClick={() => navigate('/search')}>Dịch vụ nổi bật</span> <ChevronRight size={14} />
@@ -186,7 +224,6 @@ const GigDetailPage = () => {
             {gig.title}
           </h1>
 
-          {/* Thông tin nhanh về Seller đầu trang */}
           <div className="top-seller-info-row">
             {gig.seller && (
               <>
@@ -209,7 +246,6 @@ const GigDetailPage = () => {
             )}
           </div>
 
-          {/* Khung trưng bày Hình Ảnh Bộ Sưu Tập */}
           <div className="image-gallery-section">
             <div className="main-display-image-wrapper">
               <img src={currentImage || (gig.media && gig.media.mainImage)} alt="Main view" className="main-display-image" />
@@ -229,13 +265,14 @@ const GigDetailPage = () => {
             )}
           </div>
 
-          {/* Phần mô tả chi tiết bài đăng */}
           <div className="detail-section-card description-card">
             <h3>Thông tin chi tiết dịch vụ</h3>
-            <p className="paragraph-content">{gig.description}</p>
+            <div 
+              className="paragraph-content" 
+              dangerouslySetInnerHTML={{ __html: gig.description }} 
+            />
           </div>
 
-          {/* Khối danh sách kỹ năng liên quan */}
           {gig.skills && gig.skills.length > 0 && (
             <div className="detail-section-card skills-tags-card">
               <h3>Kỹ năng liên quan</h3>
@@ -247,7 +284,6 @@ const GigDetailPage = () => {
             </div>
           )}
 
-          {/* Hồ sơ thông tin chi tiết người bán (Seller Profile Card) */}
           {gig.seller && (
             <div className="detail-section-card seller-profile-long-card">
               <h3>Thông tin về người bán</h3>
@@ -267,22 +303,21 @@ const GigDetailPage = () => {
 
               <div className="seller-extra-details-grid">
                 <div className="extra-item">
-                  <span className="label-gray"><MapPin size={14} /> Đến từ</span>
+                  <span className="label-gray">Đến từ</span>
                   <span className="val-bold">{gig.seller.location || "Chưa cập nhật"}</span>
                 </div>
                 <div className="extra-item">
-                  <span className="label-gray"><Globe size={14} /> Ngôn ngữ</span>
+                  <span className="label-gray">Ngôn ngữ</span>
                   <span className="val-bold">{gig.seller.languages ? gig.seller.languages.join(', ') : "English"}</span>
                 </div>
                 <div className="extra-item">
-                  <span className="label-gray"><Clock size={14} /> Ngày tham gia</span>
+                  <span className="label-gray">Ngày tham gia</span>
                   <span className="val-bold">Tháng 9, 2024</span>
                 </div>
               </div>
             </div>
           )}
 
-          {/* 📦 KHỐI GỢI Ý BÀI ĐĂNG TƯƠNG TỰ (SIMILAR GIGS) */}
           {similarGigs && similarGigs.length > 0 && (
             <div className="similar-gigs-section">
               <h3>Dịch vụ tương tự dành cho bạn</h3>
@@ -321,11 +356,10 @@ const GigDetailPage = () => {
 
         </div>
 
-        {/* === KHỐI BÊN PHẢI: BẢNG GIÁ VÀ CÁC GÓI DỊCH VỤ (PACKAGES) === */}
+        {/* === KHỐI BÊN PHẢI: BẢNG GIÁ VÀ CÁC GÓI DỊCH VỤ === */}
         <div className="gig-detail-side-sidebar">
           
           <div className="pricing-packages-sticky-card">
-            {/* Header chuyển đổi Tab gói */}
             {gig.packages && gig.packages.length > 0 && (
               <div className="packages-tabs-header">
                 {gig.packages.map((pkg, idx) => (
@@ -340,7 +374,6 @@ const GigDetailPage = () => {
               </div>
             )}
 
-            {/* Nội dung chi tiết của gói đang chọn */}
             {selectedPackage && (
               <div className="package-details-body">
                 <div className="price-header-row">
@@ -357,7 +390,6 @@ const GigDetailPage = () => {
                   </span>
                 </div>
 
-                {/* Tính năng đi kèm dạng checklist */}
                 {selectedPackage.features && (
                   <div className="pkg-features-checklist-box">
                     {Object.entries(selectedPackage.features).map(([featureName, isSupported], fIdx) => (
@@ -369,7 +401,10 @@ const GigDetailPage = () => {
                   </div>
                 )}
 
-                <button className="continue-order-submit-btn" onClick={() => alert(`Bấm chọn mua gói dịch vụ ${selectedPackage.type} thành công!`)}>
+                <button 
+                  className="continue-order-submit-btn" 
+                  onClick={() => handleContinueOrder(selectedPackage.type)}
+                >
                   Tiếp tục với ({selectedPackage.price}$)
                 </button>
               </div>

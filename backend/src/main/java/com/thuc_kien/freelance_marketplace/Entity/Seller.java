@@ -35,7 +35,7 @@ public class Seller {
 
     @ElementCollection
     @CollectionTable(
-        name = "seller_languages", // Tên bảng phụ sẽ được tạo trong DB
+        name = "seller_languages", 
         joinColumns = @JoinColumn(name = "seller_id")
     )
     @Column(name = "language")
