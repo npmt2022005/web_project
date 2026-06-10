@@ -20,9 +20,6 @@ import CheckoutPage from './pages/Orders/CheckoutPage';
 // 🌟 TÍCH HỢP IMPORT TRANG QUẢN LÝ DỊCH VỤ CỦA SELLER (MANAGE SERVICES)
 import ManageServices from './pages/Services/ManageServices';
 
-// 🔵 TÍCH HỢP IMPORT TRANG THANH TOÁN / XÁC NHẬN ĐƠN HÀNG (CHECKOUT PAGE)
-import CheckoutPage from './pages/Orders/CheckoutPage';
-
 // Component giữ chỗ tạm thời cho các trang danh mục chưa phát triển xong
 const PlaceholderPage = ({ title }) => (
   <div style={{ padding: '100px', textAlign: 'center', fontFamily: 'sans-serif' }}>
@@ -53,8 +50,8 @@ const AppContent = () => {
         {/* 1. Trang đầu tiên xuất hiện khi truy cập link hệ thống */}
         <Route path="/" element={<HomePage />} />
         
-        /* Trang thông tin cá nhân (Profile của chính mình) */
-        <Route path="/profile" element={<Profile />} />
+         {/* Trang thông tin cá nhân (Profile của chính mình) - Đã sửa từ Profile sang MyProfile */}
+        <Route path="/profile" element={<MyProfile />} />
 
         {/* Giữ lại Route động xem Profile người khác của bạn */}
         <Route path="/profile/:username" element={<MyProfile />} /> 
