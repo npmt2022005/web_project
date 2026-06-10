@@ -335,6 +335,7 @@ const CreateGigPage = () => {
       <div className="create-gig-header-section">
         <div className="header-left">
           <h2>Add Services</h2>
+          <p className="subtitle-text">Điền thông tin chi tiết dịch vụ freelance của bạn phía dưới.</p>
         </div>
         <button 
           type="button" 

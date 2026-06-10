@@ -62,7 +62,7 @@ const AppContent = () => {
         {/* 2. Tích hợp cấu hình Route động cho trang xem chi tiết thông tin bài đăng */}
         <Route path="/gigs/:id" element={<GigDetailPage />} />
 
-        {/* 🟢 ROUTE DẪN ĐẾN TRANG TẠO BÀI ĐĂNG DỊCH VỤ MỚI */}
+        {/* 🟢 TÍCH HỢP ROUTE DẪN ĐẾN TRANG TẠO BÀI ĐĂNG DỊCH VỤ MỚI ĐỂ CHẠY THỬ OFFLINE */}
         <Route path="/create-gig" element={<CreateGigPage />} />
         
         {/* 🌟 ROUTE MỚI: Dẫn đến trang Quản lý dịch vụ dành cho Seller */}
