@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Globe, Mail, Bell, User, ChevronDown, ChevronLeft, ChevronRight, LogOut, PlusCircle } from 'lucide-react'; 
+import { Globe, Mail, Bell, User, ChevronDown, ChevronLeft, ChevronRight, LogOut, PlusCircle, ShoppingBag } from 'lucide-react'; 
 import './Header.css'
 
 const Header = () => {
@@ -157,7 +157,7 @@ const Header = () => {
                                         border: '1px solid #e4e5e7', borderRadius: '4px', width: '170px', zIndex: 999,
                                         boxShadow: '0 4px 12px rgba(0,0,0,0.1)', padding: '6px 0'
                                     }}>
-                                        {/* 🌟 ĐÃ CHỈNH SỬA: Sửa lại hàm onClick để kích hoạt route sang trang profile */}
+                                        {/* Mục Profile chung cho tất cả user */}
                                         <div 
                                             className="avatar-dropdown-item"
                                             onClick={() => { navigate('/profile'); setShowUserDropdown(false); }}
@@ -165,6 +165,17 @@ const Header = () => {
                                         >
                                             <User size={14} /> My Profile
                                         </div>
+
+                                        {/* 🌟 THÊM MỚI: Hiển thị My Orders dành riêng cho tài khoản BUYER */}
+                                        {role && (role.toUpperCase() === 'ROLE_BUYER' || role.toUpperCase() === 'BUYER') && (
+                                            <div 
+                                                className="avatar-dropdown-item"
+                                                onClick={() => { navigate('/my-orders'); setShowUserDropdown(false); }}
+                                                style={{ padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: '#1dbf73', fontSize: '14px', fontWeight: '500', borderTop: '1px solid #f1f1f1' }}
+                                            >
+                                                <ShoppingBag size={14} /> My Orders
+                                            </div>
+                                        )}
 
                                         {/* Chuyển đổi tên sang Manage Services phù hợp với vai trò Seller */}
                                         {role && (role.toUpperCase() === 'ROLE_SELLER' || role.toLowerCase() === 'seller') && (
