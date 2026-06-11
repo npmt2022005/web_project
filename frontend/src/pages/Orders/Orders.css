@@ -1,0 +1,93 @@
+/* src/pages/Orders/Orders.css */
+.my-orders-container, .order-detail-container {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Hỗ trợ flexbox cho tiêu đề trang có chứa nhãn thông báo Mock Data */
+.page-header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.page-header-flex h1 { font-size: 28px; color: #222325; margin-bottom: 5px; }
+.page-header-flex p { color: #74767e; font-size: 14px; }
+
+/* Filter Tabs */
+.filter-tabs-row { display: flex; gap: 10px; margin: 25px 0; border-bottom: 1px solid #e4e5e7; padding-bottom: 10px; }
+.tab-btn { background: none; border: none; padding: 8px 16px; color: #74767e; font-weight: 600; cursor: pointer; border-radius: 4px; }
+
+/* 🌟 Cập nhật trạng thái active kết hợp hài hòa giữa nền xám của bạn và màu xanh lá chủ đạo */
+.tab-btn.active { background-color: #f1f1f1; color: #1dbf73; border-bottom: 2px solid #1dbf73; border-radius: 4px 4px 0 0; }
+
+/* Table Style */
+.orders-table-wrapper { background: #fff; border: 1px solid #e4e5e7; border-radius: 4px; overflow: hidden; }
+.orders-data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+.orders-data-table th { background: #f7f7f7; padding: 14px; color: #404145; font-weight: 700; border-bottom: 1px solid #e4e5e7; }
+.orders-data-table td { padding: 16px; border-bottom: 1px solid #e4e5e7; color: #222325; vertical-align: middle; }
+.table-gig-info { display: flex; gap: 12px; align-items: center; }
+.table-gig-info img { width: 50px; height: 38px; object-fit: cover; border-radius: 3px; }
+.order-date-sub { display: block; font-size: 12px; color: #95979d; margin-top: 2px; }
+.package-badge { background: #efeefd; color: #625afa; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+
+/* Status Badges */
+.status-pill, .status-tag { font-weight: 700; font-size: 12px; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; display: inline-block; }
+.pill-pending, .badge-pending { background: #ffedd5; color: #ea580c; }
+.pill-in_progress, .badge-in_progress { background: #e0f2fe; color: #0284c7; }
+.pill-delivered, .badge-delivered { background: #fef9c3; color: #ca8a04; }
+.pill-completed, .badge-completed { background: #dcfce7; color: #16a34a; }
+
+/* 🆕 BỔ SUNG: Class xử lý màu sắc cho trạng thái Hủy đơn (CANCELED) tránh bị mất màu nhãn */
+.pill-canceled, .badge-canceled { background: #ffeeeb; color: #ef4444; }
+
+/* ĐÃ SỬA LỖI: Thêm thuộc tính color: #404145 để chữ hiển thị rõ ràng ngay từ đầu */
+.view-detail-action-btn { display: inline-flex; align-items: center; gap: 6px; background: #fff; border: 1px solid #b5b6ba; border-radius: 4px; padding: 6px 12px; cursor: pointer; font-weight: 600; color: #404145; }
+.view-detail-action-btn:hover { background: #f7f7f7; border-color: #222325; color: #1dbf73; }
+
+/* Detail Workspace Layout */
+.back-to-list-btn { background: none; border: none; color: #62646a; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; margin-bottom: 20px; padding: 0; }
+.order-workspace-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 30px; }
+.workspace-main-card, .sidebar-widget { background: #fff; border: 1px solid #e4e5e7; border-radius: 8px; padding: 24px; }
+.order-main-header h1 { font-size: 24px; color: #222325; margin: 12px 0 8px 0; }
+.gig-desc-preview { color: #62646a; line-height: 1.5; font-size: 14px; }
+.order-id-label { font-size: 13px; color: #95979d; margin-top: 5px; }
+
+/* Stepper */
+.order-progress-stepper { display: flex; justify-content: space-between; margin: 30px 0; position: relative; gap: 10px; }
+.step-item { flex: 1; text-align: center; font-size: 12px; color: #b5b6ba; font-weight: 600; position: relative; }
+.step-item.active { color: #1dbf73; }
+.step-item::after { content: ''; display: block; width: 100%; height: 4px; background: #e4e5e7; margin-top: 8px; }
+.step-item.active::after { background: #1dbf73; }
+
+/* Sidebar */
+.sidebar-widget { margin-bottom: 20px; }
+.sidebar-widget h4 { display: flex; align-items: center; gap: 8px; margin-top: 0; color: #222325; font-size: 15px; }
+.countdown-clock-box { background: #fafafa; border: 1px dashed #e4e5e7; text-align: center; padding: 15px; font-size: 18px; font-weight: 700; color: #ff4d4f; border-radius: 4px; }
+.partner-profile-mini { display: flex; gap: 12px; align-items: center; margin: 15px 0; }
+.partner-profile-mini img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+.avatar-placeholder { width: 40px; height: 40px; border-radius: 50%; background: #e4e5e7; display: flex; align-items: center; justify-content: center; color: #74767e; }
+.partner-role-title { font-size: 12px; color: #74767e; margin: 0; }
+.info-row-item { display: flex; justify-content: space-between; font-size: 13px; margin: 10px 0; color: #62646a; }
+.total-price-box { display: flex; justify-content: space-between; align-items: center; font-weight: 700; margin-top: 15px; border-top: 1px solid #efeff0; padding-top: 15px; }
+.price-text { color: #1dbf73; font-size: 20px; display: flex; align-items: center; }
+
+/* Khung chat thảo luận hệ thống */
+.workspace-chat-mock { margin-top: 25px; }
+.workspace-chat-mock h3 { font-size: 16px; color: #222325; margin-bottom: 12px; }
+.mock-chat-box { border: 1px dashed #e4e5e7; border-radius: 6px; padding: 20px; background-color: #fbfbfb; text-align: center; }
+.chat-system-text { color: #95979d; font-size: 13px; font-style: italic; margin: 0; }
+
+/* Trạng thái lỗi và trống trải */
+.order-loading, .order-error-card { text-align: center; padding: 100px; font-size: 15px; color: #62646a; }
+.empty-orders-view { text-align: center; padding: 60px 20px; color: #b5b6ba; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.empty-orders-view p { color: #74767e; font-size: 15px; margin: 0; }
+
+/* Responsive hỗ trợ hiển thị trên điện thoại/máy tính bảng không bị tràn */
+@media (max-width: 768px) {
+    .order-workspace-grid { grid-template-columns: 1fr; }
+    .page-header-flex { flex-direction: column; align-items: flex-start; gap: 10px; }
+}

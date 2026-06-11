@@ -1,3 +1,4 @@
+// src/App.jsx
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import AuthPage from './pages/Auth/AuthPage';
@@ -14,12 +15,17 @@ import GigDetailPage from './pages/Gigs/GigDetailPage';
 // 🟢 TÍCH HỢP IMPORT TRANG TẠO BÀI ĐĂNG DỊCH VỤ (CHẾ ĐỘ TEST GIAO DIỆN)
 import CreateGigPage  from './pages/Gigs/CreateGigPage';
 
-
 // 🔵 TÍCH HỢP IMPORT TRANG THANH TOÁN / XÁC NHẬN ĐƠN HÀNG (CHECKOUT PAGE)
 import CheckoutPage from './pages/Orders/CheckoutPage';
 
 // 🌟 TÍCH HỢP IMPORT TRANG QUẢN LÝ DỊCH VỤ CỦA SELLER (MANAGE SERVICES)
 import ManageServices from './pages/Services/ManageServices';
+
+// 🆕 THÊM MỚI: Tích hợp trang danh sách đơn hàng của người mua (My Orders)
+import MyOrders from './pages/Orders/MyOrders';
+
+// 🆕 THÊM MỚI: Tích hợp trang chi tiết đơn hàng / Phòng làm việc (Order Detail / Workspace)
+import OrderDetailPage from './pages/Orders/OrderDetailPage';
 
 // Component giữ chỗ tạm thời cho các trang danh mục chưa phát triển xong
 const PlaceholderPage = ({ title }) => (
@@ -51,8 +57,6 @@ const AppContent = () => {
         {/* 1. Trang đầu tiên xuất hiện khi truy cập link hệ thống */}
         <Route path="/" element={<HomePage />} />
         
-
-
         {/* 🌟 ĐIỀU HƯỚNG PROFILE: Cấu hình gọi component MyProfile khi vào tuyến đường /profile */}
         <Route path="/profile" element={<MyProfile />} />
 
@@ -71,6 +75,12 @@ const AppContent = () => {
         {/* 🌟 ROUTE MỚI: Dẫn đến trang Quản lý dịch vụ dành cho Seller */}
         <Route path="/manage-services" element={<ManageServices />} />
         
+        {/* 🆕 ROUTE MỚI: Tuyến đường dẫn đến danh sách đơn hàng mua của Buyer */}
+        <Route path="/my-orders" element={<MyOrders />} />
+
+        {/* 🆕 ROUTE MỚI: Không gian phòng làm việc chi tiết của đơn hàng (Dùng chung Buyer & Seller) */}
+        <Route path="/orders/:orderId" element={<OrderDetailPage />} />
+
         {/* 🔵 TÍCH HỢP ROUTE DẪN ĐẾN TRANG THANH TOÁN XÁC NHẬN ĐƠN HÀNG THỰC TẾ */}
         <Route path="/checkout/:orderId" element={<CheckoutPage />} />
         

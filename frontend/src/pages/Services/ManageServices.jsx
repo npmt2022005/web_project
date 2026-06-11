@@ -1,96 +1,152 @@
 // src/pages/Services/ManageServices.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PenSquare, Trash2, ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight, Eye, ShoppingBag } from 'lucide-react';
 import './ManageServices.css';
-
-// MOCK DATA: Giả lập danh sách dịch vụ của Seller theo cấu trúc hệ thống
-const MOCK_SERVICES = [
-    {
-        id: 1,
-        title: "I will design modern websites in figma or adobe xd",
-        thumbnailUrl: "https://images.pexels.com/photos/3182773/pexels-photo-3182773.jpeg",
-        category: "Web & App Design",
-        cost: 500.00,
-        pricingType: "Fixed",
-        status: "active", // active, pending, ongoing, completed, canceled
-        features: ["Delievred with in a day", "Delievry Time Descreased", "Upload apps to Stores"]
-    },
-    {
-        id: 2,
-        title: "I will build secure backend REST APIs using Spring Boot",
-        thumbnailUrl: "https://images.pexels.com/photos/1181359/pexels-photo-1181359.jpeg",
-        category: "Backend Development",
-        cost: 350.00,
-        pricingType: "Fixed",
-        status: "active",
-        features: ["Clean architecture", "Database integration", "Full API documentation"]
-    },
-    {
-        id: 3,
-        title: "I will deploy and setup AWS cloud infrastructure",
-        thumbnailUrl: "https://images.pexels.com/photos/546814/pexels-photo-546814.jpeg",
-        category: "DevOps",
-        cost: 150.00,
-        pricingType: "Fixed",
-        status: "pending",
-        features: ["CI/CD Pipeline Setup", "Docker containerization"]
-    }
-];
 
 const ManageServices = () => {
     const navigate = useNavigate();
     
-    // Quản lý tab hiện tại đang được chọn (Mặc định là Active Services như hình mẫu)
+    // Quản lý tab hiện tại đang được chọn (Ứng với trạng thái đơn hàng của hệ thống)
     const [activeTab, setActiveTab] = useState('active');
-    const [services, setServices] = useState(MOCK_SERVICES);
+    
+    // State quản lý danh sách đơn hàng thực tế đổ về từ Backend API
+    const [orders, setOrders] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
 
-    // Định nghĩa danh sách các tab hiển thị ở thanh điều hướng phụ
+    // Định nghĩa danh sách các tab hiển thị ở thanh điều hướng phụ - Đã dịch sang Tiếng Việt
     const tabs = [
-        { id: 'active', label: 'Active Services' },
-        { id: 'pending', label: 'Pending Services' },
-        { id: 'ongoing', label: 'Ongoing Services' },
-        { id: 'completed', label: 'Completed Services' },
-        { id: 'canceled', label: 'Canceled Services' }
+        { id: 'active', label: 'Đang hoạt động' },
+        { id: 'pending', label: 'Chờ xử lý' },
+        { id: 'ongoing', label: 'Đang tiến hành' },
+        { id: 'completed', label: 'Đã hoàn thành' },
+        { id: 'canceled', label: 'Đã hủy đơn' }
     ];
 
-    // Lọc danh sách dịch vụ tương ứng với tab đang chọn
-    const filteredServices = services.filter(service => service.status === activeTab);
-
-    // Hàm giả lập xóa dịch vụ cục bộ trên giao diện UI
-    const handleDeleteService = (id) => {
-        if (window.confirm("Are you sure you want to delete this service?")) {
-            setServices(services.filter(item => item.id !== id));
-        }
+    // MOCK DATA DỰ PHÒNG: Tự động kích hoạt hiển thị khi API lỗi để test luồng Workspace
+    const getMockOrdersByStatus = (status) => {
+        const allMocks = [
+            {
+                id: "ORD-9921",
+                orderId: "ORD-9921",
+                gigTitle: "I will design modern websites in figma or adobe xd",
+                gigThumbnail: "https://images.pexels.com/photos/3182773/pexels-photo-3182773.jpeg",
+                partnerName: "Trung Kiên (Buyer Mock)",
+                buyerName: "Trung Kiên (Buyer Mock)",
+                totalAmount: 500.00,
+                price: 500.00,
+                packageSelected: "Gói Cao Cấp (Premium)",
+                status: "active"
+            },
+            {
+                id: "ORD-8843",
+                orderId: "ORD-8843",
+                gigTitle: "I will build secure backend REST APIs using Spring Boot",
+                gigThumbnail: "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg",
+                partnerName: "Phan Kiên (Buyer Mock)",
+                buyerName: "Phan Kiên (Buyer Mock)",
+                totalAmount: 350.00,
+                price: 350.00,
+                packageSelected: "Gói Cố Định/Tiêu Chuẩn",
+                status: "active"
+            },
+            {
+                id: "ORD-1122",
+                orderId: "ORD-1122",
+                gigTitle: "Website Deployment & Cloud Optimization Service",
+                gigThumbnail: "https://images.pexels.com/photos/1181244/pexels-photo-1181244.jpeg",
+                partnerName: "Alex Minh",
+                buyerName: "Alex Minh",
+                totalAmount: 150.00,
+                price: 150.00,
+                packageSelected: "Cài Đặt Cơ Bản",
+                status: "pending"
+            }
+        ];
+        // Lọc dữ liệu theo tab trạng thái đang chọn, nếu danh mục đó trống thì trả về bản ghi mặc định để test
+        const filtered = allMocks.filter(o => o.status === status);
+        return filtered.length > 0 ? filtered : [
+            {
+                id: `ORD-MOCK-${status.toUpperCase()}`,
+                orderId: `ORD-MOCK-${status.toUpperCase()}`,
+                gigTitle: `Dịch vụ thử nghiệm thuộc mục [${status.toUpperCase()}]`,
+                gigThumbnail: "https://images.pexels.com/photos/3182773/pexels-photo-3182773.jpeg",
+                partnerName: "Khách Hàng Giả Lập",
+                buyerName: "Khách Hàng Giả Lập",
+                totalAmount: 200.00,
+                price: 200.00,
+                packageSelected: "Gói Thử Nghiệm",
+                status: status
+            }
+        ];
     };
 
-    // Hàm chuyển hướng sang trang sửa dịch vụ
-    const handleEditService = (id) => {
-        navigate(`/edit-service/${id}`);
+    // 🌟 TÍCH HỢP API: Gọi dữ liệu đơn hàng động dựa trên Tab trạng thái đang chọn
+    useEffect(() => {
+        const fetchSellerOrders = async () => {
+            const token = localStorage.getItem('token');
+            
+            if (!token) {
+                console.warn("Không tìm thấy Access Token. Hệ thống tự động chuyển sang chế độ Mock Data.");
+                setOrders(getMockOrdersByStatus(activeTab));
+                return;
+            }
+
+            try {
+                setIsLoading(true);
+                const response = await fetch(`http://localhost:8080/api/v1/orders?role=SELLER&status=${activeTab}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const resData = await response.json();
+                
+                if (response.ok) {
+                    if (Array.isArray(resData)) {
+                        setOrders(resData.length > 0 ? resData : getMockOrdersByStatus(activeTab));
+                    } else if (resData.data && Array.isArray(resData.data)) {
+                        setOrders(resData.data.length > 0 ? resData.data : getMockOrdersByStatus(activeTab));
+                    } else {
+                        setOrders(getMockOrdersByStatus(activeTab));
+                    }
+                } else {
+                    console.error(`API trả về mã lỗi ${response.status}. Khởi động Mock Data cứu hộ.`);
+                    setOrders(getMockOrdersByStatus(activeTab));
+                }
+            } catch (error) {
+                console.error("Lỗi khi kết nối API lấy danh sách đơn hàng -> Đang kích hoạt Mock Data:", error);
+                setOrders(getMockOrdersByStatus(activeTab));
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchSellerOrders();
+    }, [activeTab]);
+
+    const handleViewOrderDetail = (orderId) => {
+        navigate(`/orders/${orderId}`);
     };
 
-    // 🌟 ĐÃ SỬA: Chuyển hướng chính xác sang route '/create-gig' theo cấu hình trong App.jsx
     const handleAddNewService = () => {
         navigate('/create-gig'); 
     };
 
     return (
         <div className="manage-services-container">
-            {/* Thanh Tiêu đề Header của Trang */}
             <div className="manage-services-header">
                 <div className="header-left">
-                    <h1>Manage Services</h1>
+                    <h1>Quản lý dịch vụ</h1>
                 </div>
-                {/* Nút Add Service được tích hợp trực tiếp tại đây giống ảnh mẫu */}
                 <button className="btn-add-service-trigger" onClick={handleAddNewService}>
-                    Add Service <ArrowUpRight size={16} />
+                    Thêm dịch vụ <ArrowUpRight size={16} />
                 </button>
             </div>
 
-            {/* Khung nội dung chính chứa Tab và Bảng */}
             <div className="services-card-wrapper">
-                
-                {/* Thanh điều hướng phân loại Tab */}
                 <div className="services-tabs-bar">
                     {tabs.map((tab) => (
                         <button
@@ -103,76 +159,96 @@ const ManageServices = () => {
                     ))}
                 </div>
 
-                {/* Khu vực bảng hiển thị danh sách dịch vụ */}
                 <div className="services-table-container">
-                    <table className="services-data-table">
-                        <thead>
-                            <tr>
-                                <th style={{ width: '50%' }}>Title</th>
-                                <th style={{ width: '20%' }}>Category</th>
-                                <th style={{ width: '15%' }}>Type/Cost</th>
-                                <th style={{ width: '15%', textAlign: 'center' }}>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredServices.length > 0 ? (
-                                filteredServices.map((service) => (
-                                    <tr key={service.id}>
-                                        {/* Cột 1: Thumbnail & Tiêu đề kèm danh sách tính năng thu nhỏ */}
+                    {isLoading ? (
+                        <div style={{ padding: '40px', textAlign: 'center', color: '#62646a', fontWeight: 500 }}>
+                            Đang tải dữ liệu từ hệ thống...
+                        </div>
+                    ) : orders.length > 0 ? (
+                        <table className="services-data-table">
+                            <thead>
+                                <tr>
+                                    <th style={{ width: '45%' }}>Thông tin dịch vụ / Đơn hàng</th>
+                                    <th style={{ width: '25%' }}>Khách hàng (Người mua)</th>
+                                    <th style={{ width: '15%' }}>Gói dịch vụ / Chi phí</th>
+                                    <th style={{ width: '15%', textAlign: 'center' }}>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {orders.map((order) => (
+                                    <tr key={order.orderId || order.id}>
                                         <td>
-                                            <div className="service-info-cell">
-                                                <img src={service.thumbnailUrl} alt={service.title} className="service-thumb-img" />
+                                            <div 
+                                                className="service-info-cell" 
+                                                onClick={() => handleViewOrderDetail(order.orderId || order.id)}
+                                                style={{ cursor: 'pointer' }}
+                                            >
+                                                <img 
+                                                    src={order.gigThumbnail || 'https://images.pexels.com/photos/3182773/pexels-photo-3182773.jpeg'} 
+                                                    alt={order.gigTitle} 
+                                                    className="service-thumb-img" 
+                                                />
                                                 <div className="service-details-text">
-                                                    <h4 className="service-title-link">{service.title}</h4>
-                                                    <ul className="service-features-bullets">
-                                                        {service.features.map((feature, index) => (
-                                                            <li key={index}>{feature}</li>
-                                                        ))}
-                                                    </ul>
+                                                    <h4 className="service-title-link" style={{ margin: '0 0 4px 0', color: '#1dbf73' }}>
+                                                        {order.gigTitle || "Dịch vụ Freelancer"}
+                                                    </h4>
+                                                    <span style={{ fontSize: '12px', color: '#95979d' }}>
+                                                        Mã đơn: #{order.orderId || order.id}
+                                                    </span>
                                                 </div>
                                             </div>
                                         </td>
                                         
-                                        {/* Cột 2: Phân mục chuyên môn */}
                                         <td>
-                                            <span className="category-text-badge">{service.category}</span>
+                                            <span className="category-text-badge" style={{ background: '#f4f4f4', color: '#333', fontWeight: 600 }}>
+                                                {order.partnerName || order.buyerName || "Khách hàng hệ thống"}
+                                            </span>
                                         </td>
                                         
-                                        {/* Cột 3: Giá và hình thức thanh toán */}
                                         <td>
-                                            <span className="cost-text-bold">${service.cost.toFixed(2)}/{service.pricingType}</span>
+                                            <span className="cost-text-bold" style={{ color: '#222' }}>
+                                                ${(order.totalAmount || order.price || 0).toFixed(2)} 
+                                                <span style={{ fontSize: '12px', color: '#74767e', fontWeight: 400 }}>
+                                                    / {order.packageSelected || "Cơ bản"}
+                                                </span>
+                                            </span>
                                         </td>
                                         
-                                        {/* Cột 4: Bộ nút thao tác nhanh (Sửa / Xóa) */}
-                                        <td>
-                                            <div className="actions-cell-flex">
-                                                <button 
-                                                    className="action-icon-btn edit-btn"
-                                                    onClick={() => handleEditService(service.id)}
-                                                    title="Edit service"
-                                                >
-                                                    <PenSquare size={16} />
-                                                </button>
-                                                <button 
-                                                    className="action-icon-btn delete-btn"
-                                                    onClick={() => handleDeleteService(service.id)}
-                                                    title="Delete service"
-                                                >
-                                                    <Trash2 size={16} />
-                                                </button>
-                                            </div>
+                                        <td style={{ textAlign: 'center' }}>
+                                            {/* ĐÃ SỬA: Loại bỏ bớt class xung đột CSS ẩn chữ, ép kiểu hiển thị inline-flex với padding rõ ràng */}
+                                            <button 
+                                                onClick={() => handleViewOrderDetail(order.orderId || order.id)}
+                                                title="Xem chi tiết phòng làm việc của đơn hàng"
+                                                style={{ 
+                                                    padding: '6px 14px', 
+                                                    minWidth: '120px',
+                                                    display: 'inline-flex', 
+                                                    alignItems: 'center', 
+                                                    justifyContent: 'center',
+                                                    gap: '6px', 
+                                                    borderRadius: '4px',
+                                                    backgroundColor: '#fff0f6',
+                                                    color: '#f4511e',
+                                                    border: '1px solid #ffccbc',
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                <Eye size={16} /> 
+                                                <span style={{ fontSize: '13px', fontWeight: 600, whiteSpace: 'nowrap' }}>Xem chi tiết</span>
+                                            </button>
                                         </td>
                                     </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan="4" className="empty-table-state">
-                                        No services found in this section.
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
+                                ))}
+                            </tbody>
+                        </table>
+                    ) : (
+                        <div style={{ padding: '60px 20px', textAlign: 'center', color: '#74767e' }}>
+                            <ShoppingBag size={44} style={{ color: '#b5b6ba', marginBottom: '12px' }} />
+                            <p style={{ margin: 0, fontSize: '15px' }}>
+                                Không tìm thấy đơn hàng nào thuộc danh mục hiển thị này.
+                            </p>
+                        </div>
+                    )}
                 </div>
 
             </div>
