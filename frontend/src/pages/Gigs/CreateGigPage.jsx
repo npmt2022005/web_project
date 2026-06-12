@@ -61,6 +61,11 @@ const CreateGigPage = () => {
     }
   ]);
 
+  // === STATE QUẢN LÝ REQUIREMENTS (CÂU HỎI YÊU CẦU ĐỐI VỚI KHÁCH HÀNG) ===
+  const [requirements, setRequirements] = useState([
+    { question: '', answerType: 'TEXT', isMandatory: true }
+  ]);
+
   // ==========================================================================
   // EFFECT: KIỂM TRA PHÂN QUYỀN TRUY CẬP (Bảo vệ Route cho tài khoản Seller)
   // ==========================================================================
@@ -91,12 +96,12 @@ const CreateGigPage = () => {
         console.error("Lỗi lấy danh mục danh mục từ hệ thống:", err);
         // Mock dữ liệu có cấu trúc phân cấp Parent - Child mẫu để tránh crash giao diện
         setBackendCategories([
-          { id: 1, name: "Programming & Tech", subCategories: [
+          { id: 1, name: "Lập trình & Công nghệ", subCategories: [
             { id: 5, name: "Spring Boot & React" },
-            { id: 6, name: "Web Development" }
+            { id: 6, name: "Phát triển Website" }
           ]},
-          { id: 2, name: "Design & Graphics", subCategories: [
-            { id: 7, name: "Logo Design" },
+          { id: 2, name: "Thiết kế & Đồ họa", subCategories: [
+            { id: 7, name: "Thiết kế Logo" },
             { id: 8, name: "UI/UX Mobile" }
           ]}
         ]);
@@ -105,7 +110,6 @@ const CreateGigPage = () => {
 
     const fetchTags = async () => {
       // Do chưa có API cho phần Tags, tạm thời gán luôn Mock Data vào state
-      // Sau này có API, bạn chỉ cần mở lại khối fetch này
       console.log("Hệ thống đang sử dụng danh sách mẫu Mock Data cho Tags.");
       setAvailableTags([
         { id: 1, name: "Spring Boot" },
@@ -181,7 +185,6 @@ const CreateGigPage = () => {
       formData.append('file', file);
 
       try {
-        // Cập nhật endpoint mới theo yêu cầu của bạn
         const response = await fetch('http://localhost:8080/api/v1/uploads/image', {
           method: 'POST',
           body: formData 
@@ -254,6 +257,27 @@ const CreateGigPage = () => {
   };
 
   // ==========================================================================
+  // XỬ LÝ LOGIC CHO KHỐI CÂU HỎI REQUIREMENTS
+  // ==========================================================================
+  const handleAddRequirement = () => {
+    setRequirements([...requirements, { question: '', answerType: 'TEXT', isMandatory: true }]);
+  };
+
+  const handleRemoveRequirement = (index) => {
+    if (requirements.length === 1) {
+      setRequirements([{ question: '', answerType: 'TEXT', isMandatory: true }]);
+    } else {
+      setRequirements(requirements.filter((_, idx) => idx !== index));
+    }
+  };
+
+  const handleRequirementChange = (index, field, value) => {
+    const updatedRequirements = [...requirements];
+    updatedRequirements[index][field] = value;
+    setRequirements(updatedRequirements);
+  };
+
+  // ==========================================================================
   // THAO TÁC CUỐI CÙNG: ĐĂNG BÀI DỊCH VỤ (CREATE GIG)
   // ==========================================================================
   const handleSubmit = async (e) => {
@@ -269,6 +293,15 @@ const CreateGigPage = () => {
       setError('Vui lòng viết mô tả chi tiết nội dung dịch vụ của bạn.');
       return;
     }
+
+    // Lọc bỏ các requirement trống không nhập câu hỏi
+    const validRequirements = requirements
+      .filter(req => req.question.trim() !== '')
+      .map(req => ({
+        question: req.question.trim(),
+        answerType: req.answerType,
+        isMandatory: req.isMandatory
+      }));
 
     const readyUrls = uploadedImages.filter(img => !img.isUploading && img.remoteUrl).map(img => img.remoteUrl);
     const thumbnailUrl = readyUrls.length > 0 ? readyUrls[0] : "https://res.cloudinary.com/your-project/image/upload/v12345/gig-thumb.jpg";
@@ -288,15 +321,17 @@ const CreateGigPage = () => {
         deliveryDays: parseInt(pkg.deliveryDays) || 1,
         revisions: parseInt(pkg.revisions),
         features: pkg.features
-      }))
+      })),
+      requirements: validRequirements 
     };
 
-    setLoading(true);
     SystemLogTest(finalPayload);
 
     const token = localStorage.getItem('token');
 
     try {
+      setLoading(true);
+      // ĐÃ CẬP NHẬT: Thay đổi Endpoint chính xác theo API đặc tả mới
       const response = await fetch('http://localhost:8080/api/v1/gigs/create_gig', {
         method: 'POST',
         headers: {
@@ -331,10 +366,10 @@ const CreateGigPage = () => {
   return (
     <div className="create-gig-container continuous-flow">
       
-      {/* HEADER: Tiêu đề trang và Nút Save chính ở góc trên */}
+      {/* HEADER: Tiêu đề trang và Nút Lưu chính ở góc trên */}
       <div className="create-gig-header-section">
         <div className="header-left">
-          <h2>Add Services</h2>
+          <h2>Thêm Dịch Vụ Mới</h2>
         </div>
         <button 
           type="button" 
@@ -342,7 +377,7 @@ const CreateGigPage = () => {
           className="btn-save-publish-top"
           disabled={loading}
         >
-          {loading ? <Loader2 className="animate-spin" size={14} /> : 'Save & Publish'} <span className="arrow-icon">↗</span>
+          {loading ? <Loader2 className="animate-spin" size={14} /> : 'Lưu & Đăng tải'} <span className="arrow-icon">↗</span>
         </button>
       </div>
 
@@ -350,31 +385,31 @@ const CreateGigPage = () => {
 
       <div className="create-gig-form-layout single-column-flow">
         
-        {/* KHỐI 1: BASIC INFORMATION */}
+        {/* KHỐI 1: THÔNG TIN CƠ BẢN */}
         <div className="form-section-card visual-card">
           <div className="section-title-line">
-            <h4>Basic Information</h4>
+            <h4>Thông Tin Cơ Bản</h4>
           </div>
           
           <div className="form-row-grid two-columns">
             <div className="form-group">
-              <label>Service Title *</label>
+              <label>Tiêu Đề Dịch Vụ *</label>
               <div className="prefix-input-container standard-input-ui">
-                <span className="title-prefix-fix">i will</span>
+                <span className="title-prefix-fix">tôi sẽ</span>
                 <input 
                   type="text" 
                   name="title"
                   value={generalInfo.title}
                   onChange={handleInputChange}
                   maxLength={80}
-                  placeholder="build a custom Spring Boot and React application"
+                  placeholder="xây dựng một ứng dụng Spring Boot và React custom theo yêu cầu"
                   required
                 />
               </div>
             </div>
 
             <div className="form-group">
-              <label>Starting Price (Basic Package) *</label>
+              <label>Giá Khởi Điểm (Gói Cơ Bản) *</label>
               <div className="prefix-input-container standard-input-ui">
                 <span className="title-prefix-fix">$</span>
                 <input 
@@ -390,16 +425,16 @@ const CreateGigPage = () => {
             </div>
           </div>
 
-          {/* SỬA ĐỔI: Chọn Category Cha & Con */}
+          {/* CHỌN CATEGORY CHA & CON */}
           <div className="form-row-grid two-columns" style={{ marginTop: '15px' }}>
             <div className="form-group">
-              <label>Main Category *</label>
+              <label>Danh Mục Chính *</label>
               <select 
                 value={selectedParentId} 
                 onChange={handleParentCategoryChange}
                 required
               >
-                <option value="">Select Main Category</option>
+                <option value="">-- Chọn Danh Mục Chính --</option>
                 {backendCategories.map((cat) => (
                   <option key={`parent-${cat.id}`} value={cat.id}>
                     {cat.name}
@@ -409,7 +444,7 @@ const CreateGigPage = () => {
             </div>
 
             <div className="form-group">
-              <label>Sub Category *</label>
+              <label>Danh Mục Phụ *</label>
               <select 
                 name="categoryId" 
                 value={generalInfo.categoryId} 
@@ -417,7 +452,7 @@ const CreateGigPage = () => {
                 disabled={!selectedParentId}
                 required
               >
-                <option value="">Select Sub Category</option>
+                <option value="">-- Chọn Danh Mục Phụ --</option>
                 {subCategories.map((sub) => (
                   <option key={`sub-${sub.id}`} value={sub.id}>
                     {sub.name}
@@ -427,23 +462,23 @@ const CreateGigPage = () => {
             </div>
           </div>
 
-          {/* SỬA ĐỔI: Skills & Tags lấy trực tiếp từ API thay vì gõ tay */}
+          {/* CHỌN SKILLS & TAGS */}
           <div className="form-group" style={{ marginTop: '15px' }}>
-            <label>Skills & Tags (Select and Add)</label>
+            <label>Kỹ Năng & Thẻ Tags (Chọn và Thêm)</label>
             <div className="skills-input-wrapper-ui">
               <select
                 value={currentSkill}
                 onChange={(e) => setCurrentSkill(e.target.value)}
                 style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
               >
-                <option value="">-- Choose a Skill --</option>
+                <option value="">-- Lựa chọn kỹ năng từ hệ thống --</option>
                 {availableTags.map((tag) => (
                   <option key={`tag-opt-${tag.id}`} value={tag.name}>
                     {tag.name}
                   </option>
                 ))}
               </select>
-              <button type="button" onClick={handleAddSkill} className="btn-add-tag-inline">Add</button>
+              <button type="button" onClick={handleAddSkill} className="btn-add-tag-inline">Thêm</button>
             </div>
             <div className="skills-tags-preview inline-tags">
               {skills.map((skill, index) => (
@@ -456,10 +491,10 @@ const CreateGigPage = () => {
           </div>
         </div>
 
-        {/* KHỐI 2: SERVICES DETAIL */}
+        {/* KHỐI 2: CHI TIẾT DỊCH VỤ */}
         <div className="form-section-card visual-card">
           <div className="section-title-line">
-            <h4>Services Detail</h4>
+            <h4>Chi Tiết Nội Dung Dịch Vụ</h4>
           </div>
           <div className="form-group">
             <textarea 
@@ -473,10 +508,10 @@ const CreateGigPage = () => {
           </div>
         </div>
 
-        {/* KHỐI 3: PACKAGES */}
+        {/* KHỐI 3: CẤU HÌNH CÁC GÓI GIÁ */}
         <div className="form-section-card visual-card no-padding-mobile">
           <div className="section-title-line" style={{ padding: '0 24px' }}>
-            <h4>Packages Pricing Matrix</h4>
+            <h4>Ma Trận Cấu Hình Gói Dịch Vụ & Giá Cả</h4>
           </div>
           
           <div className="packages-table-responsive-container">
@@ -487,10 +522,12 @@ const CreateGigPage = () => {
                   {packages.map((pkg, idx) => (
                     <th key={`pkg-th-${idx}`} width="25%">
                       <div className="pkg-header-cell-edit">
-                        <span className="pkg-title-bold text-green">{pkg.type}</span>
+                        <span className="pkg-title-bold text-green">
+                          {pkg.type === 'BASIC' ? 'CƠ BẢN (BASIC)' : pkg.type === 'STANDARD' ? 'TIÊU CHUẨN (STANDARD)' : 'CAO CẤP (PREMIUM)'}
+                        </span>
                         <textarea 
                           value={pkg.shortDescription} 
-                          placeholder={`Mô tả ngắn cho gói ${pkg.type.toLowerCase()}...`}
+                          placeholder={`Mô tả ngắn gọn đặc điểm của gói ${pkg.type.toLowerCase()}...`}
                           className="inline-edit-pkg-desc"
                           onChange={(e) => handlePackageChange(idx, 'shortDescription', e.target.value)}
                         />
@@ -501,7 +538,7 @@ const CreateGigPage = () => {
               </thead>
               <tbody>
                 <tr>
-                  <td className="row-header-label">Source Code</td>
+                  <td className="row-header-label">Cung cấp Mã Nguồn (Source Code)</td>
                   {packages.map((pkg, idx) => (
                     <td key={`sc-${idx}`} className="text-center">
                       <input 
@@ -513,7 +550,7 @@ const CreateGigPage = () => {
                   ))}
                 </tr>
                 <tr>
-                  <td className="row-header-label">Commercial Use</td>
+                  <td className="row-header-label">Sử dụng Thương Mại (Commercial Use)</td>
                   {packages.map((pkg, idx) => (
                     <td key={`cu-${idx}`} className="text-center">
                       <input 
@@ -525,7 +562,7 @@ const CreateGigPage = () => {
                   ))}
                 </tr>
                 <tr>
-                  <td className="row-header-label">Revisions</td>
+                  <td className="row-header-label">Số lần sửa đổi (Revisions)</td>
                   {packages.map((pkg, idx) => (
                     <td key={`rev-${idx}`} className="text-center">
                       <div className="inline-numeric-edit">
@@ -535,11 +572,14 @@ const CreateGigPage = () => {
                           onChange={(e) => handlePackageChange(idx, 'revisions', e.target.value)}
                         />
                       </div>
+                      <span style={{ fontSize: '11px', display: 'block', color: '#777' }}>
+                        {pkg.revisions === -1 ? 'Vô hạn' : 'Lần'}
+                      </span>
                     </td>
                   ))}
                 </tr>
                 <tr>
-                  <td className="row-header-label">Delivery Days</td>
+                  <td className="row-header-label">Thời gian bàn giao (Delivery Days)</td>
                   {packages.map((pkg, idx) => (
                     <td key={`del-${idx}`} className="text-center">
                       <div className="inline-numeric-edit">
@@ -549,12 +589,12 @@ const CreateGigPage = () => {
                           onChange={(e) => handlePackageChange(idx, 'deliveryDays', e.target.value)}
                         />
                       </div>
-                      <span style={{ fontSize: '11px', display: 'block', color: '#777' }}>Days</span>
+                      <span style={{ fontSize: '11px', display: 'block', color: '#777' }}>Ngày</span>
                     </td>
                   ))}
                 </tr>
                 <tr>
-                  <td className="row-header-label font-bold">Total Price</td>
+                  <td className="row-header-label font-bold">Tổng chi phí gói</td>
                   {packages.map((pkg, idx) => (
                     <td key={`price-${idx}`} className="text-center font-bold text-green">
                       <div className="price-input-table-container">
@@ -574,22 +614,22 @@ const CreateGigPage = () => {
           </div>
         </div>
 
-        {/* KHỐI 4: GALLERY */}
+        {/* KHỐI 4: THƯ VIỆN ẢNH */}
         <div className="form-section-card visual-card">
           <div className="section-title-line">
-            <h4>Gallery</h4>
+            <h4>Thư Viện Hình Ảnh Dịch Vụ</h4>
           </div>
           
           <div className="gallery-upload-grid-flow">
             {uploadedImages.map((img, index) => (
               <div key={img.id} className="gallery-preview-item-box" style={{ position: 'relative' }}>
-                <img src={img.previewUrl} alt="Product upload preview" />
+                <img src={img.previewUrl} alt="Hình ảnh sản phẩm preview" />
                 
                 {img.isUploading && (
                   <div className="image-loading-overlay" style={{
                     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
                     backgroundColor: 'rgba(255,255,255,0.7)', display: 'flex', 
-                    alignItems: 'center', justifyContent: 'center'
+                    alignItems: 'center', justifyindex: 'center', justifyContent: 'center'
                   }}>
                     <Loader2 className="animate-spin" color="#76b783" />
                   </div>
@@ -603,7 +643,7 @@ const CreateGigPage = () => {
                 >
                   &times;
                 </button>
-                {index === 0 && <span className="thumbnail-badge">Thumbnail</span>}
+                {index === 0 && <span className="thumbnail-badge">Ảnh Đại Diện</span>}
               </div>
             ))}
 
@@ -617,13 +657,99 @@ const CreateGigPage = () => {
               />
               <div className="trigger-inner-content">
                 <Upload size={22} color="#999" />
-                <span>Upload</span>
+                <span>Tải ảnh lên</span>
               </div>
             </label>
           </div>
           <small className="form-tip" style={{ marginTop: '12px', display: 'block' }}>
-            Hệ thống hỗ trợ ảnh .jpg & .png. Bức ảnh đầu tiên sẽ mặc định làm ảnh đại diện chính (Thumbnail).
+            Hệ thống hỗ trợ định dạng ảnh .jpg & .png. Bức ảnh đầu tiên được tải lên sẽ mặc định chọn làm Ảnh đại diện chính (Thumbnail) hiển thị ngoài danh sách.
           </small>
+        </div>
+
+        {/* KHỐI 5: BUYER REQUIREMENTS */}
+        <div className="form-section-card visual-card">
+          <div className="section-title-line">
+            <h4>Yêu Cầu Đối Với Người Mua (Buyer Requirements)</h4>
+          </div>
+          <p style={{ fontSize: '13px', color: '#62646a', marginBottom: '15px' }}>
+            Đặt các câu hỏi khảo sát để thu thập thông tin bắt buộc từ người mua (Ví dụ: file tài liệu đặc tả, link Figma, tài khoản demo, thông tin setup...) trước khi bạn bắt đầu thực hiện tiến trình đơn hàng.
+          </p>
+
+          <div className="requirements-list-wrapper" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            {requirements.map((req, idx) => (
+              <div key={`req-${idx}`} className="requirement-item-row" style={{ border: '1px solid #e4e5e7', padding: '15px', borderRadius: '6px', backgroundColor: '#fafafa' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                  <span style={{ fontWeight: '600', fontSize: '14px', color: '#404145' }}>Yêu cầu câu hỏi #{idx + 1}</span>
+                  <button 
+                    type="button" 
+                    onClick={() => handleRemoveRequirement(idx)} 
+                    style={{ background: 'none', border: 'none', color: '#f44336', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px' }}
+                  >
+                    <Trash size={14} /> Xóa câu hỏi
+                  </button>
+                </div>
+
+                <div className="form-group" style={{ marginBottom: '12px' }}>
+                  <label style={{ fontSize: '13px', fontWeight: '500' }}>Nội dung câu hỏi yêu cầu *</label>
+                  <input 
+                    type="text"
+                    value={req.question}
+                    onChange={(e) => handleRequirementChange(idx, 'question', e.target.value)}
+                    placeholder="Ví dụ: Vui lòng gửi tài liệu đặc tả thiết kế hệ thống hoặc link Figma của bạn..."
+                    style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ced4da', marginTop: '5px' }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', gap: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <div className="form-group" style={{ flex: '1', minWidth: '150px' }}>
+                    <label style={{ fontSize: '13px', fontWeight: '500' }}>Hình thức trả lời</label>
+                    <select
+                      value={req.answerType}
+                      onChange={(e) => handleRequirementChange(idx, 'answerType', e.target.value)}
+                      style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da', marginTop: '5px' }}
+                    >
+                      <option value="TEXT">Đoạn văn bản tự do (Free Text)</option>
+                      <option value="ATTACHMENT">Đính kèm tập tin (Attachment File)</option>
+                    </select>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '20px' }}>
+                    <input 
+                      type="checkbox"
+                      id={`mandatory-${idx}`}
+                      checked={req.isMandatory}
+                      onChange={(e) => handleRequirementChange(idx, 'isMandatory', e.target.checked)}
+                      style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                    />
+                    <label htmlFor={`mandatory-${idx}`} style={{ fontSize: '13px', cursor: 'pointer', fontWeight: '500' }}>
+                      Bắt buộc người mua phải trả lời (Mandatory)
+                    </label>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            onClick={handleAddRequirement}
+            style={{
+              marginTop: '15px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 16px',
+              backgroundColor: '#fff',
+              border: '1px dashed #1dbf73',
+              color: '#1dbf73',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontWeight: '600',
+              fontSize: '13px'
+            }}
+          >
+            <Plus size={14} /> Thêm câu hỏi yêu cầu mới
+          </button>
         </div>
 
         {/* FOOTER BUTTON ACTION */}
@@ -634,7 +760,7 @@ const CreateGigPage = () => {
             className="btn-submit-green-save"
             disabled={loading}
           >
-            {loading ? <Loader2 className="animate-spin" size={14} /> : 'Save'} <span className="arrow-icon">↗</span>
+            {loading ? <Loader2 className="animate-spin" size={14} /> : 'Lưu lại'} <span className="arrow-icon">↗</span>
           </button>
         </div>
 

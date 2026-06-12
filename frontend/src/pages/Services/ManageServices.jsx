@@ -20,7 +20,7 @@ const ManageServices = () => {
         { id: 'pending', label: 'Chờ xử lý' },
         { id: 'ongoing', label: 'Đang tiến hành' },
         { id: 'completed', label: 'Đã hoàn thành' },
-        { id: 'canceled', label: 'Đã hủy đơn' }
+        { id: 'cancelled', label: 'Đã hủy đơn' } // Đã chỉnh ID từ canceled thành cancelled để khớp đồng bộ
     ];
 
     // MOCK DATA DỰ PHÒNG: Tự động kích hoạt hiển thị khi API lỗi để test luồng Workspace
@@ -94,7 +94,11 @@ const ManageServices = () => {
 
             try {
                 setIsLoading(true);
-                const response = await fetch(`http://localhost:8080/api/v1/orders?role=SELLER&status=${activeTab}`, {
+                
+                // Ánh xạ an toàn tên Tab Frontend sang định dạng chữ hoa viết chuẩn theo tài liệu của Backend
+                const backendStatusParam = activeTab.toUpperCase();
+
+                const response = await fetch(`http://localhost:8080/api/v1/orders?role=SELLER&status=${backendStatusParam}`, {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -215,7 +219,6 @@ const ManageServices = () => {
                                         </td>
                                         
                                         <td style={{ textAlign: 'center' }}>
-                                            {/* ĐÃ SỬA: Loại bỏ bớt class xung đột CSS ẩn chữ, ép kiểu hiển thị inline-flex với padding rõ ràng */}
                                             <button 
                                                 onClick={() => handleViewOrderDetail(order.orderId || order.id)}
                                                 title="Xem chi tiết phòng làm việc của đơn hàng"

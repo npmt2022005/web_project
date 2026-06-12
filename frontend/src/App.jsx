@@ -27,6 +27,9 @@ import MyOrders from './pages/Orders/MyOrders';
 // 🆕 THÊM MỚI: Tích hợp trang chi tiết đơn hàng / Phòng làm việc (Order Detail / Workspace)
 import OrderDetailPage from './pages/Orders/OrderDetailPage';
 
+// 🆕 THÊM MỚI: Tích hợp trang nộp yêu cầu đơn hàng vừa tạo
+import OrderRequirementPage from './pages/Orders/OrderRequirementPage';
+
 // Component giữ chỗ tạm thời cho các trang danh mục chưa phát triển xong
 const PlaceholderPage = ({ title }) => (
   <div style={{ padding: '100px', textAlign: 'center', fontFamily: 'sans-serif' }}>
@@ -80,6 +83,9 @@ const AppContent = () => {
 
         {/* 🆕 ROUTE MỚI: Không gian phòng làm việc chi tiết của đơn hàng (Dùng chung Buyer & Seller) */}
         <Route path="/orders/:orderId" element={<OrderDetailPage />} />
+
+        {/* 🆕 ROUTE MỚI: Tuyến đường cung cấp đề bài / yêu cầu sau khi thanh toán thành công */}
+        <Route path="/orders/:orderId/requirements" element={<OrderRequirementPage />} />
 
         {/* 🔵 TÍCH HỢP ROUTE DẪN ĐẾN TRANG THANH TOÁN XÁC NHẬN ĐƠN HÀNG THỰC TẾ */}
         <Route path="/checkout/:orderId" element={<CheckoutPage />} />

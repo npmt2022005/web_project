@@ -128,8 +128,9 @@ const CheckoutPage = () => {
                     </div>
 
                     {/* Bọc Form và truyền cấu hình options vào để Split Elements hoạt động không lỗi */}
+                    {/* BỔ SUNG TRUYỀN THÊM orderId VÀO CHECKOUTFORM ĐỂ TIẾN HÀNH ĐIỀU HƯỚNG */}
                     <Elements stripe={stripePromise} options={stripeOptions.clientSecret ? stripeOptions : undefined}>
-                        <CheckoutForm summary={summary} clientSecret={clientSecret} />
+                        <CheckoutForm summary={summary} clientSecret={clientSecret} orderId={orderId} />
                     </Elements>
                 </div>
             </div>

@@ -261,6 +261,13 @@ body {
 /* ==========================================================================
    4. BẢNG CẤU HÌNH GÓI GIÁ PHẲNG (ALTERNATIVE PACKAGES TABLE)
    ========================================================================== */
+.packages-table-responsive-container {
+  overflow-x: auto;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  background-color: var(--white);
+}
+
 .packages-pricing-grid-table.alternative-style {
   width: 100%;
   border-collapse: collapse;
@@ -416,7 +423,16 @@ body {
 
 /* Bổ sung hiệu ứng mờ xoay tròn phục vụ API Upload_Image */
 .image-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background-color: rgba(255, 255, 255, 0.75) !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 8;
 }
 
 /* Nút xóa ảnh mẫu */
@@ -438,6 +454,7 @@ body {
   padding: 0;
   line-height: 1;
   z-index: 10;
+  transition: background-color 0.2s;
 }
 
 .btn-delete-image-preview:hover {
@@ -484,6 +501,21 @@ body {
   font-size: 12px;
   color: var(--text-muted);
   font-weight: 500;
+}
+
+/* Trạng thái trống khi chưa có hình ảnh nào */
+.gallery-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 20px;
+  border: 2px dashed #eae9e6;
+  border-radius: 8px;
+  background-color: #fafafa;
+  color: var(--text-muted);
+  font-size: 13px;
+  gap: 8px;
 }
 
 /* ==========================================================================
@@ -568,6 +600,10 @@ body {
   
   .form-section-card.visual-card {
     padding: 16px;
+  }
+  
+  .form-section-card.no-padding-mobile {
+    padding: 16px 0;
   }
   
   .packages-table-responsive-container {
