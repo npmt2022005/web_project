@@ -62,6 +62,9 @@ public class Gig {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @OneToMany(mappedBy = "gig", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<GigRequirement> requirements = new java.util.HashSet<>();
+    
     public void addPackage(GigPackages gigPackage) {
         packages.add(gigPackage);
         gigPackage.setGig(this); // Gắn ngược ID của Gig hiện tại vào Package

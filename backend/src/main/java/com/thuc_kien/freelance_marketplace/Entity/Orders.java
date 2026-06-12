@@ -2,10 +2,13 @@ package com.thuc_kien.freelance_marketplace.Entity;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.hibernate.annotations.CreationTimestamp;
 
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -64,4 +67,15 @@ public class Orders {
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "requirement_text", columnDefinition = "TEXT")
+    private String requirementText;
+
+    @ElementCollection
+    @CollectionTable(
+        name = "order_attachments", // Tên bảng phụ tự động sinh ra để lưu link
+        joinColumns = @JoinColumn(name = "order_id") // Khóa ngoại nối với bảng orders
+    )
+    @Column(name = "file_url", columnDefinition = "TEXT")
+    private List<String> attachedFiles = new java.util.ArrayList<>();
 }

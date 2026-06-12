@@ -31,4 +31,31 @@ public class FileUploadController {
 
         return ResponseEntity.ok(response);
     }
+    @PostMapping("/file")
+    public ResponseEntity<APIResponse<String>> uploadFile(@RequestParam("file") MultipartFile file) {
+        try {
+            // Kiểm tra file rỗng
+            if (file.isEmpty()) {
+                throw new RuntimeException("Vui lòng chọn file để upload");
+            }
+
+            String fileUrl = fileUploadService.uploadFile(file);
+
+            return ResponseEntity.ok(
+                    APIResponse.<String>builder()
+                            .status("success")
+                            .message("Upload file thành công")
+                            .data(fileUrl)
+                            .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(
+                    APIResponse.<String>builder()
+                            .status("error")
+                            .message("Lỗi khi upload file: " + e.getMessage())
+                            .data(null)
+                            .build()
+            );
+        }
+    }
 }

@@ -24,6 +24,7 @@ public class GigCreateRequestDTO {
     private List<String> galleryUrls;
 
     private List<PackageRequestDTO> packages;
+    private List<GigRequirementDTO> requirements;
 
     @Data
     public static class PackageRequestDTO {
@@ -35,5 +36,11 @@ public class GigCreateRequestDTO {
         
         private Map<String, Boolean> features; 
         
+    }
+    @Data
+    public static class GigRequirementDTO {
+        private String question;
+        private String answerType; // VD: "TEXT" hoặc "ATTACHMENT"
+        private Boolean isMandatory; // Bắt buộc hay không
     }
 }

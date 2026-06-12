@@ -55,6 +55,7 @@ public class GigService {
         List<Gig> gigs = gigRepo.findTopFeaturedGigs(pageable);
 
         return gigs.stream().map(gig -> GigFeaturedResponseDTO.builder()
+                .id(gig.getId())
                 .title(gig.getTitle())
                 .price(gig.getPrice())
                 .thumbnailUrl(gig.getThumbnailUrl())
@@ -450,6 +451,18 @@ public class GigService {
                 newGig.setPrice(basicPackage.getPrice());
                 newGig.setDeliveryTime(basicPackage.getDeliveryDays());
             }
+        }
+        if (request.getRequirements() != null && !request.getRequirements().isEmpty()) {
+            Set<GigRequirement> requirementsToSave = request.getRequirements().stream().map(reqDto -> {
+                GigRequirement req = new GigRequirement();
+                req.setQuestion(reqDto.getQuestion());
+                req.setAnswerType(reqDto.getAnswerType() != null ? reqDto.getAnswerType() : "TEXT"); 
+                req.setIsMandatory(reqDto.getIsMandatory() != null ? reqDto.getIsMandatory() : true);
+                req.setGig(newGig); // Mapping quan hệ 2 chiều
+                return req;
+            }).collect(Collectors.toSet());
+            
+            newGig.setRequirements(requirementsToSave);
         }
         Gig savedGig = gigRepo.save(newGig);
         syncGigToElasTic(savedGig);

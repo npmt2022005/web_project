@@ -36,6 +36,7 @@ public class GigController {
 
     @Operation(summary = "Lấy danh sách dịch vụ nổi bật (Featured Gigs)", 
             description = "API này mở công khai để lấy các dịch vụ có rating và lượt review cao nhất hiển thị lên trang chủ.")
+            
     @GetMapping("/featured")
     public ResponseEntity<APIResponse<List<GigFeaturedResponseDTO>>> getFeaturedGigs(
             @Parameter(description = "Số lượng dịch vụ tối đa muốn lấy ra để hiển thị", example = "4")
