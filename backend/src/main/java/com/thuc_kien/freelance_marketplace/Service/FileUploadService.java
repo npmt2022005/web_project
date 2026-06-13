@@ -26,21 +26,20 @@ public class FileUploadService {
         }
 
         try {
-            Map uploadResult = cloudinary.uploader().upload(file.getBytes(), 
-            ObjectUtils.asMap(
-                "folder", "freelance_marketplace/gigs", // 👈 Tự tạo thư mục trên Cloudinary
-                "resource_type", "image"
-            )
-        );
-            
+            Map uploadResult = cloudinary.uploader().upload(file.getBytes(),
+                    ObjectUtils.asMap(
+                            "folder", "freelance_marketplace/gigs", // 👈 Tự tạo thư mục trên Cloudinary
+                            "resource_type", "image"));
+
             return uploadResult.get("secure_url").toString();
-            
+
         } catch (IOException e) {
             throw new RuntimeException("Đã xảy ra lỗi khi tải ảnh lên Cloudinary", e);
         }
     }
+
     @SuppressWarnings("unchecked")
-    public String uploadFile(MultipartFile file) throws IOException{
+    public String uploadFile(MultipartFile file, String folderName) throws IOException {
         if (file.isEmpty()) {
             throw new RuntimeException("Vui lòng chọn một file đính kèm!");
         }
@@ -49,17 +48,17 @@ public class FileUploadService {
         String originalFilename = file.getOriginalFilename();
         if (originalFilename != null) {
             String lowerCaseName = originalFilename.toLowerCase();
-            if (lowerCaseName.endsWith(".exe") || lowerCaseName.endsWith(".bat") || 
-                lowerCaseName.endsWith(".sh") || lowerCaseName.endsWith(".msi")) {
+            if (lowerCaseName.endsWith(".exe") || lowerCaseName.endsWith(".bat") ||
+                    lowerCaseName.endsWith(".sh") || lowerCaseName.endsWith(".msi")) {
                 throw new RuntimeException("Định dạng file không được hỗ trợ để đảm bảo an toàn!");
             }
         }
+        // 2. Cấu hình upload lên Cloudinary
         Map<String, Object> params = ObjectUtils.asMap(
-            "resource_type", "auto",
-            "folder", "freelance_marketplace/attachments",
-            "use_filename", true,    // Yêu cầu Cloudinary giữ lại tên file của người dùng
-            "unique_filename", true 
-        );
+                "resource_type", "auto",
+                "folder", "freelance_marketplace/" + folderName, 
+                "use_filename", true,
+                "unique_filename", true);
         Map uploadResult = cloudinary.uploader().upload(file.getBytes(), params);
         return uploadResult.get("secure_url").toString();
     }

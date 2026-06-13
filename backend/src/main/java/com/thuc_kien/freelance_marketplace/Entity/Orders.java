@@ -37,7 +37,10 @@ public class Orders {
     private Long packageId;
 
     @Column(name = "status", nullable = false, length = 50)
-    private String status; // Ví dụ: PENDING, PAID, CANCELED, COMPLETED
+    private String status; // Ví dụ: PAID, PENDING, ACCEPTED, REJECTED, DELIVERED, COMPLETED, REFUNDED
+
+    @Column(name = "stripe_payment_intent_id", length = 100)
+    private String stripePaymentIntentId;
 
     @Column(name = "total_amount", precision = 10, scale = 2)
     private BigDecimal totalAmount;
@@ -70,7 +73,15 @@ public class Orders {
 
     @Column(name = "requirement_text", columnDefinition = "TEXT")
     private String requirementText;
+    
+    @Column(name = "submission_link", columnDefinition = "TEXT")
+    private String submissionLink;
 
+    @Column(name = "submission_note", columnDefinition = "TEXT")
+    private String submissionNote;
+
+    @Column(name = "actual_delivery_date")
+    private LocalDateTime actualDeliveryDate;
     @ElementCollection
     @CollectionTable(
         name = "order_attachments", // Tên bảng phụ tự động sinh ra để lưu link

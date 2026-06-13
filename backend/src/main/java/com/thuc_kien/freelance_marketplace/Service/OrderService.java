@@ -1,34 +1,42 @@
 package com.thuc_kien.freelance_marketplace.Service;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.data.elasticsearch.ResourceNotFoundException;
+// import org.springframework.http.ResponseEntity;
+// import org.springframework.security.core.Authentication;
+// import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+// import org.springframework.web.bind.annotation.PathVariable;
+// import org.springframework.web.bind.annotation.PostMapping;
+// import org.springframework.web.bind.annotation.RequestBody;
 
-
+import com.thuc_kien.freelance_marketplace.DTO.CompleteOrderRequest;
 import com.thuc_kien.freelance_marketplace.DTO.CreateOrderRequest;
+import com.thuc_kien.freelance_marketplace.DTO.DeliverOrderRequest;
 import com.thuc_kien.freelance_marketplace.DTO.GigRequirementResponseDTO;
 import com.thuc_kien.freelance_marketplace.DTO.OrderListItemDTO;
 import com.thuc_kien.freelance_marketplace.DTO.OrderResponseDTO;
 import com.thuc_kien.freelance_marketplace.DTO.OrderStartRequestDTO;
+import com.thuc_kien.freelance_marketplace.DTO.OrderStatus;
 import com.thuc_kien.freelance_marketplace.DTO.OrderSummaryDTO;
+import com.thuc_kien.freelance_marketplace.DTO.UpdateStatusRequest;
 import com.thuc_kien.freelance_marketplace.DTO.OrderSummaryDTO.*;
+import com.thuc_kien.freelance_marketplace.DTO.RevisionOrderRequest;
 import com.thuc_kien.freelance_marketplace.Entity.Gig;
 import com.thuc_kien.freelance_marketplace.Entity.GigPackages;
 import com.thuc_kien.freelance_marketplace.Entity.Orders;
+import com.thuc_kien.freelance_marketplace.Entity.Review;
 import com.thuc_kien.freelance_marketplace.Entity.Seller;
 import com.thuc_kien.freelance_marketplace.Entity.User;
 import com.thuc_kien.freelance_marketplace.Repository.GigRepository;
 import com.thuc_kien.freelance_marketplace.Repository.GigsPackagesRepository;
 import com.thuc_kien.freelance_marketplace.Repository.OrderRepository;
+import com.thuc_kien.freelance_marketplace.Repository.ReviewRepository;
 import com.thuc_kien.freelance_marketplace.Repository.SellerRepository;
 import com.thuc_kien.freelance_marketplace.Repository.UserRepository;
 import com.thuc_kien.freelance_marketplace.security.CustomUserDetails;
@@ -44,6 +52,9 @@ public class OrderService {
     private final UserRepository userRepo;
     private final SellerRepository sellerRepo;
     private final GigsPackagesRepository pkgRepo;
+    private final PaymentService paymentService;
+    private final FileUploadService fileUploadService;
+    private final ReviewRepository reviewRepo;
 
     @Transactional
     public Long createDraftOrder(CreateOrderRequest request, Long buyerId) {
@@ -67,7 +78,7 @@ public class OrderService {
                 .seller(seller)
                 .buyer(buyer)
                 .packageId(selectedPackage.getId())
-                .status("PENDING")
+                .status("PAID")
                 .gigPrice(packagePrice)
                 .serviceFee(serviceFee)
                 .totalAmount(totalAmount)
@@ -97,14 +108,10 @@ public class OrderService {
                 break;
 
             case "DELIVERED":
-                // Người bán đã nộp sản phẩm -> Bạn có thể lưu vết thời gian nộp bài thực tế ở
-                // đây nếu có cột delivered_at
                 System.out.println("Người bán đã giao hàng cho đơn: " + orderId);
                 break;
 
             case "COMPLETED":
-                // Người mua bấm "Chấp nhận sản phẩm" -> Đơn hoàn thành
-                // Thường ở đây sẽ có logic gọi qua WalletService để cộng tiền cho Người bán
                 System.out.println("Đơn hàng hoàn thành, chuẩn bị cộng tiền cho Seller!");
                 break;
 
@@ -114,7 +121,6 @@ public class OrderService {
                 break;
 
             default:
-                // Các trạng thái khác (như IN_PROGRESS, LATE...) không cần xử lý đặc biệt
                 break;
         }
         order.setStatus(newStatus.toUpperCase());
@@ -251,7 +257,7 @@ public class OrderService {
                 .gigTitle(order.getGig() != null ? order.getGig().getTitle() : "Dịch vụ không xác định")
                 .gigDescription(order.getGig() != null ? order.getGig().getDescription() : "")
                 .deliveryDeadline(order.getDeliveryDate())
-                .partnerAvatar("") // Tạm để trống, sau này nối với link S3/Cloudinary của User
+                .partnerAvatar("")
                 .partnerName(partnerName)
                 .packageSelected(order.getPackageId() != null ? getPackageName(order.getPackageId(), order) : "")
                 .createdAt(order.getCreatedAt())
@@ -259,6 +265,7 @@ public class OrderService {
                 .currency("USD")
                 .build();
     }
+
     public List<GigRequirementResponseDTO> getRequirementsForOrder(Long orderId, Long currentUserId) {
         // 1. Tìm đơn hàng
         Orders order = orderRepo.findById(orderId)
@@ -266,9 +273,9 @@ public class OrderService {
 
         // 2. Bảo mật: Chỉ Buyer hoặc Seller của đơn này mới được xem câu hỏi
         boolean isBuyer = order.getBuyer() != null && order.getBuyer().getId().equals(currentUserId);
-        boolean isSeller = order.getSeller() != null 
-                        && order.getSeller().getUser() != null 
-                        && order.getSeller().getUser().getId().equals(currentUserId);
+        boolean isSeller = order.getSeller() != null
+                && order.getSeller().getUser() != null
+                && order.getSeller().getUser().getId().equals(currentUserId);
 
         if (!isBuyer && !isSeller) {
             throw new RuntimeException("Từ chối truy cập: Bạn không có quyền xem yêu cầu của đơn hàng này.");
@@ -277,7 +284,7 @@ public class OrderService {
         // 3. Lấy Gig từ đơn hàng
         Gig gig = order.getGig();
         if (gig == null || gig.getRequirements() == null || gig.getRequirements().isEmpty()) {
-            return List.of(); 
+            return List.of();
         }
 
         return gig.getRequirements().stream()
@@ -288,6 +295,7 @@ public class OrderService {
                         .build())
                 .collect(Collectors.toList());
     }
+
     @Transactional
     public void startOrder(Long orderId, Long currentUserId, OrderStartRequestDTO request) {
         // 1. Tìm đơn hàng
@@ -299,9 +307,9 @@ public class OrderService {
             throw new RuntimeException("Từ chối truy cập: Bạn không có quyền khởi động đơn hàng này.");
         }
 
-        // 3. Kiểm tra nếu đơn hàng đã bắt đầu rồi thì không cho nhấn lại
-        if (!"PENDING".equalsIgnoreCase(order.getStatus())) {
-            throw new RuntimeException("Đơn hàng này đã được khởi động từ trước.");
+        // 3. Chỉ cho phép buyer nộp requirement khi đơn hàng đã ở trạng thái PAID
+        if (!OrderStatus.PAID.name().equalsIgnoreCase(order.getStatus())) {
+            throw new RuntimeException("Đơn hàng phải ở trạng thái PAID trước khi nộp requirement.");
         }
 
         // 4. Lưu câu trả lời và danh sách link vào đơn hàng
@@ -310,28 +318,266 @@ public class OrderService {
             order.setAttachedFiles(request.getAttachedFiles()); // JPA sẽ tự động chèn vào bảng phụ order_attachments
         }
 
-        // 5. Cập nhật trạng thái và tính toán deadline
-        order.setStatus("PENDING");
-        int deliveryDays = getDeliveryDaysFromOrder(order); 
-        order.setDeliveryDate(java.time.LocalDateTime.now().plusDays(deliveryDays));
+        // 5. Cập nhật trạng thái đơn thành PENDING sau khi buyer đã nộp requirement
+        order.setStatus(OrderStatus.PENDING.name());
+        order.setDeliveryDate(null);
 
         // 6. Lưu xuống Database
         orderRepo.save(order);
     }
+
     private int getDeliveryDaysFromOrder(Orders order) {
         // 1. Kiểm tra xem đơn hàng và Gig có tồn tại thông tin Package không
         if (order.getPackageId() != null && order.getGig() != null && order.getGig().getPackages() != null) {
-            
+
             // 2. Tìm chính xác gói Package mà khách đã mua
             return order.getGig().getPackages().stream()
                     .filter(pkg -> pkg.getId().equals(order.getPackageId()))
                     .findFirst()
                     .map(pkg -> pkg.getDeliveryDays()) // Rút trích số ngày giao hàng của gói này
-                    .orElse(order.getGig().getDeliveryTime()); // Fallback: Nếu không tìm thấy, lấy thời gian mặc định của Gig
+                    .orElse(order.getGig().getDeliveryTime()); // Fallback: Nếu không tìm thấy, lấy thời gian mặc định
+                                                               // của Gig
         }
         if (order.getGig() != null && order.getGig().getDeliveryTime() != null) {
             return order.getGig().getDeliveryTime();
         }
-        return 3; 
+        return 3;
     }
+
+    @Transactional
+    public Orders updateOrderStatus(Long orderId, UpdateStatusRequest request, Long currentUserId) {
+        // 1. Tìm đơn hàng
+        Orders order = orderRepo.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn hàng với ID: " + orderId));
+
+        // 2. Bảo mật: Kiểm tra xem User hiện tại có phải là Seller của đơn hàng này
+        // không
+        if (!order.getGig().getSeller().getId().equals(currentUserId)) {
+            throw new RuntimeException("Bạn không có quyền xử lý đơn hàng này!");
+        }
+
+        if (!OrderStatus.PENDING.name().equalsIgnoreCase(order.getStatus())) {
+            throw new RuntimeException("Đơn hàng này đã được xử lý trước đó rồi.");
+        }
+
+        OrderStatus newStatus = request.getStatus();
+        if (newStatus != OrderStatus.ACCEPTED && newStatus != OrderStatus.REJECTED) {
+            throw new RuntimeException("Hành động không hợp lệ. Bạn chỉ có thể ACCEPTED hoặc REJECTED.");
+        }
+
+        if (newStatus == OrderStatus.ACCEPTED && order.getDeliveryDate() == null) {
+            int deliveryDays = getDeliveryDaysFromOrder(order);
+            order.setDeliveryDate(java.time.LocalDateTime.now().plusDays(deliveryDays));
+        }
+
+        if (newStatus == OrderStatus.ACCEPTED) {
+            order.setStatus(OrderStatus.IN_PROGRESS.name()); // Thành công -> Đang chờ làm (Pending)
+        } else if (newStatus == OrderStatus.REJECTED) {
+            order.setStatus(OrderStatus.CANCELED.name()); // Từ chối -> Hủy luôn (Canceled)
+        }
+        return orderRepo.save(order);
+    }
+
+    @Transactional
+    public Orders deliverOrder(Long orderId, DeliverOrderRequest request, Long currentUserId) {
+        Orders order = orderRepo.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn hàng với ID: " + orderId));
+
+        if (!order.getGig().getSeller().getId().equals(currentUserId)) {
+            throw new RuntimeException("Bạn không có quyền giao sản phẩm cho đơn hàng này!");
+        }
+
+        if (!"IN_PROGRESS".equalsIgnoreCase(order.getStatus())) {
+            throw new RuntimeException("Đơn hàng phải ở trạng thái đang thực hiện mới có thể giao hàng.");
+        }
+        String finalLink = request.getSubmissionLink();
+        if (request.getFile() != null && !request.getFile().isEmpty()) {
+            try {
+                finalLink = fileUploadService.uploadFile(request.getFile(), "orders");
+            } catch (IOException e) {
+                throw new RuntimeException("Đã xảy ra lỗi hệ thống khi tải file của bạn lên. Vui lòng thử lại sau!", e);
+            }
+        }
+        if (finalLink == null || finalLink.trim().isEmpty()) {
+            throw new RuntimeException("Bạn phải upload file hoặc cung cấp link sản phẩm!");
+        }
+
+        order.setStatus(OrderStatus.DELIVERED.name());
+        order.setSubmissionLink(finalLink);
+        order.setSubmissionNote(request.getNote());
+        order.setActualDeliveryDate(java.time.LocalDateTime.now());
+
+        return orderRepo.save(order);
+    }
+
+    @Transactional
+    public Orders cancelLateOrder(Long orderId, Long currentUserId) {
+        Orders order = orderRepo.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn hàng: " + orderId));
+
+        // 1. Kiểm tra quyền: Chỉ Buyer của đơn này mới được hủy
+        if (!order.getBuyer().getId().equals(currentUserId)) {
+            throw new RuntimeException("Bạn không có quyền hủy đơn hàng này!");
+        }
+
+        // 2. Chặn điều kiện: Chỉ cho phép Buyer chủ động hủy khi đơn hàng đã LATE hoặc
+        // VERY_LATE
+        if (!order.getStatus().equals(OrderStatus.LATE.name()) &&
+                !order.getStatus().equals(OrderStatus.VERY_LATE.name())) {
+            throw new RuntimeException("Bạn chỉ được phép hủy khi Seller giao hàng trễ hạn.");
+        }
+
+        // 3. Xử lý hủy
+        order.setStatus(OrderStatus.CANCELED.name());
+
+        // TODO: Gọi logic hoàn tiền (Refund) về ví cho Buyer tại đây nếu có
+
+        return orderRepo.save(order);
+    }
+
+    @Transactional
+    public Orders completeOrder(Long orderId, CompleteOrderRequest request, Long currentUserId) {
+        Orders order = orderRepo.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn hàng với ID: " + orderId));
+
+        if (order.getBuyer() == null || !order.getBuyer().getId().equals(currentUserId)) {
+            throw new RuntimeException("Bạn không có quyền nghiệm thu đơn hàng này!");
+        }
+
+        // 2. Kiểm tra trạng thái: Phải đang ở DELIVERED
+        if (!"DELIVERED".equalsIgnoreCase(order.getStatus())) {
+            throw new RuntimeException("Chỉ có thể nghiệm thu khi người bán đã giao hàng.");
+        }
+
+        // 3. Cập nhật trạng thái và lưu đánh giá
+        order.setStatus("COMPLETED");
+        Review review = new Review();
+        review.setReviewer(order.getBuyer());
+
+        Seller targetSeller = order.getGig().getSeller();
+        review.setSeller(targetSeller);
+        review.setRating(request.getRating());
+        review.setComment(request.getReviewComment());
+        reviewRepo.save(review);
+
+        Gig gig = order.getGig();
+        Long gigId = gig.getId();
+
+        Double rawGigAvg = reviewRepo.calculateAverageRatingByGig(gigId);
+        Integer totalGigReviews = reviewRepo.countReviewsByGig(gigId);
+
+        if (rawGigAvg != null) {
+            // Làm tròn đến 1 chữ số thập phân (Ví dụ: 4.6666 -> 4.7)
+            double roundedGigAvg = Math.round(rawGigAvg * 10.0) / 10.0;
+            gig.setRatingAvg(roundedGigAvg);
+            gig.setTotalReviews(totalGigReviews);
+            gigRepo.save(gig);
+        }
+
+        // Cap nhat seller
+        Long sellerId = targetSeller.getId();
+        Double rawSellerAvg = reviewRepo.calculateAverageRatingBySeller(sellerId);
+        Integer totalSellerReviews = reviewRepo.countReviewsBySeller(sellerId);
+
+        if (rawSellerAvg != null) {
+            double roundedSellerAvg = Math.round(rawSellerAvg * 10.0) / 10.0;
+
+            targetSeller.setRatingAvg(roundedSellerAvg);
+            targetSeller.setTotalReviews(totalSellerReviews);
+            sellerRepo.save(targetSeller);
+        }
+        return orderRepo.save(order);
+    }
+
+    @Transactional
+    public Orders rejectOrder(Long orderId, Long currentUserId) {
+        Orders order = orderRepo.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn hàng với ID: " + orderId));
+
+        // 1. Phân quyền: Xác định ai đang gọi API (Buyer hay Seller)
+        boolean isBuyer = order.getBuyer() != null && order.getBuyer().getId().equals(currentUserId);
+        boolean isSeller = order.getGig().getSeller().getUser().getId().equals(currentUserId);
+
+        if (!isBuyer && !isSeller) {
+            throw new RuntimeException("Bạn không có quyền từ chối hoặc hủy đơn hàng này!");
+        }
+
+        // 2. Chặn logic: Không thể hủy nếu đơn đã hoàn tất (COMPLETED) hoặc đã bị hủy
+        // trước đó (CANCELLED)
+        String currentStatus = order.getStatus();
+        if ("COMPLETED".equalsIgnoreCase(currentStatus) || "CANCELLED".equalsIgnoreCase(currentStatus)) {
+            throw new RuntimeException("Không thể thực hiện thao tác trên đơn hàng đã hoàn tất hoặc đã bị hủy.");
+        }
+
+        // 3. Cập nhật trạng thái
+        order.setStatus("CANCELLED");
+
+        return orderRepo.save(order);
+    }
+
+    @Transactional
+    public Orders refundOrderDueToMissingRequirement(Long orderId) {
+        Orders order = orderRepo.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng với ID: " + orderId));
+
+        if (!OrderStatus.PAID.name().equalsIgnoreCase(order.getStatus())) {
+            throw new RuntimeException("Chỉ đơn hàng đã thanh toán và chưa nộp requirement mới được hoàn tiền.");
+        }
+
+        if (order.getStripePaymentIntentId() == null || order.getStripePaymentIntentId().isBlank()) {
+            throw new RuntimeException("Đơn hàng không có thông tin Stripe để hoàn tiền.");
+        }
+
+        try {
+            paymentService.refundPayment(order.getStripePaymentIntentId());
+            order.setStatus(OrderStatus.REFUNDED.name());
+            return orderRepo.save(order);
+        } catch (Exception e) {
+            throw new RuntimeException("Hoàn tiền thất bại: " + e.getMessage(), e);
+        }
+    }
+
+    // @Transactional
+    // public Orders requestRevision(Long orderId, RevisionOrderRequest request, Long currentUserId) {
+    //     Orders order = orderRepo.findById(orderId)
+    //             .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn hàng với ID: " + orderId));
+
+    //     if (order.getBuyer() == null || !order.getBuyer().getId().equals(currentUserId)) {
+    //         throw new RuntimeException("Từ chối truy cập: Chỉ người mua mới có quyền yêu cầu chỉnh sửa.");
+    //     }
+
+    //     if (!"DELIVERED".equalsIgnoreCase(order.getStatus())) {
+    //         throw new RuntimeException("Bạn chỉ có thể yêu cầu chỉnh sửa khi người bán đã nộp sản phẩm.");
+    //     }
+
+    //     // 3. LOGIC CHỐNG SPAM (Giới hạn số lần sửa)
+    //     GigPackages selectedPackage = pkgRepo.findById(order.getPackageId())
+    //             .orElseThrow(() -> new RuntimeException("Không tìm thấy gói dịch vụ của đơn hàng này."));
+    //     int maxRevisionsAllowed = selectedPackage.getRevisions() != null ? selectedPackage.getRevisions() : 0;
+    //     int currentRevisions = order.getRevisionCount() != null ? order.getRevisionCount() : 0;
+
+    //     if (currentRevisions >= maxRevisionsAllowed) {
+    //         throw new RuntimeException(
+    //                 "Bạn đã hết lượt yêu cầu chỉnh sửa miễn phí. Vui lòng bấm 'Chấp nhận' hoặc thỏa thuận thêm với người bán.");
+    //     }
+
+    //     // Tăng biến đếm số lần đã sửa lên 1
+    //     order.setRevisionCount(currentRevisions + 1);
+
+    //     order.setStatus("IN_PROGRESS");
+
+    //     // Ghi lại lời nhắn bắt lỗi của Buyer
+    //     // order.setRevisionNote(request.getRevisionNote());
+
+    //     // Xóa file nộp bài cũ đi để ép Seller phải nộp lại file mới
+    //     order.setSubmissionLink(null);
+    //     order.setSubmissionNote(null);
+
+    //     // (Tùy chọn) Bạn có thể cộng thêm 1-2 ngày vào deliveryDeadline nếu việc sửa
+    //     // tốn nhiều thời gian
+    //     // order.setDeliveryDate(order.getDeliveryDate().plusDays(1));
+
+    //     return orderRepo.save(order);
+    // }
+
 }

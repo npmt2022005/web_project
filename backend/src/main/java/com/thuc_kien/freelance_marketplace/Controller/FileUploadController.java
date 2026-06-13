@@ -39,7 +39,7 @@ public class FileUploadController {
                 throw new RuntimeException("Vui lòng chọn file để upload");
             }
 
-            String fileUrl = fileUploadService.uploadFile(file);
+            String fileUrl = fileUploadService.uploadFile(file,"attachments");
 
             return ResponseEntity.ok(
                     APIResponse.<String>builder()

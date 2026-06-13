@@ -19,15 +19,18 @@ import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.databind.deser.std.NumberDeserializers.BigDecimalDeserializer;
 import com.thuc_kien.freelance_marketplace.DTO.GigCardDTO;
 import com.thuc_kien.freelance_marketplace.DTO.GigCreateRequestDTO;
 import com.thuc_kien.freelance_marketplace.DTO.GigDetailResponseDTO;
 import com.thuc_kien.freelance_marketplace.DTO.GigFeaturedResponseDTO;
 import com.thuc_kien.freelance_marketplace.DTO.GigSearchRequestDTO;
 import com.thuc_kien.freelance_marketplace.DTO.GigSearchResponseDTO;
+import com.thuc_kien.freelance_marketplace.DTO.SellerGigResponse;
 import com.thuc_kien.freelance_marketplace.Entity.*;
 import com.thuc_kien.freelance_marketplace.Repository.*;
 
@@ -45,10 +48,12 @@ public class GigService {
     private final CategoryService categoryService;
     private final SellerRepository sellerRepo;
     private final CategoryRepository cateRepo;
+
     public Double getMaximumPrice() {
         Double maxPrice = gigRepo.findMaximumPrice();
         return (maxPrice != null) ? maxPrice : 20000000;
     }
+
     public List<GigFeaturedResponseDTO> getFeaturedGigs(int limit) {
         Pageable pageable = PageRequest.of(0, limit);
 
@@ -67,6 +72,7 @@ public class GigService {
                 .level(gig.getSeller().getLevel())
                 .build()).collect(Collectors.toList());
     }
+
     private GigDoc convertToGigDoc(Gig gig) {
         return GigDoc.builder()
                 .id(gig.getId().toString())
@@ -84,25 +90,29 @@ public class GigService {
                 .categoryName(gig.getCategory().getName())
                 .build();
     }
-    public void syncGigToElasTic(Gig gig){
+
+    public void syncGigToElasTic(Gig gig) {
         GigDoc elasticDoc = convertToGigDoc(gig);
         gigElasticRepo.save(elasticDoc);
     }
+
     public void removeGigFromElastic(Long gigId) {
         gigElasticRepo.deleteById(gigId.toString());
     }
+
     @Transactional
     public void syncAllGigsFromMySQLToElastic() {
         gigElasticRepo.deleteAll();
-        
+
         List<Gig> allGigsInMySQL = gigRepo.findAll();
-        
+
         List<GigDoc> elasticDocs = allGigsInMySQL.stream()
-                .map(this::convertToGigDoc) 
+                .map(this::convertToGigDoc)
                 .collect(Collectors.toList());
 
         gigElasticRepo.saveAll(elasticDocs);
     }
+
     public List<GigSearchResponseDTO> searchGigs(GigSearchRequestDTO rq) {
         String kw = (rq.getKeyword() != null) ? rq.getKeyword().trim() : "";
 
@@ -130,10 +140,18 @@ public class GigService {
         Integer deliveryDays;
         if (rq.getDeliveryTime() != null && !rq.getDeliveryTime().trim().isEmpty()) {
             switch (rq.getDeliveryTime().trim()) {
-                case "Express 24h":  deliveryDays = 1; break;
-                case "Up to 3 days": deliveryDays = 3; break;
-                case "Up to 7 days": deliveryDays = 7; break;
-                default:             deliveryDays = null; break;
+                case "Express 24h":
+                    deliveryDays = 1;
+                    break;
+                case "Up to 3 days":
+                    deliveryDays = 3;
+                    break;
+                case "Up to 7 days":
+                    deliveryDays = 7;
+                    break;
+                default:
+                    deliveryDays = null;
+                    break;
             }
         } else {
             deliveryDays = null;
@@ -151,88 +169,73 @@ public class GigService {
         final Integer finalDeliveryDays = deliveryDays;
 
         NativeQuery nativeQuery = NativeQuery.builder()
-            .withQuery(q -> q
-                .bool(b -> {
-                    // --- MUST: fuzzy keyword search trên title và categoryName ---
-                    if (!cleanKw.isEmpty()) {
-                        b.must(m -> m
-                            .multiMatch(mm -> mm
-                                .query(cleanKw)
-                                .fields("title^3", "categoryName^1") 
-                                .fuzziness("AUTO")                
-                            )
-                        );
-                    }
+                .withQuery(q -> q
+                        .bool(b -> {
+                            // --- MUST: fuzzy keyword search trên title và categoryName ---
+                            if (!cleanKw.isEmpty()) {
+                                b.must(m -> m
+                                        .multiMatch(mm -> mm
+                                                .query(cleanKw)
+                                                .fields("title^3", "categoryName^1")
+                                                .fuzziness("AUTO")));
+                            }
 
+                            // Lọc theo category slug
+                            if (targetSlugs != null) {
+                                System.out.println(">>> Dữ liệu trong Elasticsearch: marketing-nguoi-anh-huong");
+                                System.out.println(">>> Danh sách slugs truyền vào hàm: " + targetSlugs);
+                                b.filter(f -> f
+                                        .terms(t -> t
+                                                .field("categorySlug")
+                                                .terms(tv -> tv.value(
+                                                        targetSlugs.stream()
+                                                                .map(co.elastic.clients.elasticsearch._types.FieldValue::of)
+                                                                .collect(Collectors.toList())))));
+                            }
 
-                    // Lọc theo category slug
-                    if (targetSlugs != null) {
-                        System.out.println(">>> Dữ liệu trong Elasticsearch: marketing-nguoi-anh-huong");
-                        System.out.println(">>> Danh sách slugs truyền vào hàm: " + targetSlugs);
-                        b.filter(f -> f
-                            .terms(t -> t
-                                .field("categorySlug")
-                                .terms(tv -> tv.value(
-                                    targetSlugs.stream()
-                                        .map(co.elastic.clients.elasticsearch._types.FieldValue::of)
-                                        .collect(Collectors.toList())
-                                ))
-                            )
-                        );
-                    }
+                            // Lọc theo country
+                            if (rq.getLocation() != null && !rq.getLocation().trim().isEmpty()) {
+                                b.filter(f -> f.term(t -> t.field("country").value(rq.getLocation().trim())));
+                            }
 
-                    // Lọc theo country
-                    if (rq.getLocation() != null && !rq.getLocation().trim().isEmpty()) {
-                        b.filter(f -> f.term(t -> t.field("country").value(rq.getLocation().trim())));
-                    }
+                            // Lọc theo level
+                            if (rq.getLevel() != null && !rq.getLevel().trim().isEmpty()) {
+                                b.filter(f -> f.term(t -> t.field("level").value(rq.getLevel().trim())));
+                            }
 
-                    // Lọc theo level
-                    if (rq.getLevel() != null && !rq.getLevel().trim().isEmpty()) {
-                        b.filter(f -> f.term(t -> t.field("level").value(rq.getLevel().trim())));
-                    }
+                            // Lọc theo languages
+                            if (rq.getLanguages() != null && !rq.getLanguages().isEmpty()) {
+                                log.debug(">>> [DEBUG] Dữ liệu mảng gửi lên: {}", rq.getLanguages());
+                                b.filter(f -> f
+                                        .terms(t -> t
+                                                .field("languages")
+                                                .terms(tv -> tv.value(
+                                                        rq.getLanguages().stream()
+                                                                .map(co.elastic.clients.elasticsearch._types.FieldValue::of)
+                                                                .collect(Collectors.toList())))));
+                            }
 
-                    // Lọc theo languages
-                    if (rq.getLanguages() != null && !rq.getLanguages().isEmpty()) {
-                        log.debug(">>> [DEBUG] Dữ liệu mảng gửi lên: {}", rq.getLanguages());
-                        b.filter(f -> f
-                            .terms(t -> t
-                                .field("languages")
-                                .terms(tv -> tv.value(
-                                    rq.getLanguages().stream()
-                                        .map(co.elastic.clients.elasticsearch._types.FieldValue::of)
-                                        .collect(Collectors.toList())
-                                ))
-                            )
-                        );
-                    }
+                            // Lọc theo deliveryTime
+                            if (finalDeliveryDays != null) {
+                                b.filter(f -> f
+                                        .range(r -> r
+                                                .number(n -> n.field("deliveryTime").lte((double) finalDeliveryDays))));
+                            }
 
-                    // Lọc theo deliveryTime
-                    if (finalDeliveryDays != null) {
-                        b.filter(f -> f
-                            .range(r -> r
-                                .number(n -> n.field("deliveryTime").lte((double) finalDeliveryDays))
-                            )
-                        );
-                    }
+                            // Lọc theo price range
+                            if (rq.getMinPrice() != null && rq.getMaxPrice() != null) {
+                                b.filter(f -> f
+                                        .range(r -> r
+                                                .number(n -> n
+                                                        .field("price")
+                                                        .gte(rq.getMinPrice())
+                                                        .lte(rq.getMaxPrice()))));
+                            }
 
-                    // Lọc theo price range
-                    if (rq.getMinPrice() != null && rq.getMaxPrice() != null) {
-                        b.filter(f -> f
-                            .range(r -> r
-                                .number(n -> n
-                                    .field("price")
-                                    .gte(rq.getMinPrice())
-                                    .lte(rq.getMaxPrice())
-                                )
-                            )
-                        );
-                    }
-
-                    return b;
-                })
-            )
-            .withPageable(pageable)
-            .build();
+                            return b;
+                        }))
+                .withPageable(pageable)
+                .build();
 
         SearchHits<GigDoc> searchHits = elasticsearchOperations.search(nativeQuery, GigDoc.class);
 
@@ -291,8 +294,7 @@ public class GigService {
         List<GigDetailResponseDTO.PackageDTO> packageDTOs = new ArrayList<>();
         if (gig.getPackages() != null) {
             packageDTOs = gig.getPackages().stream()
-                    .sorted(Comparator.comparing(GigPackages::getId))
-                    .<GigDetailResponseDTO.PackageDTO>map(pkg -> {
+                    .sorted(Comparator.comparing(GigPackages::getId)).<GigDetailResponseDTO.PackageDTO>map(pkg -> {
 
                         Map<String, Boolean> featureMap = pkg.getFeatures() == null ? new HashMap<>()
                                 : pkg.getFeatures().stream()
@@ -314,14 +316,14 @@ public class GigService {
                     }).collect(Collectors.toList());
         }
         Gig gigImg = gigRepo.findGigWithImagesById(gigId)
-            .orElseThrow(() -> new RuntimeException("Không tìm thấy Gig với ID: " + gigId));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy Gig với ID: " + gigId));
         List<String> gallery = gigImg.getGalleryUrls() != null ? gigImg.getGalleryUrls() : new ArrayList<>();
-        
+
         GigDetailResponseDTO.MediaDTO mediaDTO = GigDetailResponseDTO.MediaDTO.builder()
-                                    .mainImage(gig.getThumbnailUrl()) 
-                                    .gallery(gallery)                
-                                    .build();
-        
+                .mainImage(gig.getThumbnailUrl())
+                .gallery(gallery)
+                .build();
+
         return GigDetailResponseDTO.builder()
                 .id(gig.getId())
                 .title(gig.getTitle())
@@ -341,8 +343,7 @@ public class GigService {
         List<Gig> similarGigs = gigRepo.findSimilarGigs(
                 currentGig.getId(),
                 currentGig.getCategory().getId(),
-                PageRequest.of(0, 4)
-        );
+                PageRequest.of(0, 4));
 
         List<GigCardDTO> content = similarGigs.stream().map(gig -> {
             BigDecimal startingPrice = BigDecimal.ZERO;
@@ -395,16 +396,16 @@ public class GigService {
 
     @Transactional
     public Long createGig(Long userId, GigCreateRequestDTO request) {
-        
+
         Seller seller = sellerRepo.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Tài khoản này chưa đăng ký làm Người bán (Seller)!"));
         Category category = cateRepo.findById(request.getCategoryId())
                 .orElseThrow(() -> new RuntimeException("Danh mục không hợp lệ!"));
-        
+
         Gig newGig = new Gig();
         newGig.setTitle(request.getTitle());
         newGig.setDescription(request.getDescription());
-        newGig.setSeller(seller); 
+        newGig.setSeller(seller);
         newGig.setCategory(category);
         newGig.setThumbnailUrl(request.getThumbnailUrl());
         newGig.setGalleryUrls(request.getGalleryUrls());
@@ -416,26 +417,25 @@ public class GigService {
         if (request.getPackages() != null && !request.getPackages().isEmpty()) {
             Set<GigPackages> packagesToSave = request.getPackages().stream().map(pkgDto -> {
                 GigPackages pkg = new GigPackages();
-                pkg.setName(pkgDto.getType()); 
+                pkg.setName(pkgDto.getType());
                 pkg.setPrice(pkgDto.getPrice());
                 pkg.setDescription(pkgDto.getShortDescription());
                 pkg.setDeliveryDays(pkgDto.getDeliveryDays());
                 pkg.setRevisions(pkgDto.getRevisions());
-                pkg.setGig(newGig); 
-
+                pkg.setGig(newGig);
 
                 if (pkgDto.getFeatures() != null && !pkgDto.getFeatures().isEmpty()) {
                     Set<PackageFeature> features = pkgDto.getFeatures()
-                        .entrySet()
-                        .stream()
-                        .map(entry -> {
-                            PackageFeature feature = new PackageFeature();
-                            feature.setName(entry.getKey());
-                            feature.setIsIncluded(entry.getValue());
-                            feature.setGigPackage(pkg);
-                            return feature;
-                        })
-                        .collect(Collectors.toSet());
+                            .entrySet()
+                            .stream()
+                            .map(entry -> {
+                                PackageFeature feature = new PackageFeature();
+                                feature.setName(entry.getKey());
+                                feature.setIsIncluded(entry.getValue());
+                                feature.setGigPackage(pkg);
+                                return feature;
+                            })
+                            .collect(Collectors.toSet());
 
                     pkg.setFeatures(features);
                 }
@@ -456,18 +456,19 @@ public class GigService {
             Set<GigRequirement> requirementsToSave = request.getRequirements().stream().map(reqDto -> {
                 GigRequirement req = new GigRequirement();
                 req.setQuestion(reqDto.getQuestion());
-                req.setAnswerType(reqDto.getAnswerType() != null ? reqDto.getAnswerType() : "TEXT"); 
+                req.setAnswerType(reqDto.getAnswerType() != null ? reqDto.getAnswerType() : "TEXT");
                 req.setIsMandatory(reqDto.getIsMandatory() != null ? reqDto.getIsMandatory() : true);
                 req.setGig(newGig); // Mapping quan hệ 2 chiều
                 return req;
             }).collect(Collectors.toSet());
-            
+
             newGig.setRequirements(requirementsToSave);
         }
         Gig savedGig = gigRepo.save(newGig);
         syncGigToElasTic(savedGig);
         return savedGig.getId();
     }
+
     public void deleteGig(Long gigId, Long currentSellerId) {
         Gig gig = gigRepo.findById(gigId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy bài dịch vụ này!"));
@@ -477,6 +478,7 @@ public class GigService {
         gigRepo.delete(gig);
         removeGigFromElastic(gigId);
     }
+
     private String generateSlug(String title) {
         if (title == null || title.isEmpty()) {
             return "gig-" + System.currentTimeMillis();
@@ -485,12 +487,44 @@ public class GigService {
         String temp = Normalizer.normalize(title, Normalizer.Form.NFD);
         Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
         String slug = pattern.matcher(temp).replaceAll("").toLowerCase();
-        
+
         // Thay thế ký tự đặc biệt và khoảng trắng thành dấu gạch ngang
         slug = slug.replaceAll("[^a-z0-9\\s-]", "");
         slug = slug.replaceAll("\\s+", "-");
-        
-        // Gắn thêm 1 đoạn mã ngẫu nhiên (timestamp) ở đuôi để đảm bảo slug không bao giờ bị trùng lặp
+
+        // Gắn thêm 1 đoạn mã ngẫu nhiên (timestamp) ở đuôi để đảm bảo slug không bao
+        // giờ bị trùng lặp
         return slug + "-" + System.currentTimeMillis();
+    }
+
+    @Transactional
+    public Page<SellerGigResponse> getGigsBySeller(Long sellerId, Pageable pageable) {
+        Page<Gig> gigPage = gigRepo.findBySellerId(sellerId, pageable);
+
+        return gigPage.map(this::mapToSellerGigResponse);
+    }
+
+    // Hàm Helper để Map dữ liệu và tính toán
+    private SellerGigResponse mapToSellerGigResponse(Gig gig) {
+        BigDecimal minPrice = gig.getPackages().stream()
+                .map(GigPackages::getPrice)
+                .min(BigDecimal::compareTo)
+                .orElse(BigDecimal.ZERO); 
+
+        Integer minDeliveryDays = gig.getPackages().stream()
+                .map(GigPackages::getDeliveryDays)
+                .min(Integer::compareTo)
+                .orElse(0);
+        String generatedGigCode = "#GIG-" + gig.getId();
+
+        return SellerGigResponse.builder()
+                .id(gig.getId())
+                .gigCode(generatedGigCode) 
+                .thumbnailUrl(gig.getThumbnailUrl()) 
+                .title(gig.getTitle())
+                .categoryName(gig.getCategory().getName()) 
+                .startingPrice(minPrice)
+                .deliveryDays(minDeliveryDays)
+                .build();
     }
 }

@@ -7,7 +7,9 @@ import org.springframework.stereotype.Service;
 import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
 import com.stripe.model.PaymentIntent;
+import com.stripe.model.Refund;
 import com.stripe.param.PaymentIntentCreateParams;
+import com.stripe.param.RefundCreateParams;
 import com.thuc_kien.freelance_marketplace.DTO.PaymentIntentRequest;
 import com.thuc_kien.freelance_marketplace.Entity.Orders;
 import com.thuc_kien.freelance_marketplace.Repository.OrderRepository;
@@ -53,13 +55,24 @@ public class PaymentService {
         // 5. Gửi request sang máy chủ Stripe
         PaymentIntent intent = PaymentIntent.create(params);
 
-        // 6. (Nâng cao) Lưu mã giao dịch của Stripe vào Database để dễ đối soát sau này
-        // Giả sử trong Entity Orders bạn có trường stripePaymentIntentId
-        // order.setStripePaymentIntentId(intent.getId()); // Lưu mã dạng pi_3Mtw...
-        // ordersRepository.save(order);
+        // 6. Lưu id PaymentIntent để sau này có thể refund khi cần
+        order.setStripePaymentIntentId(intent.getId());
+        orderRepo.save(order);
 
         // 7. Trả về mã client_secret cho Frontend
         return intent.getClientSecret();
-}
+    }
+
+    @Transactional
+    public void refundPayment(String paymentIntentId) throws StripeException {
+        if (paymentIntentId == null || paymentIntentId.isBlank()) {
+            throw new RuntimeException("Không tìm thấy Stripe PaymentIntent để hoàn tiền.");
+        }
+        Stripe.apiKey = stripeSecretkey;
+        RefundCreateParams params = RefundCreateParams.builder()
+                .setPaymentIntent(paymentIntentId)
+                .build();
+        Refund.create(params);
+    }
 }
 

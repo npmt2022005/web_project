@@ -3,6 +3,7 @@ package com.thuc_kien.freelance_marketplace.Repository;
 import java.util.List;
 import java.util.Optional;
 
+import org.hibernate.query.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -55,4 +56,7 @@ public interface GigRepository extends JpaRepository<Gig, Long> {
         @Query("SELECT g FROM Gig g LEFT JOIN FETCH g.galleryUrls WHERE g.id = :gigId")
         Optional<Gig> findGigWithImagesById(@Param("gigId") Long gigId);
 
+        org.springframework.data.domain.Page<Gig> findBySellerId(Long sellerId, Pageable pageable);
+
+        
 }       
