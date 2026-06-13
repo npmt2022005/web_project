@@ -179,13 +179,24 @@ const Header = () => {
 
                                         {/* Chuyển đổi tên sang Manage Services phù hợp với vai trò Seller */}
                                         {role && (role.toUpperCase() === 'ROLE_SELLER' || role.toLowerCase() === 'seller') && (
-                                            <div 
-                                                className="avatar-dropdown-item"
-                                                onClick={() => { navigate('/manage-services'); setShowUserDropdown(false); }}
-                                                style={{ padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: '#1dbf73', fontSize: '14px', fontWeight: '500', borderTop: '1px solid #f1f1f1' }}
-                                            >
-                                                <PlusCircle size={14} /> Manage Services
-                                            </div>
+                                            <>
+                                                <div 
+                                                    className="avatar-dropdown-item"
+                                                    onClick={() => { navigate('/manage-services'); setShowUserDropdown(false); }}
+                                                    style={{ padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: '#1dbf73', fontSize: '14px', fontWeight: '500', borderTop: '1px solid #f1f1f1' }}
+                                                >
+                                                    <PlusCircle size={14} /> Manage Services
+                                                </div>
+                                                
+                                                {/* 🌟 ĐÃ SỬA: Thay đổi navigate thành '/manage-orders' để trỏ chính xác đến trang quản lý đơn hàng */}
+                                                <div 
+                                                    className="avatar-dropdown-item"
+                                                    onClick={() => { navigate('/manage-orders'); setShowUserDropdown(false); }}
+                                                    style={{ padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: '#1dbf73', fontSize: '14px', fontWeight: '500', borderTop: '1px solid #f1f1f1' }}
+                                                >
+                                                    <ShoppingBag size={14} /> Manage Orders
+                                                </div>
+                                            </>
                                         )}
 
                                         <div 

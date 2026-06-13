@@ -41,8 +41,8 @@
 .pill-delivered, .badge-delivered { background: #fef9c3; color: #ca8a04; }
 .pill-completed, .badge-completed { background: #dcfce7; color: #16a34a; }
 
-/* 🆕 BỔ SUNG: Class xử lý màu sắc cho trạng thái Hủy đơn (CANCELED) tránh bị mất màu nhãn */
-.pill-canceled, .badge-canceled { background: #ffeeeb; color: #ef4444; }
+/* 🆕 SỬA CHÍNH TẢ: Đổi sang 2 chữ l (cancelled) trùng khớp class map từ JavaScript của hệ thống */
+.pill-cancelled, .badge-cancelled { background: #ffeeeb; color: #ef4444; border: 1px solid #ffa39e; }
 
 /* ĐÃ SỬA LỖI: Thêm thuộc tính color: #404145 để chữ hiển thị rõ ràng ngay từ đầu */
 .view-detail-action-btn { display: inline-flex; align-items: center; gap: 6px; background: #fff; border: 1px solid #b5b6ba; border-radius: 4px; padding: 6px 12px; cursor: pointer; font-weight: 600; color: #404145; }
@@ -90,4 +90,40 @@
 @media (max-width: 768px) {
     .order-workspace-grid { grid-template-columns: 1fr; }
     .page-header-flex { flex-direction: column; align-items: flex-start; gap: 10px; }
+}
+
+/* 🆕 SỬA ĐỔI: Tinh chỉnh màu ô nhập thông tin cho sáng sủa và dễ nhìn hơn */
+.deliver-embedded-form label {
+    color: #222325;
+    margin-bottom: 6px;
+}
+
+.deliver-embedded-form input[type="file"] {
+    background: #fafafa;
+    padding: 8px;
+    border: 1px dashed #b5b6ba;
+    border-radius: 4px;
+    cursor: pointer;
+    color: #404145;
+}
+
+.deliver-embedded-form input[type="url"],
+.deliver-embedded-form textarea {
+    background-color: #ffffff !important; /* Đổi từ màu tối sang màu trắng */
+    color: #222325 !important;            /* Màu chữ đen xám dễ đọc */
+    border: 1px solid #b5b6ba !important;
+}
+
+/* Tùy chỉnh màu chữ mờ của placeholder cho đồng bộ */
+.deliver-embedded-form input::placeholder,
+.deliver-embedded-form textarea::placeholder {
+    color: #95979d !important;
+}
+
+.deliver-embedded-form input:focus, 
+.deliver-embedded-form textarea:focus {
+    outline: none;
+    background-color: #ffffff !important;
+    border-color: #1dbf73 !important;
+    box-shadow: 0 0 4px rgba(29, 191, 115, 0.2);
 }

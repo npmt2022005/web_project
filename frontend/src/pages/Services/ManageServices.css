@@ -50,44 +50,9 @@
     background: #ffffff;
     border: 1px solid #e4e5e7;
     border-radius: 8px;
-    padding: 24px 0 0 0; /* Giữ padding lề trên dưới chuẩn chỉnh */
+    padding: 24px 0; /* Đã điều chỉnh đều lề trên dưới sau khi bỏ tab */
     box-shadow: 0 2px 12px rgba(0,0,0,0.02);
     overflow: hidden;
-}
-
-/* Thanh Tabs phân loại */
-.services-tabs-bar {
-    display: flex;
-    gap: 25px;
-    padding: 0 24px;
-    border-bottom: 1px solid #e4e5e7;
-}
-.tab-item-btn {
-    background: none;
-    border: none;
-    padding: 0 0 14px 0;
-    font-size: 14px;
-    font-weight: 600;
-    color: #74767e;
-    cursor: pointer;
-    position: relative;
-    transition: color 0.2s ease;
-}
-.tab-item-btn:hover {
-    color: #222325;
-}
-.tab-active {
-    color: #222325;
-}
-/* Đường line gạch dưới khi tab active giống hình mẫu */
-.tab-active::after {
-    content: '';
-    position: absolute;
-    bottom: -1px;
-    left: 0;
-    width: 100%;
-    height: 2px;
-    background-color: #222325;
 }
 
 /* Cấu trúc Table quản lý dữ liệu */
@@ -110,13 +75,14 @@
 .services-data-table td {
     padding: 20px 24px;
     border-bottom: 1px solid #efefef;
-    vertical-align: top;
+    vertical-align: middle; /* Đổi sang middle để căn giữa các nút hành động và ảnh dịch vụ */
 }
 
 /* Chi tiết ô hiển thị Service (Ảnh + Chữ) */
 .service-info-cell {
     display: flex;
     gap: 16px;
+    align-items: center;
 }
 .service-thumb-img {
     width: 100px;
@@ -158,36 +124,42 @@
     color: #404145;
 }
 
-/* Cột hành động chứa các button bo vuông nhạt màu */
-.actions-cell-flex {
+/* ==========================================================================
+   BỔ SUNG CSS CHO ĐIỀU KHIỂN HÀNH ĐỘNG (SỬA / XÓA) & PHÂN TRANG (PAGINATION)
+   ========================================================================== */
+
+/* Khu vực bọc các nút phân trang số */
+.pagination-wrapper {
     display: flex;
     justify-content: center;
-    gap: 10px;
+    gap: 8px;
+    margin-top: 24px;
+    padding: 10px 24px;
 }
-.action-icon-btn {
-    border: none;
+
+/* Nút bấm số trang mặc định */
+.pagination-wrapper button {
+    padding: 6px 12px;
     border-radius: 4px;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    border: 1px solid #e0e0e0;
+    background-color: #ffffff;
+    color: #333333;
+    font-weight: 600;
+    font-size: 13px;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: all 0.2s ease;
 }
-.edit-btn {
-    background-color: #fef2f2; /* Màu cam/hồng rất nhạt */
-    color: #f59e0b; /* Icon cam ấm */
+
+.pagination-wrapper button:hover {
+    border-color: #1dbf73;
+    color: #1dbf73;
 }
-.edit-btn:hover {
-    background-color: #fee2e2;
-}
-.delete-btn {
-    background-color: #fff1f2; /* Hồng nhạt */
-    color: #f43f5e; /* Icon đỏ hồng */
-}
-.delete-btn:hover {
-    background-color: #ffe4e6;
+
+/* Trạng thái trang hiện tại đang được kích hoạt (Giữ nguyên class cũ và bổ sung logic inline đồng bộ JSX) */
+.pagination-wrapper button.page-active {
+    background-color: #1dbf73 !important;
+    color: #ffffff !important;
+    border-color: #1dbf73 !important;
 }
 
 /* Trạng thái bảng trống dữ liệu */

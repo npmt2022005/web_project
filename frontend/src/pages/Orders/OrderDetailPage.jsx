@@ -1,12 +1,12 @@
 // src/pages/Orders/OrderDetailPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Clock, DollarSign, ArrowLeft, ShieldCheck, User, AlertCircle } from 'lucide-react';
+import { Clock, DollarSign, ArrowLeft, ShieldCheck, User, AlertCircle, Upload, Link as LinkIcon } from 'lucide-react';
 import './Orders.css';
 
 const FALLBACK_MOCK_DETAIL = {
     orderId: "ORD-9921",
-    status: "IN_PROGRESS",
+    status: "PENDING", // Mặc định đổi thành PENDING để kiểm thử luồng duyệt đơn hàng khi chạy Mock
     gigTitle: "I will build secure backend REST APIs using Spring Boot",
     gigDescription: "Thiết kế kiến trúc cơ sở dữ liệu MySQL, xây dựng các api endpoints bảo mật với Spring Security và JWT, xử lý phân quyền phân vai đầy đủ cho hệ thống thương mại điện tử.",
     deliveryDeadline: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(), 
@@ -24,6 +24,7 @@ const translateStatus = (status) => {
         case 'IN_PROGRESS': return 'ĐANG THỰC HIỆN';
         case 'DELIVERED': return 'ĐÃ BÀN GIAO';
         case 'COMPLETED': return 'HOÀN THÀNH';
+        case 'CANCELLED': return 'ĐÃ HỦY ĐƠN'; // Bổ sung nhãn hiển thị khi bị từ chối
         default: return status || 'CHỜ XỬ LÝ';
     }
 };
@@ -36,40 +37,51 @@ const OrderDetailPage = () => {
     const [error, setError] = useState(null);
     const [timeLeft, setTimeLeft] = useState('');
     const [isUsingMock, setIsUsingMock] = useState(false);
+    
+    // Khởi tạo state quản lý trạng thái loading khi đang bấm xử lý API duyệt đơn
+    const [actionLoading, setActionLoading] = useState(false);
+
+    // 🆕 BỔ SUNG: Khởi tạo các State phục vụ tính năng Deliver Order
+    const [showDeliverForm, setShowDeliverForm] = useState(false);
+    const [deliverFile, setDeliverFile] = useState(null);
+    const [submissionLink, setSubmissionLink] = useState('');
+    const [deliverNote, setDeliverNote] = useState('');
+    const [deliverLoading, setDeliverLoading] = useState(false);
 
     const token = localStorage.getItem('token');
 
-    useEffect(() => {
-        const fetchOrderDetail = async () => {
-            try {
-                setLoading(true);
-                setError(null);
-                setIsUsingMock(false);
-                
-                const response = await fetch(`http://localhost:8080/api/v1/orders/${orderId}`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                const resData = await response.json();
-
-                if (response.ok && resData.status === 'success') {
-                    setOrder(resData.data);
-                } else {
-                    throw new Error(resData.message || 'Có lỗi xảy ra');
+    // Tách hàm fetch thành một hàm riêng để có thể gọi lại sau khi cập nhật trạng thái thành công
+    const fetchOrderDetail = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            setIsUsingMock(false);
+            
+            const response = await fetch(`http://localhost:8080/api/v1/orders/${orderId}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
                 }
-            } catch (err) {
-                console.warn(`[API] Lỗi tải chi tiết đơn #${orderId}. Tự động kích hoạt hiển thị giao diện Mockup.`);
-                setOrder({ ...FALLBACK_MOCK_DETAIL, orderId: orderId });
-                setIsUsingMock(true);
-            } finally {
-                setLoading(false);
-            }
-        };
+            });
 
+            const resData = await response.json();
+
+            if (response.ok && resData.status === 'success') {
+                setOrder(resData.data);
+            } else {
+                throw new Error(resData.message || 'Có lỗi xảy ra');
+            }
+        } catch (err) {
+            console.warn(`[API] Lỗi tải chi tiết đơn #${orderId}. Tự động kích hoạt hiển thị giao diện Mockup.`);
+            setOrder(prev => (prev && prev.orderId === orderId) ? prev : { ...FALLBACK_MOCK_DETAIL, orderId: orderId });
+            setIsUsingMock(true);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
         if (orderId && token) {
             fetchOrderDetail();
         } else {
@@ -101,6 +113,111 @@ const OrderDetailPage = () => {
         return () => clearInterval(interval);
     }, [order]);
 
+    // Hàm xử lý tương tác gọi API Cập nhật trạng thái đơn hàng (Xác nhận / Từ chối)
+    const handleProcessOrder = async (decision) => {
+        const payloadStatus = decision === 'ACCEPT' ? 'ACCEPTED' : 'REJECTED';
+        const targetUIStatus = decision === 'ACCEPT' ? 'IN_PROGRESS' : 'CANCELLED';
+
+        if (isUsingMock || !token) {
+            setActionLoading(true);
+            setTimeout(() => {
+                setOrder(prev => ({ ...prev, status: targetUIStatus }));
+                setActionLoading(false);
+                alert(`[Mockup] Đã giả lập xử lý thành công trạng thái đơn sang: ${translateStatus(targetUIStatus)}`);
+            }, 500);
+            return;
+        }
+
+        try {
+            setActionLoading(true);
+            const response = await fetch(`http://localhost:8080/api/v1/orders/${orderId}/status`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ status: payloadStatus })
+            });
+
+            const resData = await response.json();
+
+            if (response.ok && resData.status === 'success') {
+                alert(resData.message || 'Cập nhật trạng thái đơn hàng thành công.');
+                await fetchOrderDetail();
+            } else {
+                alert(`Lỗi: ${resData.message || 'Không thể cập nhật trạng thái đơn hàng.'}`);
+            }
+        } catch (err) {
+            console.error("Lỗi kết nối API status:", err);
+            alert("Có lỗi xảy ra khi kết nối tới máy chủ cập nhật trạng thái.");
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    // 🆕 BỔ SUNG: Hàm xử lý gửi sản phẩm (Deliver Order) bằng FormData lên API mới
+    const handleDeliverOrderSubmit = async (e) => {
+        e.preventDefault();
+
+        if (!submissionLink && !deliverFile) {
+            alert("Vui lòng đính kèm tệp sản phẩm hoặc cung cấp liên kết dẫn tới sản phẩm bàn giao.");
+            return;
+        }
+        if (!deliverNote.trim()) {
+            alert("Vui lòng nhập lời nhắn gửi kèm cho khách hàng.");
+            return;
+        }
+
+        // Tạo đối tượng FormData bắt buộc từ API contract
+        const formData = new FormData();
+        if (deliverFile) {
+            formData.append('file', deliverFile);
+        }
+        formData.append('submissionLink', submissionLink);
+        formData.append('note', deliverNote);
+
+        if (isUsingMock || !token) {
+            setDeliverLoading(true);
+            setTimeout(() => {
+                setOrder(prev => ({ ...prev, status: 'DELIVERED' }));
+                setDeliverLoading(false);
+                setShowDeliverForm(false);
+                alert(`[Mockup] Bàn giao sản phẩm giả lập thành công! Trạng thái: ĐÃ BÀN GIAO`);
+            }, 800);
+            return;
+        }
+
+        try {
+            setDeliverLoading(true);
+            const response = await fetch(`http://localhost:8080/api/v1/orders/${orderId}/deliver`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                    // Tuyệt đối KHÔNG thiết lập 'Content-Type': 'multipart/form-data' thủ công tại đây để trình duyệt tự generate kèm boundary
+                },
+                body: formData
+            });
+
+            const resData = await response.json();
+
+            if (response.ok && resData.status === 'success') {
+                alert(resData.message || 'Nộp sản phẩm và giao hàng thành công.');
+                setShowDeliverForm(false);
+                setDeliverFile(null);
+                setSubmissionLink('');
+                setDeliverNote('');
+                await fetchOrderDetail(); // Cập nhật lại UI đồng bộ từ backend
+            } else {
+                alert(`Lỗi: ${resData.message || 'Không thể gửi sản phẩm bàn giao.'}`);
+            }
+        } catch (err) {
+            console.error("Lỗi kết nối API deliver:", err);
+            alert("Có lỗi kết nối hệ thống khi đang nộp sản phẩm.");
+        } finally {
+            setDeliverLoading(false);
+        }
+    };
+
     if (loading) return <div className="order-loading">Đang tải thông tin đơn hàng...</div>;
     if (error) return <div className="order-error-card"><p>{error}</p><button onClick={() => navigate(-1)}><ArrowLeft size={16}/> Quay lại</button></div>;
     if (!order) return null;
@@ -116,7 +233,6 @@ const OrderDetailPage = () => {
             <div className="order-workspace-grid">
                 <div className="workspace-main-card">
                     <div className="order-main-header">
-                        {/* ĐÃ SỬA: Nhãn trạng thái hiển thị Tiếng Việt */}
                         <span className={`status-tag badge-${order.status ? order.status.toLowerCase() : 'pending'}`}>
                             {translateStatus(order.status)}
                         </span>
@@ -136,16 +252,114 @@ const OrderDetailPage = () => {
                         <h3>Không gian làm việc (Workspace)</h3>
                         <div className="mock-chat-box">
                             <p className="chat-system-text">Hệ thống: Đơn hàng đã được thiết lập thành công. Hãy bắt đầu trao đổi công việc tại đây.</p>
+                            {order.status === 'CANCELLED' && (
+                                <p className="chat-system-text" style={{ color: '#ff4d4f', fontWeight: 'bold' }}>Hệ thống: Đơn hàng đã bị từ chối và hủy bỏ.</p>
+                            )}
+                            {order.status === 'DELIVERED' && (
+                                <p className="chat-system-text" style={{ color: '#1dbf73', fontWeight: 'bold' }}>Hệ thống: Người bán đã nộp sản phẩm bàn giao thành công. Chờ người mua xác nhận hoàn thành.</p>
+                            )}
                         </div>
                     </div>
                 </div>
 
                 <div className="workspace-sidebar">
-                    {order.status === 'IN_PROGRESS' && (
-                        <div className="sidebar-widget countdown-widget">
-                            <h4><Clock size={16} /> Thời gian còn lại</h4>
-                            <div className="countdown-clock-box">{timeLeft}</div>
+                    {/* KHU VỰC NÚT DUYỆT ĐƠN DÀNH CHO SELLER: Chỉ hiển thị khi trạng thái là PENDING */}
+                    {order.status === 'PENDING' && (
+                        <div className="sidebar-widget seller-action-widget" style={{ padding: '16px', backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e4e5e7', marginBottom: '16px' }}>
+                            <h4 style={{ margin: '0 0 12px 0', fontSize: '15px', fontWeight: 600, color: '#222325' }}>Yêu cầu đơn hàng mới</h4>
+                            <p style={{ fontSize: '13px', color: '#62646a', margin: '0 0 16px 0', lineHeight: '1.4' }}>Buyer đã hoàn tất thanh toán và gửi yêu cầu. Vui lòng xác nhận thực hiện.</p>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <button 
+                                    onClick={() => handleProcessOrder('ACCEPT')} 
+                                    disabled={actionLoading}
+                                    style={{ width: '100%', padding: '10px', backgroundColor: '#1dbf73', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}
+                                Type="button">
+                                    {actionLoading ? 'Đang xử lý...' : 'Chấp nhận đơn hàng'}
+                                </button>
+                                <button 
+                                    onClick={() => handleProcessOrder('REJECT')} 
+                                    disabled={actionLoading}
+                                    style={{ width: '100%', padding: '10px', backgroundColor: '#fff', color: '#ff4d4f', border: '1px solid #ff4d4f', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}
+                                Type="button">
+                                    {actionLoading ? 'Đang xử lý...' : 'Từ chối đơn hàng'}
+                                </button>
+                            </div>
                         </div>
+                    )}
+
+                    {/* KHU VỰC HÀNH ĐỘNG GIAO HÀNG KHI ĐƠN Ở TRẠNG THÁI IN_PROGRESS */}
+                    {order.status === 'IN_PROGRESS' && (
+                        <React.Fragment>
+                            <div className="sidebar-widget countdown-widget">
+                                <h4><Clock size={16} /> Thời gian còn lại</h4>
+                                <div className="countdown-clock-box">{timeLeft}</div>
+                            </div>
+
+                            {/* 🆕 BỔ SUNG: Khối giao diện hiển thị nút hoặc Form điền thông tin Delivery sản phẩm */}
+                            <div className="sidebar-widget deliver-action-widget" style={{ padding: '16px', backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e4e5e7', marginBottom: '16px' }}>
+                                <h4><Upload size={16} /> Bàn giao dịch vụ</h4>
+                                <p style={{ fontSize: '13px', color: '#62646a', margin: '8px 0 12px 0' }}>Bấm nút dưới đây để tải lên sản phẩm hoặc cung cấp link hoàn thành công việc gửi cho khách hàng.</p>
+                                
+                                {!showDeliverForm ? (
+                                    <button 
+                                        onClick={() => setShowDeliverForm(true)}
+                                        style={{ width: '100%', padding: '10px', backgroundColor: '#1dbf73', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}
+                                    Type="button">
+                                        Giao sản phẩm (Delivery Work)
+                                    </button>
+                                ) : (
+                                    <form onSubmit={handleDeliverOrderSubmit} className="deliver-embedded-form" style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
+                                        <div>
+                                            <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '2px' }}>Tệp đính kèm (Tùy chọn):</label>
+                                            <span style={{ display: 'block', fontSize: '11px', color: '#74767e', marginBottom: '6px', fontStyle: 'italic' }}>
+                                                * Nếu có nhiều file, vui lòng nén thành định dạng .zip hoặc .rar
+                                            </span>
+                                            <input 
+                                                type="file" 
+                                                onChange={(e) => setDeliverFile(e.target.files[0])}
+                                                style={{ fontSize: '12px', width: '100%' }}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '4px' }}>Đường dẫn sản phẩm (Tùy chọn):</label>
+                                            <input 
+                                                type="url" 
+                                                placeholder="https://github.com/... hoặc link figma" 
+                                                value={submissionLink}
+                                                onChange={(e) => setSubmissionLink(e.target.value)}
+                                                style={{ width: '100%', padding: '6px', fontSize: '12px', border: '1px solid #b5b6ba', borderRadius: '4px', boxSizing: 'border-box' }}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '4px' }}>Lời nhắn gửi (Bắt buộc):</label>
+                                            <textarea 
+                                                rows="3"
+                                                placeholder="Nhập ghi chú gửi cho khách hàng..."
+                                                value={deliverNote}
+                                                onChange={(e) => setDeliverNote(e.target.value)}
+                                                style={{ width: '100%', padding: '6px', fontSize: '12px', border: '1px solid #b5b6ba', borderRadius: '4px', resize: 'none', boxSizing: 'border-box' }}
+                                            />
+                                        </div>
+                                        <div style={{ display: 'flex', gap: '6px', marginTop: '4px' }}>
+                                            <button 
+                                                type="submit" 
+                                                disabled={deliverLoading}
+                                                style={{ flex: 1, padding: '8px', backgroundColor: '#1dbf73', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}
+                                            >
+                                                {deliverLoading ? 'Đang nộp...' : 'Gửi đi'}
+                                            </button>
+                                            <button 
+                                                type="button" 
+                                                onClick={() => setShowDeliverForm(false)}
+                                                style={{ padding: '8px', backgroundColor: '#fff', color: '#62646a', border: '1px solid #b5b6ba', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}
+                                            >
+                                                Hủy
+                                            </button>
+                                        </div>
+                                    </form>
+                                )}
+                            </div>
+                        </React.Fragment>
                     )}
 
                     <div className="sidebar-widget info-summary-widget">
