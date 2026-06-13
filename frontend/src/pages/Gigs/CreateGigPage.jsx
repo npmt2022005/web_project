@@ -1,14 +1,19 @@
 // src/pages/Gigs/CreateGigPage.jsx
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom'; // Thêm useLocation để nhận state dữ liệu từ ManageServices
 import { Plus, Trash, Save, Image, Folder, DollarSign, FileText, Upload, Loader2 } from 'lucide-react';
 import './CreateGigPage.css'; 
 
 const CreateGigPage = () => {
   const navigate = useNavigate();
+  const location = useLocation(); // Khởi tạo hook để bóc tách editGigData
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   
+  // State nhận diện xem đây là chế độ SỬA dịch vụ hay TẠO MỚI dịch vụ
+  const isEditMode = !!location.state?.editGigData;
+  const editGigId = location.state?.editGigData?.id || null;
+
   // State lưu danh sách categories gốc từ Backend API
   const [backendCategories, setBackendCategories] = useState([]);
   // State quản lý danh mục cha được chọn hiện tại trên UI
@@ -126,6 +131,89 @@ const CreateGigPage = () => {
     fetchCategories();
     fetchTags();
   }, []);
+
+  // ==========================================================================
+  // EFFECT TÍCH HỢP: ĐIỀN NGƯỢC DỮ LIỆU TỪ MOCK DATA / TRANG QUẢN LÝ KHI ẤN SỬA
+  // ==========================================================================
+  useEffect(() => {
+    if (location.state?.editGigData && backendCategories.length > 0) {
+      const targetGig = location.state.editGigData;
+
+      // Xử lý loại bỏ tiền tố "I will " hoặc "Tôi sẽ " nếu có ở tiêu đề
+      let cleanTitle = targetGig.title || '';
+      cleanTitle = cleanTitle.replace(/^I will\s+/i, '').replace(/^Tôi sẽ\s+/i, '');
+
+      // Tìm kiếm danh mục dựa vào tên category được truyền qua từ Mock Data
+      let finalCategoryId = '';
+      let matchedParentId = '';
+      
+      for (const parent of backendCategories) {
+        const subList = parent.subCategories || parent.children || [];
+        const foundSub = subList.find(sub => sub.name === targetGig.category);
+        if (foundSub) {
+          matchedParentId = parent.id.toString();
+          finalCategoryId = foundSub.id.toString();
+          setSubCategories(subList);
+          break;
+        }
+      }
+
+      // Đẩy ngược dữ liệu vào State thông tin cơ bản
+      setSelectedParentId(matchedParentId);
+      setGeneralInfo({
+        title: cleanTitle,
+        categoryId: finalCategoryId,
+        description: targetGig.description ? targetGig.description.replace(/<\/?p>/g, '') : 'Dịch vụ được cung cấp chuyên nghiệp chất lượng cao.'
+      });
+
+      // Điền ngược giá trị cho ma trận Packages
+      setPackages([
+        {
+          type: 'BASIC',
+          shortDescription: targetGig.shortDescription || 'Gói dịch vụ cơ bản ban đầu tối ưu chi phí.',
+          deliveryDays: parseInt(targetGig.deliveryTime) || 3,
+          revisions: 1,
+          price: targetGig.basicPrice || 50,
+          features: { "Source Code": true, "Commercial Use": false }
+        },
+        {
+          type: 'STANDARD',
+          shortDescription: 'Cung cấp đầy đủ tính năng tiêu chuẩn hệ thống.',
+          deliveryDays: (parseInt(targetGig.deliveryTime) || 3) + 2,
+          revisions: 3,
+          price: ((targetGig.basicPrice + targetGig.premiumPrice) / 2) || 100,
+          features: { "Source Code": true, "Commercial Use": true }
+        },
+        {
+          type: 'PREMIUM',
+          shortDescription: 'Phiên bản cao cấp đầy đủ toàn bộ option nâng cao.',
+          deliveryDays: (parseInt(targetGig.deliveryTime) || 3) + 4,
+          revisions: -1,
+          price: targetGig.premiumPrice || 150,
+          features: { "Source Code": true, "Commercial Use": true }
+        }
+      ]);
+
+      // Phục hồi tags nếu có, nếu không gán theo danh mục làm tag mặc định
+      if (targetGig.tags && targetGig.tags.length > 0) {
+        setSkills(targetGig.tags);
+      } else {
+        setSkills([targetGig.category || "Web Development"]);
+      }
+
+      // Phục hồi danh sách ảnh hiển thị
+      if (targetGig.thumbnail) {
+        setUploadedImages([
+          {
+            id: 'mock-img-1',
+            previewUrl: targetGig.thumbnail,
+            remoteUrl: targetGig.thumbnail,
+            isUploading: false
+          }
+        ]);
+      }
+    }
+  }, [location.state, backendCategories]);
 
   // Xử lý khi thay đổi Category cha
   const handleParentCategoryChange = (e) => {
@@ -278,7 +366,7 @@ const CreateGigPage = () => {
   };
 
   // ==========================================================================
-  // THAO TÁC CUỐI CÙNG: ĐĂNG BÀI DỊCH VỤ (CREATE GIG)
+  // THAO TÁC CUỐI CÙNG: ĐĂNG BÀI DỊCH VỤ HOẶC CẬP NHẬT (CREATE / UPDATE GIG)
   // ==========================================================================
   const handleSubmit = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
@@ -329,11 +417,17 @@ const CreateGigPage = () => {
 
     const token = localStorage.getItem('token');
 
+    // ĐIỀU CHỈNH ĐỘNG ENDPOINT VÀ METHOD ĐỂ KHÔNG TẠO TRÙNG LẶP GIG MỚI KHI SỬA
+    const apiUrl = isEditMode 
+      ? `http://localhost:8080/api/v1/gigs/update/${editGigId}` 
+      : 'http://localhost:8080/api/v1/gigs/create_gig';
+    
+    const apiMethod = isEditMode ? 'PUT' : 'POST';
+
     try {
       setLoading(true);
-      // ĐÃ CẬP NHẬT: Thay đổi Endpoint chính xác theo API đặc tả mới
-      const response = await fetch('http://localhost:8080/api/v1/gigs/create_gig', {
-        method: 'POST',
+      const response = await fetch(apiUrl, {
+        method: apiMethod,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': token ? `Bearer ${token}` : ''
@@ -341,14 +435,17 @@ const CreateGigPage = () => {
         body: JSON.stringify(finalPayload)
       });
 
-      if (!response.ok) throw new Error('Yêu cầu tạo bài đăng dịch vụ không thành công');
+      if (!response.ok) throw new Error(isEditMode ? 'Yêu cầu cập nhật dịch vụ không thành công' : 'Yêu cầu tạo bài đăng dịch vụ không thành công');
       
       const result = await response.json();
       
-      if (result.status === "success" && result.data) {
-        navigate(`/gigs/${result.data}`);
+      if (result.status === "success") {
+        alert(isEditMode ? "Cập nhật thông tin dịch vụ thành công!" : "Đăng dịch vụ mới thành công!");
+        // Chuyển hướng về trang chi tiết hoặc danh sách quản lý dịch vụ cũ
+        const targetId = result.data || editGigId;
+        navigate(`/gigs/${targetId}`);
       } else {
-        setError(result.message || 'Đăng bài thất bại từ hệ thống phản hồi.');
+        setError(result.message || 'Thao tác lưu thất bại từ hệ thống phản hồi.');
       }
     } catch (err) {
       console.error("Lỗi khi gọi API lưu dữ liệu:", err);
@@ -369,7 +466,7 @@ const CreateGigPage = () => {
       {/* HEADER: Tiêu đề trang và Nút Lưu chính ở góc trên */}
       <div className="create-gig-header-section">
         <div className="header-left">
-          <h2>Thêm Dịch Vụ Mới</h2>
+          <h2>{isEditMode ? 'Chỉnh Sửa Dịch Vụ' : 'Thêm Dịch Vụ Mới'}</h2>
         </div>
         <button 
           type="button" 
@@ -377,7 +474,7 @@ const CreateGigPage = () => {
           className="btn-save-publish-top"
           disabled={loading}
         >
-          {loading ? <Loader2 className="animate-spin" size={14} /> : 'Lưu & Đăng tải'} <span className="arrow-icon">↗</span>
+          {loading ? <Loader2 className="animate-spin" size={14} /> : (isEditMode ? 'Cập nhật dịch vụ' : 'Lưu & Đăng tải')} <span className="arrow-icon">↗</span>
         </button>
       </div>
 
@@ -760,7 +857,7 @@ const CreateGigPage = () => {
             className="btn-submit-green-save"
             disabled={loading}
           >
-            {loading ? <Loader2 className="animate-spin" size={14} /> : 'Lưu lại'} <span className="arrow-icon">↗</span>
+            {loading ? <Loader2 className="animate-spin" size={14} /> : (isEditMode ? 'Cập nhật ngay' : 'Lưu lại')} <span className="arrow-icon">↗</span>
           </button>
         </div>
 

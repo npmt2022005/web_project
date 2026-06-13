@@ -41,6 +41,7 @@ const translateStatus = (status) => {
         case 'IN_PROGRESS': return 'ĐANG THỰC HIỆN';
         case 'DELIVERED': return 'ĐÃ GIAO';
         case 'COMPLETED': return 'HOÀN THÀNH';
+        case 'CANCELLED': return 'ĐÃ HỦY ĐƠN'; // 🆕 Bổ sung hỗ trợ dịch trạng thái đơn bị Seller từ chối
         default: return status || 'CHỜ XỬ LÝ';
     }
 };
@@ -112,7 +113,6 @@ const MyOrders = () => {
         <div className="my-orders-container">
             <div className="page-header-flex" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                    {/* ĐÃ SỬA: Chuyển sang Tiếng Việt */}
                     <h1>Đơn hàng của tôi</h1>
                     <p>Theo dõi và quản lý toàn bộ dịch vụ bạn đã đặt mua.</p>
                 </div>
@@ -124,6 +124,7 @@ const MyOrders = () => {
                 <button className={statusFilter === 'IN_PROGRESS' ? 'tab-btn active' : 'tab-btn'} onClick={() => setStatusFilter('IN_PROGRESS')}>Đang thực hiện</button>
                 <button className={statusFilter === 'DELIVERED' ? 'tab-btn active' : 'tab-btn'} onClick={() => setStatusFilter('DELIVERED')}>Đã giao</button>
                 <button className={statusFilter === 'COMPLETED' ? 'tab-btn active' : 'tab-btn'} onClick={() => setStatusFilter('COMPLETED')}>Hoàn thành</button>
+                <button className={statusFilter === 'CANCELLED' ? 'tab-btn active' : 'tab-btn'} onClick={() => setStatusFilter('CANCELLED')}>Đã hủy</button> {/* 🆕 Bổ sung tab lọc đơn hàng bị hủy */}
             </div>
 
             {loading ? (
@@ -163,7 +164,6 @@ const MyOrders = () => {
                                     <td><strong>${order.totalAmount}</strong></td>
                                     <td>
                                         <span className={`status-pill pill-${order.status ? order.status.toLowerCase() : 'pending'}`}>
-                                            {/* ĐÃ SỬA: Hiển thị tên Tiếng Việt */}
                                             {translateStatus(order.status)}
                                         </span>
                                     </td>

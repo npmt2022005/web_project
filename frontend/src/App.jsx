@@ -21,6 +21,9 @@ import CheckoutPage from './pages/Orders/CheckoutPage';
 // 🌟 TÍCH HỢP IMPORT TRANG QUẢN LÝ DỊCH VỤ CỦA SELLER (MANAGE SERVICES)
 import ManageServices from './pages/Services/ManageServices';
 
+// 🆕 THÊM MỚI: Tích hợp trang quản lý đơn hàng dành riêng cho Seller mới tạo
+import ManageSellerOrders from './pages/Orders/ManageSellerOrders';
+
 // 🆕 THÊM MỚI: Tích hợp trang danh sách đơn hàng của người mua (My Orders)
 import MyOrders from './pages/Orders/MyOrders';
 
@@ -54,6 +57,7 @@ const AppContent = () => {
   return (
     <>
       {/* Nếu KHÔNG phải trang đăng nhập/đăng ký thì mới hiển thị Header */}
+      {/* Nếu KHÔNG phải trang đăng nhập/đăng ký thì mới hiển thị Header */}
       {!shouldHideHeader && <Header />}
 
       <Routes>
@@ -75,8 +79,11 @@ const AppContent = () => {
         {/* 🟢 ROUTE DẪN ĐẾN TRANG TẠO BÀI ĐĂNG DỊCH VỤ MỚI */}
         <Route path="/create-gig" element={<CreateGigPage />} />
         
-        {/* 🌟 ROUTE MỚI: Dẫn đến trang Quản lý dịch vụ dành cho Seller */}
+        {/* 🌟 ROUTE ĐÃ SỬA: Trả lại đúng trang Quản lý dịch vụ gốc (ManageServices) */}
         <Route path="/manage-services" element={<ManageServices />} />
+
+        {/* 🆕 ROUTE THÊM MỚI: Tuyến đường chính thức dẫn đến trang Quản lý đơn hàng của Seller */}
+        <Route path="/manage-orders" element={<ManageSellerOrders />} />
         
         {/* 🆕 ROUTE MỚI: Tuyến đường dẫn đến danh sách đơn hàng mua của Buyer */}
         <Route path="/my-orders" element={<MyOrders />} />
@@ -118,7 +125,7 @@ const AppContent = () => {
         <Route path="/signup" element={<AuthPage isLoginDefault={false} />} />
 
         {/* 5. Điều hướng dự phòng: Nếu người dùng gõ sai đường dẫn URL thì tự động quay về trang chủ */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="/*" element={<Navigate to="/" replace />} />
       </Routes>
     </>
   );
