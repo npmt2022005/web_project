@@ -1,6 +1,7 @@
 package com.thuc_kien.freelance_marketplace.Controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -8,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.thuc_kien.freelance_marketplace.DTO.*;
 
 import com.thuc_kien.freelance_marketplace.Service.AuthService;
+import com.thuc_kien.freelance_marketplace.security.CustomUserDetails;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +19,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AuthController implements AuthApi{
     private final AuthService authService;
-
+    
     @PostMapping("/register")
     public ResponseEntity<APIResponse<Void>> register(@Valid @RequestBody RegisterRequest request){
         // Gọi service xử lý nghiệp vụ
@@ -53,7 +55,7 @@ public class AuthController implements AuthApi{
             APIResponse.<String>builder()
                 .status("success")
                 .message("Mã OTP hợp lệ")
-                .data("OK") // Trả về tín hiệu để Frontend chuyển màn hình
+                .data("OK") 
                 .build()
         );
     }
@@ -83,5 +85,24 @@ public class AuthController implements AuthApi{
                         .build()
         );
         
-    }    
+    }   
+    @PostMapping("/change-password")
+    public ResponseEntity<APIResponse<String>> changePassword(
+            @Valid @RequestBody ChangePasswordRequestDTO request,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        // 1. Xác thực người dùng (nếu Spring Security đã cấu hình tốt thì userDetails không bao giờ null)
+        if (userDetails == null) {
+            return ResponseEntity.status(401).body(
+                new APIResponse<>("error", "Phiên làm việc đã hết hạn", null));
+        }
+
+        authService.changePassword(userDetails.getUser().getId(), request);
+
+        // 3. Trả về kết quả
+        return ResponseEntity.ok(APIResponse.<String>builder()
+                .status("success")
+                .message("Đổi mật khẩu thành công")
+                .build());
+    }
 }

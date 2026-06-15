@@ -1,7 +1,7 @@
 package com.thuc_kien.freelance_marketplace.DTO;
 
 public enum OrderStatus {
-    PAID,       // Đơn hàng đã được thanh toán, chờ Buyer nộp requirement
+    AWAITING_REQUIREMENT,       // Đơn hàng đã được thanh toán, chờ Buyer nộp requirement
     PENDING,    // Buyer đã nộp requirement, chờ Seller xử lý
     IN_PROGRESS, // 
     ACCEPTED,   // Seller đã đồng ý làm

@@ -48,6 +48,7 @@ public class GigService {
     private final CategoryService categoryService;
     private final SellerRepository sellerRepo;
     private final CategoryRepository cateRepo;
+    private final WalletRepository walletRepo;
 
     public Double getMaximumPrice() {
         Double maxPrice = gigRepo.findMaximumPrice();
@@ -394,11 +395,42 @@ public class GigService {
         return response;
     }
 
+    private void validateSellerProfile(Seller seller) {
+        // 1. Check thông tin User
+        if (seller.getUser().getAvatarUrl() == null || seller.getUser().getAvatarUrl().isBlank())
+            throw new RuntimeException("Vui lòng cập nhật Avatar trước khi tạo Gig!");
+        if (seller.getUser().getCountry() == null || seller.getUser().getCountry().isBlank())
+            throw new RuntimeException("Vui lòng cập nhật Quốc gia!");
+        if (seller.getUser().getCity() == null || seller.getUser().getCity().isBlank())
+            throw new RuntimeException("Vui lòng cập nhật Thành phố!");
+
+        // 2. Check Bio
+        if (seller.getBio() == null || seller.getBio().isBlank())
+            throw new RuntimeException("Vui lòng cập nhật Bio (Mô tả bản thân)!");
+
+        // 3. Check Education & Experience
+        if (seller.getEducations() == null || seller.getEducations().isEmpty())
+            throw new RuntimeException("Vui lòng thêm ít nhất 1 bằng cấp!");
+        if (seller.getExperiences() == null || seller.getExperiences().isEmpty())
+            throw new RuntimeException("Vui lòng thêm ít nhất 1 kinh nghiệm làm việc!");
+
+        // 4. Check Wallet (Liên kết ngân hàng)
+        var wallet = walletRepo.findByUserId(seller.getUser().getId())
+                .orElseThrow(() -> new RuntimeException("Ví thanh toán chưa được khởi tạo!"));
+        if (wallet.getStripeAccountId() == null || wallet.getStripeAccountId().isBlank()) {
+            throw new RuntimeException("Vui lòng liên kết tài khoản ngân hàng để nhận tiền!");
+        }
+    }
+
     @Transactional
     public Long createGig(Long userId, GigCreateRequestDTO request) {
 
         Seller seller = sellerRepo.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Tài khoản này chưa đăng ký làm Người bán (Seller)!"));
+
+        // 2. Kiểm tra điều kiện (Nếu thiếu thông tin, nó sẽ ném Exception và dừng hàm tại đây)
+        // validateSellerProfile(seller);
+        
         Category category = cateRepo.findById(request.getCategoryId())
                 .orElseThrow(() -> new RuntimeException("Danh mục không hợp lệ!"));
 
@@ -509,7 +541,7 @@ public class GigService {
         BigDecimal minPrice = gig.getPackages().stream()
                 .map(GigPackages::getPrice)
                 .min(BigDecimal::compareTo)
-                .orElse(BigDecimal.ZERO); 
+                .orElse(BigDecimal.ZERO);
 
         Integer minDeliveryDays = gig.getPackages().stream()
                 .map(GigPackages::getDeliveryDays)
@@ -519,10 +551,10 @@ public class GigService {
 
         return SellerGigResponse.builder()
                 .id(gig.getId())
-                .gigCode(generatedGigCode) 
-                .thumbnailUrl(gig.getThumbnailUrl()) 
+                .gigCode(generatedGigCode)
+                .thumbnailUrl(gig.getThumbnailUrl())
                 .title(gig.getTitle())
-                .categoryName(gig.getCategory().getName()) 
+                .categoryName(gig.getCategory().getName())
                 .startingPrice(minPrice)
                 .deliveryDays(minDeliveryDays)
                 .build();

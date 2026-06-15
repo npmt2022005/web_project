@@ -5,6 +5,7 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 @Data
 @Entity
@@ -50,6 +51,9 @@ public class User {
     private String country;
     
     @Column(name = "created_at", updatable = false)
-    @CreationTimestamp // Tự động lấy thời gian hiện tại khi insert
-    private LocalDateTime createdAt; // timestamp, Default: CURRENT_TIMESTAMP
+    @CreationTimestamp 
+    private LocalDateTime createdAt; 
+
+    @Column(name = "city", length = 100)
+    private String city;
 }

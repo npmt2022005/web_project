@@ -1,4 +1,5 @@
 package com.thuc_kien.freelance_marketplace.Service;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Random;
 import java.util.Set;
@@ -13,6 +14,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.thuc_kien.freelance_marketplace.DTO.ChangePasswordRequestDTO;
 import com.thuc_kien.freelance_marketplace.DTO.LoginRequest;
 import com.thuc_kien.freelance_marketplace.DTO.LoginResponse;
 import com.thuc_kien.freelance_marketplace.DTO.RegisterRequest;
@@ -21,6 +23,7 @@ import com.thuc_kien.freelance_marketplace.Exception.AppException;
 import com.thuc_kien.freelance_marketplace.Exception.ConflictException;
 import com.thuc_kien.freelance_marketplace.Repository.SellerRepository;
 import com.thuc_kien.freelance_marketplace.Repository.UserRepository;
+import com.thuc_kien.freelance_marketplace.Repository.WalletRepository;
 import com.thuc_kien.freelance_marketplace.security.CustomUserDetails;
 import com.thuc_kien.freelance_marketplace.security.JwtService;
 import com.thuc_kien.freelance_marketplace.Entity.*;
@@ -38,6 +41,7 @@ public class AuthService {
     private final SellerRepository sellerRepo;
     private final SmsService smsService;
     private final AuthenticationManager authenticationManager;
+    private final WalletRepository walletRepo;
 
     @Transactional
     public void register(RegisterRequest rq){
@@ -88,6 +92,15 @@ public class AuthService {
             
             sellerRepo.save(newSeller); 
         }
+        Wallet wallet = new Wallet();
+        wallet.setUser(savedUser); // 
+        wallet.setBalance(BigDecimal.ZERO); // Số dư ban đầu bằng 0
+        wallet.setCurrency("USD");
+        wallet.setStatus("ACTIVE");
+        wallet.setStripeAccountId(null); 
+        wallet.setVerified(false);
+        
+        walletRepo.save(wallet);
     }
 
     public LoginResponse login(LoginRequest lr){
@@ -172,5 +185,25 @@ public class AuthService {
         userRepo.save(user);
 
         otpService.deleteOtp(request.getIdentifier());
+    }
+
+    @Transactional
+    public void changePassword(Long userId, ChangePasswordRequestDTO dto) {
+        // 1. Kiểm tra xác nhận mật khẩu
+        if (!dto.getNewPassword().equals(dto.getConfirmNewPassword())) {
+            throw new RuntimeException("Mật khẩu xác nhận không khớp!");
+        }
+
+        // 2. Tìm User
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User không tồn tại"));
+                
+        if (!passwordEncoder.matches(dto.getOldPassword(), user.getPasswordHash())) {
+            throw new RuntimeException("Mật khẩu cũ không chính xác!");
+        }
+
+        // 4. Mã hóa mật khẩu mới và lưu
+        user.setPasswordHash(passwordEncoder.encode(dto.getNewPassword()));
+        userRepo.save(user);
     }
 }

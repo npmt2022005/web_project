@@ -22,7 +22,7 @@ public class FileUploadController {
             @RequestParam("file") MultipartFile file 
     ) {
         
-        String imageUrl = fileUploadService.uploadImage(file);
+        String imageUrl = fileUploadService.uploadImage(file,"thumbnail");
 
         APIResponse<String> response = new APIResponse<>();
         response.setStatus("success");

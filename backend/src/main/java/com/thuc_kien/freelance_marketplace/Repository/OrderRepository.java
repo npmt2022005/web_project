@@ -24,6 +24,10 @@ public interface OrderRepository extends JpaRepository<Orders, Long> {
                         @Param("allowedStatuses") List<String> allowedStatuses);
         List<Orders> findByStatusAndDeliveryDateBefore(String status, LocalDateTime time);
 
+
+        // Tìm các đơn thanh toán rồi nhưng quên nộp Requirement quá 7 ngày
+        @Query("SELECT o FROM Orders o WHERE o.status = 'AWAITING_REQUIREMENTS' AND o.createdAt < :deadline")
+        List<Orders> findAbandonedOrders(@Param("deadline") LocalDateTime deadline);
         // // Lấy điểm trung bình của 1 Gig
         // @Query("SELECT AVG(o.rating) FROM Orders o WHERE o.gig.id = :gigId AND o.status = 'COMPLETED' AND o.rating IS NOT NULL")
         // Double calculateAverageRating(@Param("gigId") Long gigId);

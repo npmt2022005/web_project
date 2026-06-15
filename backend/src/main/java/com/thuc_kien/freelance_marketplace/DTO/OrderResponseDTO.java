@@ -21,4 +21,5 @@ public class OrderResponseDTO {
     private LocalDateTime createdAt;
     private LocalDateTime deliveryDeadline;
     private String partnerAvatar;
+    private LocalDateTime inspectionDeadline;
 }

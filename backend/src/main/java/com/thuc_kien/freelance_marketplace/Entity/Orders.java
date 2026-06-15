@@ -54,8 +54,7 @@ public class Orders {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "buyer_id", nullable = false)
-    private User buyer; // Giả sử bảng User chứa thông tin người mua
-
+    private User buyer; 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "gig_id", nullable = false)
     private Gig gig;
@@ -66,7 +65,6 @@ public class Orders {
     @Column(name="serviceFee")
     private BigDecimal serviceFee;
 
-    // Tự động lấy giờ hệ thống lúc đơn hàng được tạo (Insert)
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -82,11 +80,26 @@ public class Orders {
 
     @Column(name = "actual_delivery_date")
     private LocalDateTime actualDeliveryDate;
+
+    @Column(name = "revision_count")
+    private Integer revisionCount;
+
     @ElementCollection
     @CollectionTable(
-        name = "order_attachments", // Tên bảng phụ tự động sinh ra để lưu link
-        joinColumns = @JoinColumn(name = "order_id") // Khóa ngoại nối với bảng orders
+        name = "order_attachments", // 
+        joinColumns = @JoinColumn(name = "order_id") 
     )
     @Column(name = "file_url", columnDefinition = "TEXT")
     private List<String> attachedFiles = new java.util.ArrayList<>();
+
+
+    @Column(name = "inspection_deadline")
+    private LocalDateTime inspectionDeadline; 
+
+    
+    @Column(name = "revision_note", columnDefinition = "TEXT")
+    private String revisionNote; 
+
+    @Column(name = "revision_file_url")
+    private String revisionFileUrl; 
 }

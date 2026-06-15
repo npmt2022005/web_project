@@ -16,7 +16,7 @@ import lombok.RequiredArgsConstructor;
 public class FileUploadService {
     private final Cloudinary cloudinary;
 
-    public String uploadImage(MultipartFile file) {
+    public String uploadImage(MultipartFile file, String folderName) {
         if (file.isEmpty()) {
             throw new RuntimeException("Vui lòng chọn một file ảnh!");
         }
@@ -25,17 +25,23 @@ public class FileUploadService {
             throw new RuntimeException("Chỉ cho phép upload hình ảnh!");
         }
 
-        try {
-            Map uploadResult = cloudinary.uploader().upload(file.getBytes(),
-                    ObjectUtils.asMap(
-                            "folder", "freelance_marketplace/gigs", // 👈 Tự tạo thư mục trên Cloudinary
-                            "resource_type", "image"));
-
-            return uploadResult.get("secure_url").toString();
-
-        } catch (IOException e) {
-            throw new RuntimeException("Đã xảy ra lỗi khi tải ảnh lên Cloudinary", e);
+        if (file.getSize() > 5 * 1024 * 1024) {
+            throw new RuntimeException("Ảnh quá lớn! Vui lòng chọn ảnh dưới 5MB.");
         }
+
+        try {
+        Map uploadResult = cloudinary.uploader().upload(file.getBytes(),
+                ObjectUtils.asMap(
+                        "folder", "freelance_marketplace/" + folderName, 
+                        "resource_type", "image",
+                        "overwrite", true 
+                ));
+
+        return uploadResult.get("secure_url").toString();
+
+    } catch (IOException e) {
+        throw new RuntimeException("Đã xảy ra lỗi khi tải ảnh lên Cloudinary", e);
+    }
     }
 
     @SuppressWarnings("unchecked")
