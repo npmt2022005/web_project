@@ -99,7 +99,6 @@ const CreateGigPage = () => {
         }
       } catch (err) {
         console.error("Lỗi lấy danh mục danh mục từ hệ thống:", err);
-        // Mock dữ liệu có cấu trúc phân cấp Parent - Child mẫu để tránh crash giao diện
         setBackendCategories([
           { id: 1, name: "Lập trình & Công nghệ", subCategories: [
             { id: 5, name: "Spring Boot & React" },
@@ -114,8 +113,6 @@ const CreateGigPage = () => {
     };
 
     const fetchTags = async () => {
-      // Do chưa có API cho phần Tags, tạm thời gán luôn Mock Data vào state
-      console.log("Hệ thống đang sử dụng danh sách mẫu Mock Data cho Tags.");
       setAvailableTags([
         { id: 1, name: "Spring Boot" },
         { id: 2, name: "ReactJS" },
@@ -133,7 +130,7 @@ const CreateGigPage = () => {
   }, []);
 
   // ==========================================================================
-  // EFFECT TÍCH HỢP: ĐIỀN NGƯỢC DỮ LIỆU TỪ MOCK DATA / TRANG QUẢN LÝ KHI ẤN SỬA
+  // EFFECT TÍCH HỢP: ĐIỀN NGƯỢC DỮ LIỆU TỪ BACKEND KHI ẤN SỬA (ĐÃ SỬA LỖI ĐỔ FORM)
   // ==========================================================================
   useEffect(() => {
     if (location.state?.editGigData && backendCategories.length > 0) {
@@ -143,14 +140,24 @@ const CreateGigPage = () => {
       let cleanTitle = targetGig.title || '';
       cleanTitle = cleanTitle.replace(/^I will\s+/i, '').replace(/^Tôi sẽ\s+/i, '');
 
-      // Tìm kiếm danh mục dựa vào tên category được truyền qua từ Mock Data
-      let finalCategoryId = '';
+      // Tìm kiếm danh mục dựa vào categoryId hoặc tên category được truyền qua
+      let finalCategoryId = targetGig.categoryId ? targetGig.categoryId.toString() : '';
       let matchedParentId = '';
       
       for (const parent of backendCategories) {
         const subList = parent.subCategories || parent.children || [];
-        const foundSub = subList.find(sub => sub.name === targetGig.category);
-        if (foundSub) {
+        const isMatched = subList.some(sub => 
+          sub.id.toString() === finalCategoryId || 
+          sub.name === targetGig.categoryName || 
+          sub.name === targetGig.category
+        );
+
+        if (isMatched) {
+          const foundSub = subList.find(sub => 
+            sub.id.toString() === finalCategoryId || 
+            sub.name === targetGig.categoryName || 
+            sub.name === targetGig.category
+          );
           matchedParentId = parent.id.toString();
           finalCategoryId = foundSub.id.toString();
           setSubCategories(subList);
@@ -158,56 +165,66 @@ const CreateGigPage = () => {
         }
       }
 
-      // Đẩy ngược dữ liệu vào State thông tin cơ bản
       setSelectedParentId(matchedParentId);
+      
+      // ĐÃ SỬA: Lấy mô tả chi tiết chuẩn xác từ DB mà không bị bộ lọc regex chặn làm mất chữ
+      let rawDescription = targetGig.description || '';
+      rawDescription = rawDescription.replace(/<\/p>/g, '\n').replace(/<\/?p>/g, '').trim();
+
       setGeneralInfo({
         title: cleanTitle,
         categoryId: finalCategoryId,
-        description: targetGig.description ? targetGig.description.replace(/<\/?p>/g, '') : 'Dịch vụ được cung cấp chuyên nghiệp chất lượng cao.'
+        description: rawDescription
       });
 
-      // Điền ngược giá trị cho ma trận Packages
-      setPackages([
-        {
-          type: 'BASIC',
-          shortDescription: targetGig.shortDescription || 'Gói dịch vụ cơ bản ban đầu tối ưu chi phí.',
-          deliveryDays: parseInt(targetGig.deliveryTime) || 3,
-          revisions: 1,
-          price: targetGig.basicPrice || 50,
-          features: { "Source Code": true, "Commercial Use": false }
-        },
-        {
-          type: 'STANDARD',
-          shortDescription: 'Cung cấp đầy đủ tính năng tiêu chuẩn hệ thống.',
-          deliveryDays: (parseInt(targetGig.deliveryTime) || 3) + 2,
-          revisions: 3,
-          price: ((targetGig.basicPrice + targetGig.premiumPrice) / 2) || 100,
-          features: { "Source Code": true, "Commercial Use": true }
-        },
-        {
-          type: 'PREMIUM',
-          shortDescription: 'Phiên bản cao cấp đầy đủ toàn bộ option nâng cao.',
-          deliveryDays: (parseInt(targetGig.deliveryTime) || 3) + 4,
-          revisions: -1,
-          price: targetGig.premiumPrice || 150,
-          features: { "Source Code": true, "Commercial Use": true }
-        }
-      ]);
+      // ĐÃ SỬA: Map đúng cấu trúc mảng gói (packages) trả về từ cơ sở dữ liệu thật
+      if (targetGig.packages && Array.isArray(targetGig.packages) && targetGig.packages.length > 0) {
+        const sortedPackages = [...targetGig.packages].sort((a, b) => {
+          const order = { 'BASIC': 1, 'STANDARD': 2, 'PREMIUM': 3 };
+          return (order[a.type] || 9) - (order[b.type] || 9);
+        });
 
-      // Phục hồi tags nếu có, nếu không gán theo danh mục làm tag mặc định
-      if (targetGig.tags && targetGig.tags.length > 0) {
-        setSkills(targetGig.tags);
-      } else {
-        setSkills([targetGig.category || "Web Development"]);
+        setPackages(sortedPackages.map(pkg => ({
+          type: pkg.type || 'BASIC',
+          shortDescription: pkg.shortDescription || pkg.description || '',
+          deliveryDays: pkg.deliveryDays || 3,
+          revisions: pkg.revisions ?? 1,
+          price: pkg.price || 0,
+          features: pkg.features || { "Source Code": true, "Commercial Use": false }
+        })));
       }
 
-      // Phục hồi danh sách ảnh hiển thị
-      if (targetGig.thumbnail) {
+      // ĐÃ SỬA: Đồng bộ đổ lại danh sách câu hỏi yêu cầu (Requirements) cũ từ cơ sở dữ liệu
+      if (targetGig.requirements && Array.isArray(targetGig.requirements) && targetGig.requirements.length > 0) {
+        setRequirements(targetGig.requirements.map(req => ({
+          question: req.question || '',
+          answerType: req.answerType || 'TEXT',
+          isMandatory: req.isMandatory ?? true
+        })));
+      }
+
+      // Phục hồi tags dữ liệu
+      if (targetGig.tags && targetGig.tags.length > 0) {
+        setSkills(targetGig.tags);
+      } else if (targetGig.categoryName || targetGig.category) {
+        setSkills([targetGig.categoryName || targetGig.category]);
+      }
+
+      // Phục hồi danh sách ảnh hiển thị từ API
+      if (targetGig.galleryUrls && Array.isArray(targetGig.galleryUrls) && targetGig.galleryUrls.length > 0) {
+        setUploadedImages(targetGig.galleryUrls.map((url, index) => ({
+          id: `db-img-${index}-${Date.now()}`,
+          previewUrl: url,
+          remoteUrl: url,
+          isUploading: false
+        })));
+      } else if (targetGig.thumbnailUrl || targetGig.thumbnail) {
+        const thumb = targetGig.thumbnailUrl || targetGig.thumbnail;
         setUploadedImages([
           {
-            id: 'mock-img-1',
-            previewUrl: targetGig.thumbnail,
-            remoteUrl: targetGig.thumbnail,
+            id: 'db-img-thumb',
+            previewUrl: thumb,
+            remoteUrl: thumb,
             isUploading: false
           }
         ]);
@@ -220,7 +237,6 @@ const CreateGigPage = () => {
     const parentId = e.target.value;
     setSelectedParentId(parentId);
     
-    // Tìm danh mục cha tương ứng để trích xuất mảng con (subCategories hoặc children)
     const selectedCategory = backendCategories.find(cat => cat.id === parseInt(parentId));
     if (selectedCategory && (selectedCategory.subCategories || selectedCategory.children)) {
       setSubCategories(selectedCategory.subCategories || selectedCategory.children || []);
@@ -228,7 +244,6 @@ const CreateGigPage = () => {
       setSubCategories([]);
     }
     
-    // Reset lại giá trị danh mục con đã chọn trước đó
     setGeneralInfo(prev => ({ ...prev, categoryId: '' }));
   };
 
@@ -250,7 +265,7 @@ const CreateGigPage = () => {
   };
 
   // ==========================================================================
-  // LUỒNG XỬ LÝ: UPLOAD HÌNH ẢNH (Đã cập nhật Endpoint mới)
+  // LUỒNG XỬ LÝ: UPLOAD HÌNH ẢNH
   // ==========================================================================
   const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files);
@@ -382,7 +397,6 @@ const CreateGigPage = () => {
       return;
     }
 
-    // Lọc bỏ các requirement trống không nhập câu hỏi
     const validRequirements = requirements
       .filter(req => req.question.trim() !== '')
       .map(req => ({
@@ -399,7 +413,7 @@ const CreateGigPage = () => {
       title: `I will ${generalInfo.title.replace(/^I will\s+/i, '')}`,
       categoryId: parseInt(generalInfo.categoryId),
       tags: skills.length > 0 ? skills : ["Web Development"],
-      description: `<p>${generalInfo.description}</p>`, 
+      description: `<p>${generalInfo.description.replace(/\n/g, '</p><p>')}</p>`, 
       thumbnailUrl: thumbnailUrl,
       galleryUrls: galleryUrls,
       packages: packages.map(pkg => ({
@@ -413,11 +427,8 @@ const CreateGigPage = () => {
       requirements: validRequirements 
     };
 
-    SystemLogTest(finalPayload);
+    const token = localStorage.getItem('token') || localStorage.getItem('JWT_TOKEN');
 
-    const token = localStorage.getItem('token');
-
-    // ĐIỀU CHỈNH ĐỘNG ENDPOINT VÀ METHOD ĐỂ KHÔNG TẠO TRÙNG LẶP GIG MỚI KHI SỬA
     const apiUrl = isEditMode 
       ? `http://localhost:8080/api/v1/gigs/update/${editGigId}` 
       : 'http://localhost:8080/api/v1/gigs/create_gig';
@@ -441,9 +452,7 @@ const CreateGigPage = () => {
       
       if (result.status === "success") {
         alert(isEditMode ? "Cập nhật thông tin dịch vụ thành công!" : "Đăng dịch vụ mới thành công!");
-        // Chuyển hướng về trang chi tiết hoặc danh sách quản lý dịch vụ cũ
-        const targetId = result.data || editGigId;
-        navigate(`/gigs/${targetId}`);
+        navigate('/manage-services');
       } else {
         setError(result.message || 'Thao tác lưu thất bại từ hệ thống phản hồi.');
       }
@@ -455,15 +464,8 @@ const CreateGigPage = () => {
     }
   };
 
-  const SystemLogTest = (data) => {
-    console.log("%c[Spring-API-Payload] === GỬI REQUEST BODY JSON ===", 'background: #111; color: #76b783; font-weight: bold;');
-    console.log(JSON.stringify(data, null, 2));
-  };
-
   return (
     <div className="create-gig-container continuous-flow">
-      
-      {/* HEADER: Tiêu đề trang và Nút Lưu chính ở góc trên */}
       <div className="create-gig-header-section">
         <div className="header-left">
           <h2>{isEditMode ? 'Chỉnh Sửa Dịch Vụ' : 'Thêm Dịch Vụ Mới'}</h2>
@@ -522,7 +524,6 @@ const CreateGigPage = () => {
             </div>
           </div>
 
-          {/* CHỌN CATEGORY CHA & CON */}
           <div className="form-row-grid two-columns" style={{ marginTop: '15px' }}>
             <div className="form-group">
               <label>Danh Mục Chính *</label>
@@ -559,7 +560,6 @@ const CreateGigPage = () => {
             </div>
           </div>
 
-          {/* CHỌN SKILLS & TAGS */}
           <div className="form-group" style={{ marginTop: '15px' }}>
             <label>Kỹ Năng & Thẻ Tags (Chọn và Thêm)</label>
             <div className="skills-input-wrapper-ui">
@@ -640,7 +640,7 @@ const CreateGigPage = () => {
                     <td key={`sc-${idx}`} className="text-center">
                       <input 
                         type="checkbox" 
-                        checked={pkg.features["Source Code"] || false}
+                        checked={pkg.features?.["Source Code"] || false}
                         onChange={() => handleFeatureToggle(idx, "Source Code")}
                       />
                     </td>
@@ -652,7 +652,7 @@ const CreateGigPage = () => {
                     <td key={`cu-${idx}`} className="text-center">
                       <input 
                         type="checkbox" 
-                        checked={pkg.features["Commercial Use"] || false}
+                        checked={pkg.features?.["Commercial Use"] || false}
                         onChange={() => handleFeatureToggle(idx, "Commercial Use")}
                       />
                     </td>
@@ -721,17 +721,15 @@ const CreateGigPage = () => {
             {uploadedImages.map((img, index) => (
               <div key={img.id} className="gallery-preview-item-box" style={{ position: 'relative' }}>
                 <img src={img.previewUrl} alt="Hình ảnh sản phẩm preview" />
-                
                 {img.isUploading && (
                   <div className="image-loading-overlay" style={{
                     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
                     backgroundColor: 'rgba(255,255,255,0.7)', display: 'flex', 
-                    alignItems: 'center', justifyindex: 'center', justifyContent: 'center'
+                    alignItems: 'center', justifyContent: 'center'
                   }}>
                     <Loader2 className="animate-spin" color="#76b783" />
                   </div>
                 )}
-
                 <button 
                   type="button" 
                   className="btn-delete-image-preview" 
@@ -758,9 +756,6 @@ const CreateGigPage = () => {
               </div>
             </label>
           </div>
-          <small className="form-tip" style={{ marginTop: '12px', display: 'block' }}>
-            Hệ thống hỗ trợ định dạng ảnh .jpg & .png. Bức ảnh đầu tiên được tải lên sẽ mặc định chọn làm Ảnh đại diện chính (Thumbnail) hiển thị ngoài danh sách.
-          </small>
         </div>
 
         {/* KHỐI 5: BUYER REQUIREMENTS */}
@@ -768,10 +763,7 @@ const CreateGigPage = () => {
           <div className="section-title-line">
             <h4>Yêu Cầu Đối Với Người Mua (Buyer Requirements)</h4>
           </div>
-          <p style={{ fontSize: '13px', color: '#62646a', marginBottom: '15px' }}>
-            Đặt các câu hỏi khảo sát để thu thập thông tin bắt buộc từ người mua (Ví dụ: file tài liệu đặc tả, link Figma, tài khoản demo, thông tin setup...) trước khi bạn bắt đầu thực hiện tiến trình đơn hàng.
-          </p>
-
+          
           <div className="requirements-list-wrapper" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
             {requirements.map((req, idx) => (
               <div key={`req-${idx}`} className="requirement-item-row" style={{ border: '1px solid #e4e5e7', padding: '15px', borderRadius: '6px', backgroundColor: '#fafafa' }}>
@@ -792,7 +784,7 @@ const CreateGigPage = () => {
                     type="text"
                     value={req.question}
                     onChange={(e) => handleRequirementChange(idx, 'question', e.target.value)}
-                    placeholder="Ví dụ: Vui lòng gửi tài liệu đặc tả thiết kế hệ thống hoặc link Figma của bạn..."
+                    placeholder="Ví dụ: Vui lòng gửi tài liệu đặc tả thiết kế hệ thống..."
                     style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ced4da', marginTop: '5px' }}
                   />
                 </div>
@@ -849,7 +841,6 @@ const CreateGigPage = () => {
           </button>
         </div>
 
-        {/* FOOTER BUTTON ACTION */}
         <div className="form-bottom-sticky-action-bar">
           <button 
             type="button" 

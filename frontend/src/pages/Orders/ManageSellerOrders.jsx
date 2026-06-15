@@ -14,7 +14,7 @@ const ManageSellerOrders = () => {
     const [orders, setOrders] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
 
-    // Định nghĩa danh sách các tab hiển thị ở thanh điều hướng phụ
+    // Định nghĩa danh sách các tab hiển thị ở thanh điều hướng phụ (Giữ nguyên ID để tránh lỗi CSS)
     const tabs = [
         { id: 'active', label: 'Đang hoạt động' },
         { id: 'pending', label: 'Chờ xử lý' },
@@ -23,8 +23,8 @@ const ManageSellerOrders = () => {
         { id: 'cancelled', label: 'Đã hủy đơn' }
     ];
 
-    // MOCK DATA DỰ PHÒNG: Tự động kích hoạt hiển thị khi API lỗi để test luồng Workspace
-    const getMockOrdersByStatus = (status) => {
+    // MOCK DATA DỰ PHÒNG: Đồng bộ chuẩn hóa toàn bộ mã trạng thái IN HOA theo OrderDetailPage
+    const getMockOrdersByStatus = (statusKey) => {
         const allMocks = [
             {
                 id: "ORD-9921",
@@ -36,7 +36,7 @@ const ManageSellerOrders = () => {
                 totalAmount: 500.00,
                 price: 500.00,
                 packageSelected: "Gói Cao Cấp (Premium)",
-                status: "active"
+                status: "PENDING" // Chờ Seller duyệt
             },
             {
                 id: "ORD-8843",
@@ -48,7 +48,7 @@ const ManageSellerOrders = () => {
                 totalAmount: 350.00,
                 price: 350.00,
                 packageSelected: "Gói Cố Định/Tiêu Chuẩn",
-                status: "active"
+                status: "IN_PROGRESS" // Đang tiến hành thực hiện
             },
             {
                 id: "ORD-1122",
@@ -60,25 +60,61 @@ const ManageSellerOrders = () => {
                 totalAmount: 150.00,
                 price: 150.00,
                 packageSelected: "Cài Đặt Cơ Bản",
-                status: "pending"
+                status: "PENDING"
+            },
+            {
+                id: "ORD-7751",
+                orderId: "ORD-7751",
+                gigTitle: "Fix bugs and deploy Spring Boot application to AWS",
+                gigThumbnail: "https://images.pexels.com/photos/1181244/pexels-photo-1181244.jpeg",
+                partnerName: "Hoàng Long",
+                buyerName: "Hoàng Long",
+                totalAmount: 250.00,
+                price: 250.00,
+                packageSelected: "Gói Cao Cấp",
+                status: "DELIVERED" // Đã bàn giao sản phẩm, chờ Buyer nghiệm thu
+            },
+            {
+                id: "ORD-4412",
+                orderId: "ORD-4412",
+                gigTitle: "Xây dựng hệ thống Freelance Marketplace hoàn chỉnh",
+                gigThumbnail: "https://images.pexels.com/photos/3182773/pexels-photo-3182773.jpeg",
+                partnerName: "Minh Thư",
+                buyerName: "Minh Thư",
+                totalAmount: 1200.00,
+                price: 1200.00,
+                packageSelected: "Gói Doanh Nghiệp",
+                status: "COMPLETED" // Buyer đã bấm nghiệm thu chấp nhận thanh toán thành công
+            },
+            {
+                id: "ORD-3321",
+                orderId: "ORD-3321",
+                gigTitle: "Thiết kế Landing Page bán hàng chuẩn SEO",
+                gigThumbnail: "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg",
+                partnerName: "Quốc Anh",
+                buyerName: "Quốc Anh",
+                totalAmount: 180.00,
+                price: 180.00,
+                packageSelected: "Gói Cơ Bản",
+                status: "CANCELLED" // Đơn bị hủy do Seller từ chối hoặc hệ thống tự động hủy trễ hạn
             }
         ];
 
-        const filtered = allMocks.filter(o => o.status === status);
-        return filtered.length > 0 ? filtered : [
-            {
-                id: `ORD-MOCK-${status.toUpperCase()}`,
-                orderId: `ORD-MOCK-${status.toUpperCase()}`,
-                gigTitle: `Dịch vụ thử nghiệm thuộc mục [${status.toUpperCase()}]`,
-                gigThumbnail: "https://images.pexels.com/photos/3182773/pexels-photo-3182773.jpeg",
-                partnerName: "Khách Hàng Giả Lập",
-                buyerName: "Khách Hàng Giả Lập",
-                totalAmount: 200.00,
-                price: 200.00,
-                packageSelected: "Gói Thử Nghiệm",
-                status: status
-            }
-        ];
+        // Hàm lọc danh sách mock tương ứng với Tab được chọn trên giao diện
+        if (statusKey === 'active') {
+            // Tab Đang hoạt động bao gồm cả đơn mới (PENDING), đang làm (IN_PROGRESS) và đã giao (DELIVERED)
+            return allMocks.filter(o => o.status === 'PENDING' || o.status === 'IN_PROGRESS' || o.status === 'DELIVERED');
+        } else if (statusKey === 'pending') {
+            return allMocks.filter(o => o.status === 'PENDING');
+        } else if (statusKey === 'ongoing') {
+            return allMocks.filter(o => o.status === 'IN_PROGRESS' || o.status === 'DELIVERED');
+        } else if (statusKey === 'completed') {
+            return allMocks.filter(o => o.status === 'COMPLETED');
+        } else if (statusKey === 'cancelled') {
+            return allMocks.filter(o => o.status === 'CANCELLED');
+        }
+        
+        return allMocks;
     };
 
     // 🌟 TÍCH HỢP API: Gọi dữ liệu đơn hàng động dựa trên Tab trạng thái đang chọn
@@ -94,9 +130,21 @@ const ManageSellerOrders = () => {
 
             try {
                 setIsLoading(true);
-                const backendStatusParam = activeTab.toUpperCase();
+                
+                // Ánh xạ chính xác cụm từ tìm kiếm trạng thái từ Client Tab sang API Parameter chuỗi in hoa
+                let backendStatusParam = '';
+                if (activeTab === 'pending') backendStatusParam = 'PENDING';
+                else if (activeTab === 'ongoing') backendStatusParam = 'IN_PROGRESS';
+                else if (activeTab === 'completed') backendStatusParam = 'COMPLETED';
+                else if (activeTab === 'cancelled') backendStatusParam = 'CANCELLED';
+                else backendStatusParam = 'ALL'; // Đối với tab 'active', lấy toàn bộ để client hoặc API tự tổng hợp
 
-                const response = await fetch(`http://localhost:8080/api/v1/orders?role=SELLER&status=${backendStatusParam}`, {
+                let url = `http://localhost:8080/api/v1/orders?role=SELLER`;
+                if (backendStatusParam !== 'ALL') {
+                    url += `&status=${backendStatusParam}`;
+                }
+
+                const response = await fetch(url, {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -107,13 +155,21 @@ const ManageSellerOrders = () => {
                 const resData = await response.json();
                 
                 if (response.ok) {
+                    let extractedOrders = [];
                     if (Array.isArray(resData)) {
-                        setOrders(resData.length > 0 ? resData : getMockOrdersByStatus(activeTab));
+                        extractedOrders = resData;
                     } else if (resData.data && Array.isArray(resData.data)) {
-                        setOrders(resData.data.length > 0 ? resData.data : getMockOrdersByStatus(activeTab));
-                    } else {
-                        setOrders(getMockOrdersByStatus(activeTab));
+                        extractedOrders = resData.data;
                     }
+
+                    // Nếu chọn tab 'active', tiến hành lọc client-side để hiển thị đúng các đơn đang vận hành
+                    if (activeTab === 'active' && extractedOrders.length > 0) {
+                        extractedOrders = extractedOrders.filter(o => 
+                            o.status === 'PENDING' || o.status === 'IN_PROGRESS' || o.status === 'DELIVERED'
+                        );
+                    }
+
+                    setOrders(extractedOrders.length > 0 ? extractedOrders : getMockOrdersByStatus(activeTab));
                 } else {
                     console.error(`API trả về mã lỗi ${response.status}. Khởi động Mock Data cứu hộ.`);
                     setOrders(getMockOrdersByStatus(activeTab));

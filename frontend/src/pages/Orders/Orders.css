@@ -127,3 +127,99 @@
     border-color: #1dbf73 !important;
     box-shadow: 0 0 4px rgba(29, 191, 115, 0.2);
 }
+
+/* ==========================================================================
+   🆕 BỔ SUNG: CSS CHO FORM MODAL ĐÁNH GIÁ DỊCH VỤ CỦA BUYER
+   ========================================================================== */
+
+/* Hoạt ảnh xuất hiện mượt mà cho Modal */
+@keyframes fadeInModal {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.review-modal-overlay {
+    animation: fadeInModal 0.2s ease-out;
+}
+
+.review-modal-card {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    animation: fadeInModal 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Thêm hiệu ứng phóng to nhẹ khi di chuột vào các ngôi sao chọn đánh giá */
+.review-modal-card form button svg {
+    transition: transform 0.15s ease, fill 0.15s ease;
+}
+
+.review-modal-card form button:hover svg {
+    transform: scale(1.15);
+}
+
+/* Đồng bộ hóa giao diện ô nhập textarea trong Modal với form bàn giao */
+.review-modal-card textarea {
+    background-color: #ffffff !important;
+    color: #222325 !important;
+    border: 1px solid #b5b6ba !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.review-modal-card textarea::placeholder {
+    color: #95979d !important;
+}
+
+.review-modal-card textarea:focus {
+    outline: none;
+    border-color: #1dbf73 !important;
+    box-shadow: 0 0 4px rgba(29, 191, 115, 0.2);
+}
+
+/* Hiệu ứng tương tác cho các nút điều hướng bên trong Modal */
+.review-modal-card button[type="submit"]:hover {
+    background-color: #19a463 !important;
+}
+
+.review-modal-card button[type="button"]:hover {
+    background-color: #f7f7f7 !important;
+    border-color: #222325 !important;
+    color: #222325 !important;
+}
+
+/* ==========================================================================
+   🆕 BỔ SUNG: ĐỒNG BỘ GIAO DIỆN FORM YÊU CẦU LÀM LẠI (REVISION FORM)
+   ========================================================================== */
+
+/* Thừa kế cấu trúc sáng sủa cho ô nhập đính kèm file và ghi chú sửa đổi */
+.buyer-action-widget form textarea,
+.buyer-action-widget form input[type="file"] {
+    background-color: #ffffff !important;
+    color: #222325 !important;
+    border: 1px solid #b5b6ba !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.buyer-action-widget form input[type="file"] {
+    background: #fafafa !important;
+    border: 1px dashed #b5b6ba !important;
+    padding: 6px;
+    cursor: pointer;
+}
+
+.buyer-action-widget form textarea:focus {
+    outline: none;
+    border-color: #f4511e !important; /* Đổi sang màu cam định danh riêng cho luồng sửa đổi */
+    box-shadow: 0 0 4px rgba(244, 81, 30, 0.25);
+}
+
+/* Hiệu ứng rê chuột mượt mà cho nút Xác nhận gửi yêu cầu làm lại màu cam */
+.buyer-action-widget button[type="submit"] {
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.buyer-action-widget button[type="submit"]:hover:not(:disabled) {
+    background-color: #d84315 !important; /* Cam đậm hơn khi hover */
+}
+
+.buyer-action-widget button[type="submit"]:active:not(:disabled) {
+    transform: scale(0.98);
+}

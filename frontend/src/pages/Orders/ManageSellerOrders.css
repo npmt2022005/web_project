@@ -129,14 +129,14 @@
     background-color: #fafafa;
 }
 
-/* Service / Gig Column Elements */
-.service-info-cell {
+/* Service / Order Column Elements (Đồng bộ Class với File JSX Mới) */
+.order-info-cell, .service-info-cell {
     display: flex;
     align-items: center;
     gap: 14px;
 }
 
-.service-thumb-img {
+.order-thumb-img, .service-thumb-img {
     width: 72px;
     height: 48px;
     object-fit: cover;
@@ -144,14 +144,14 @@
     border: 1px solid #e4e5e7;
 }
 
-.service-details-text {
+.order-details-text, .service-details-text {
     display: flex;
     flex-direction: column;
     justify-content: center;
     max-width: 420px;
 }
 
-.service-title-link {
+.order-title-link, .service-title-link {
     font-size: 14px;
     font-weight: 600;
     line-height: 1.4;
@@ -163,12 +163,12 @@
     transition: color 0.15s ease;
 }
 
-.service-title-link:hover {
+.order-title-link:hover, .service-title-link:hover {
     color: #19a463 !important;
 }
 
-/* Badges and Price Styles */
-.category-text-badge {
+/* Badges and Price Styles (Bổ sung ánh xạ Class cho Buyer và Cost) */
+.buyer-text-badge, .category-text-badge {
     display: inline-block;
     padding: 6px 12px;
     font-size: 13px;
@@ -179,7 +179,7 @@
     white-space: nowrap;
 }
 
-.cost-text-bold {
+.order-cost-bold, .cost-text-bold {
     font-size: 15px;
     font-weight: 700;
 }

@@ -34,14 +34,14 @@ const FALLBACK_MOCK_ORDERS = [
     }
 ];
 
-// Hàm bổ trợ hiển thị tên Trạng thái Tiếng Việt trên giao diện
+// Hàm bổ trợ hiển thị tên Trạng thái Tiếng Việt trên giao diện (Đồng bộ chuẩn hóa theo OrderDetailPage)
 const translateStatus = (status) => {
     switch (status ? status.toUpperCase() : '') {
         case 'PENDING': return 'CHỜ XỬ LÝ';
         case 'IN_PROGRESS': return 'ĐANG THỰC HIỆN';
-        case 'DELIVERED': return 'ĐÃ GIAO';
+        case 'DELIVERED': return 'ĐÃ BÀN GIAO'; // Chỉnh từ ĐÃ GIAO thành ĐÃ BÀN GIAO để đồng bộ hệ thống
         case 'COMPLETED': return 'HOÀN THÀNH';
-        case 'CANCELLED': return 'ĐÃ HỦY ĐƠN'; // 🆕 Bổ sung hỗ trợ dịch trạng thái đơn bị Seller từ chối
+        case 'CANCELLED': return 'ĐÃ HỦY ĐƠN'; // Đồng bộ hiển thị chữ in hoa ĐÃ HỦY ĐƠN
         default: return status || 'CHỜ XỬ LÝ';
     }
 };
@@ -124,7 +124,7 @@ const MyOrders = () => {
                 <button className={statusFilter === 'IN_PROGRESS' ? 'tab-btn active' : 'tab-btn'} onClick={() => setStatusFilter('IN_PROGRESS')}>Đang thực hiện</button>
                 <button className={statusFilter === 'DELIVERED' ? 'tab-btn active' : 'tab-btn'} onClick={() => setStatusFilter('DELIVERED')}>Đã giao</button>
                 <button className={statusFilter === 'COMPLETED' ? 'tab-btn active' : 'tab-btn'} onClick={() => setStatusFilter('COMPLETED')}>Hoàn thành</button>
-                <button className={statusFilter === 'CANCELLED' ? 'tab-btn active' : 'tab-btn'} onClick={() => setStatusFilter('CANCELLED')}>Đã hủy</button> {/* 🆕 Bổ sung tab lọc đơn hàng bị hủy */}
+                <button className={statusFilter === 'CANCELLED' ? 'tab-btn active' : 'tab-btn'} onClick={() => setStatusFilter('CANCELLED')}>Đã hủy</button>
             </div>
 
             {loading ? (

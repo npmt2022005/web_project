@@ -65,13 +65,14 @@ const ManageServices = () => {
     const fetchGigsFromServer = useCallback(async () => {
         setIsLoading(true);
         try {
-            const token = localStorage.getItem('JWT_TOKEN'); // Lấy mã token xác thực
+            // SỬA ĐỔI AN TOÀN: Kiểm tra token từ cả 'token' hoặc 'JWT_TOKEN' để tránh bị thiếu thông tin xác thực
+            const token = localStorage.getItem('token') || localStorage.getItem('JWT_TOKEN'); 
             
             // Backend Spring Boot nhận trang bắt đầu từ 0, nên cần (currentPage - 1)
             const apiPage = currentPage - 1;
             
-            // ĐÃ THAY ĐỔI: Gọi trực tiếp URL đầy đủ bằng cách nối chuỗi BASE_URL
-            const response = await fetch(`${BASE_URL}/api/v1/gigs/me?page=${apiPage}&size=${gigsPerPage}&sortBy=createdAt&sortDir=desc`, {
+            // SỬA ĐỔI: Đồng bộ tham số sortDir thành 'DESC' (viết hoa) để tránh lỗi 400 từ bộ lọc JPA Spring
+            const response = await fetch(`${BASE_URL}/api/v1/gigs/me?page=${apiPage}&size=${gigsPerPage}&sortBy=createdAt&sortDir=DESC`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -120,7 +121,8 @@ const ManageServices = () => {
     // ==========================================================================
     
     const handleViewGigDetail = (gig) => {
-        navigate(`/services/${gig.id}`, { state: { detailGigData: gig } });
+        // ĐÃ SỬA: Thay đổi URL điều hướng sang trang chi tiết gig phù hợp với GigDetailPage thay vì OrderDetailPage
+        navigate(`/gigs/${gig.id}`, { state: { detailGigData: gig } });
     };
 
     const handleAddNewService = () => {
@@ -128,6 +130,7 @@ const ManageServices = () => {
     };
 
     const handleEditGig = (gig) => {
+        // Truyền dữ liệu thật qua state để component đích nhận diện chế độ Edit
         navigate('/create-gig', { state: { editGigData: gig } });
     };
 
@@ -143,7 +146,7 @@ const ManageServices = () => {
     const confirmDeleteGig = async () => {
         const gigId = deleteModal.gigId;
         try {
-            const token = localStorage.getItem('JWT_TOKEN');
+            const token = localStorage.getItem('token') || localStorage.getItem('JWT_TOKEN');
             
             // ĐÃ THAY ĐỔI: Gọi chính xác API Contract DELETE bằng cách nối chuỗi BASE_URL
             const response = await fetch(`${BASE_URL}/api/v1/gigs/delete_gig/${gigId}`, {

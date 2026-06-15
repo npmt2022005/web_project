@@ -28,6 +28,7 @@ const MOCK_GIG_DETAILS = {
     "seller": {
       "id": 88,
       "fullName": "Kianna Ble",
+      "username": "kianna_ble",
       "avatarUrl": "https://i.pravatar.cc/150?img=32",
       "isVerified": true,
       "role": "Supporter",
@@ -90,6 +91,36 @@ const GigDetailPage = () => {
   const [activeTab, setActiveTab] = useState(0); 
   const [currentImage, setCurrentImage] = useState('');
   const [loading, setLoading] = useState(true);
+
+  // === ĐOẠN ĐƯỢC CHỈNH SỬA ĐỂ PHÙ HỢP VỚI LOCALSTORAGE CỦA BẠN ===
+  const token = localStorage.getItem('token');
+  const loggedInUsername = localStorage.getItem('username'); // Đọc trực tiếp chuỗi kien_phan
+  let currentUserId = null;
+
+  // Tự động giải mã token JWT để lấy ID số phòng trường hợp Backend so sánh qua ID
+  if (token) {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        window.atob(base64)
+          .split('')
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+      const decoded = JSON.parse(jsonPayload);
+      currentUserId = decoded.id || decoded.userId || decoded.sub; 
+    } catch (e) {
+      console.warn("Không thể giải mã dữ liệu token để lấy mã ID khách hàng");
+    }
+  }
+
+  // Logic kiểm tra trùng khớp: Trùng khớp về Username HOẶC trùng khớp về mã ID số
+  const isSellerOfThisGig = gig && gig.seller && (
+    (loggedInUsername && gig.seller.username && String(loggedInUsername).toLowerCase() === String(gig.seller.username).toLowerCase()) ||
+    (currentUserId && gig.seller.id && String(currentUserId) === String(gig.seller.id))
+  );
+  // =============================================================
 
   useEffect(() => {
     const loadData = async () => {
@@ -157,10 +188,15 @@ const GigDetailPage = () => {
 
   // Hàm xử lý gọi API khởi tạo đơn hàng nháp khi chọn gói dịch vụ
   const handleContinueOrder = async (packageType) => {
-    const token = localStorage.getItem('token');
     if (!token) {
       alert("Vui lòng đăng nhập hệ thống để thực hiện đặt đơn hàng!");
       navigate('/login');
+      return;
+    }
+
+    // Phòng ngừa nhấn nút bằng phím hoặc công cụ dev: chặn hành vi nếu là Seller chính mình
+    if (isSellerOfThisGig) {
+      alert("Bạn không thể đặt đơn hàng cho dịch vụ của chính mình!");
       return;
     }
 
@@ -189,8 +225,6 @@ const GigDetailPage = () => {
       console.warn("⚠️ Lỗi hệ thống hoặc lỗi kết nối Server API đơn hàng. Tự động chuyển sang Mock Đơn Hàng để test UI.");
       console.log("🚨 Chi tiết lỗi API:", error.response ? error.response.data : error.message);
   
-      console.warn("⚠️ Lỗi hệ thống hoặc lỗi kết nối Server API đơn hàng. Tự động chuyển sang Mock Đơn Hàng để test UI.");
-      // ... phần điều hướng mock data tiếp theo ..
       const fallbackId = `mock-${id === 'test-local' ? '1' : id}-${packageType.toLowerCase()}`;
       navigate(`/checkout/${fallbackId}`);
     }
@@ -401,11 +435,20 @@ const GigDetailPage = () => {
                   </div>
                 )}
 
+                {/* THAY ĐỔI LOGIC: Vô hiệu hóa nút bấm và thêm hiệu ứng mờ nếu người dùng chính là Seller tạo bài đăng này */}
                 <button 
                   className="continue-order-submit-btn" 
                   onClick={() => handleContinueOrder(selectedPackage.type)}
+                  disabled={isSellerOfThisGig}
+                  style={isSellerOfThisGig ? {
+                    backgroundColor: '#b5b6ba',
+                    color: '#fff',
+                    cursor: 'not-allowed',
+                    opacity: 0.6,
+                    boxShadow: 'none'
+                  } : {}}
                 >
-                  Tiếp tục với ({selectedPackage.price}$)
+                  {isSellerOfThisGig ? 'Bạn không thể mua dịch vụ của mình' : `Tiếp tục với (${selectedPackage.price}$)`}
                 </button>
               </div>
             )}
