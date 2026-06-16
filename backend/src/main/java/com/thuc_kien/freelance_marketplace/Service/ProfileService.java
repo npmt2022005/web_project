@@ -14,15 +14,12 @@ import com.thuc_kien.freelance_marketplace.DTO.ProfileUpdateRequestDTO;
 import com.thuc_kien.freelance_marketplace.Entity.Seller;
 import com.thuc_kien.freelance_marketplace.Entity.User;
 import com.thuc_kien.freelance_marketplace.Entity.Wallet;
-import com.thuc_kien.freelance_marketplace.Repository.EducationRepository;
-import com.thuc_kien.freelance_marketplace.Repository.ExperienceRepository;
 import com.thuc_kien.freelance_marketplace.Repository.SellerRepository;
-import com.thuc_kien.freelance_marketplace.Repository.SkillRepository;
+
 import com.thuc_kien.freelance_marketplace.Repository.UserRepository;
 import com.thuc_kien.freelance_marketplace.Repository.WalletRepository;
 
 import jakarta.transaction.Transactional;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
@@ -36,6 +33,8 @@ import org.springframework.beans.factory.annotation.Value;
 public class ProfileService {
     private final WalletRepository walletRepo;
     @Value("${stripe.api.secretKey}")
+
+    
     private String stripeSecretkey;
     private final SellerRepository sellerRepo;
     private final WalletRepository walletRepository;
@@ -43,12 +42,15 @@ public class ProfileService {
     private final FileUploadService fileUploadService;
 
     public ProfileResponseDTO getFullProfile(Long userId) {
-        // 1. Lấy User từ DB
-        Seller seller = sellerRepo.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("Seller không tồn tại"));
+        // 1. Lấy User cơ bản từ DB
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
 
-        // 2. Lấy thông tin Ví (Logic kiểm tra Bank Linked & Verified)
-        var wallet = walletRepository.findByUserId(seller.getUser().getId()).orElse(null);
+        // 2. Kiểm tra thông tin Seller (nếu có)
+        Optional<Seller> sellerOpt = sellerRepo.findByUserId(userId);
+
+        // 3. Lấy thông tin Ví
+        var wallet = walletRepository.findByUserId(userId).orElse(null);
         boolean isLinked = (wallet != null && wallet.getStripeAccountId() != null && !wallet.getStripeAccountId().isEmpty());
         boolean isVerified = (wallet != null && wallet.isVerified());
 
@@ -58,23 +60,34 @@ public class ProfileService {
             .build();
 
         var basicInfo = ProfileResponseDTO.BasicInfoDTO.builder()
-                .username(seller.getUser().getFullname())
-                .email(seller.getUser().getEmail())
-                .phone(seller.getUser().getPhone())
-                .country(seller.getUser().getCountry())
-                .description(seller.getBio())
-                .avatar(seller.getUser().getAvatarUrl())
+                .username(user.getFullname())
+                .email(user.getEmail())
+                .phone(user.getPhone())
+                .country(user.getCountry())
+                .city(user.getCity())
+                .description(sellerOpt.map(Seller::getBio).orElse("Người dùng chưa cập nhật giới thiệu"))
+                .avatar(user.getAvatarUrl())
                 .build();
 
-        var educationList = seller.getEducations().stream()
-                .map(edu -> new ProfileResponseDTO.TimelineDTO(
-                        edu.getId(), edu.getDuration(), edu.getDegree(), edu.getSchool(), edu.getDescription()))
-                .collect(Collectors.toList());
+        var educationList = sellerOpt.isPresent() ? sellerOpt.get().getEducations().stream()
+                .map(edu -> ProfileResponseDTO.TimelineDTO.builder()
+                        .id(edu.getId())
+                        .duration(edu.getDuration())
+                        .title(edu.getDegree())
+                        .subtitle(edu.getSchool())
+                        .description(edu.getDescription())
+                        .build())
+                .collect(Collectors.toList()) : new ArrayList<ProfileResponseDTO.TimelineDTO>();
 
-        var experienceList = seller.getExperiences().stream()
-                .map(exp -> new ProfileResponseDTO.TimelineDTO(
-                        exp.getId(), exp.getDuration(), exp.getRole(), exp.getCompany(), exp.getDescription()))
-                .collect(Collectors.toList());
+        var experienceList = sellerOpt.isPresent() ? sellerOpt.get().getExperiences().stream()
+                .map(exp -> ProfileResponseDTO.TimelineDTO.builder()
+                        .id(exp.getId())
+                        .duration(exp.getDuration())
+                        .title(exp.getRole())
+                        .subtitle(exp.getCompany())
+                        .description(exp.getDescription())
+                        .build())
+                .collect(Collectors.toList()) : new ArrayList<ProfileResponseDTO.TimelineDTO>();
 
         // 6. Trả về đối tượng tổng hợp
         return ProfileResponseDTO.builder()
@@ -103,8 +116,8 @@ public class ProfileService {
         // 2. Tạo link onboarding
         AccountLinkCreateParams linkParams = AccountLinkCreateParams.builder()
                 .setAccount(wallet.getStripeAccountId())
-                .setRefreshUrl("http://localhost:5173/api/v1/profile") //
-                .setReturnUrl("http://localhost:5173/api/v1/profile") //
+                .setRefreshUrl("http://localhost:5173/profile") 
+                .setReturnUrl("http://localhost:5173/profile") 
                 .setType(AccountLinkCreateParams.Type.ACCOUNT_ONBOARDING)
                 .build();
 
@@ -139,25 +152,24 @@ public class ProfileService {
     
     @Transactional
     public void updateBasicInfo(Long userId, ProfileUpdateRequestDTO dto) {
-        // 1. Tìm User và Seller
+        // 1. Tìm User
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User không tồn tại"));
-        
-        Seller seller = sellerRepo.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("Chưa đăng ký làm Seller"));
-
 
         if (dto.getAvatarUrl() != null) user.setAvatarUrl(dto.getAvatarUrl());
         if (dto.getPhone() != null) user.setPhone(dto.getPhone());
         if (dto.getCountry() != null) user.setCountry(dto.getCountry());
         if (dto.getCity() != null) user.setCity(dto.getCity());
 
-        // 3. Cập nhật thông tin Seller (Bio/Description)
-        if (dto.getDescription() != null) seller.setBio(dto.getDescription());
-
-        // 4. Lưu lại
         userRepo.save(user);
-        sellerRepo.save(seller);
+
+        // 2. Cập nhật thông tin Seller (Bio/Description) nếu có
+        sellerRepo.findByUserId(userId).ifPresent(seller -> {
+            if (dto.getDescription() != null) {
+                seller.setBio(dto.getDescription());
+                sellerRepo.save(seller);
+            }
+        });
     }
     @Transactional
     public String updateAvatar(Long userId, MultipartFile file) {

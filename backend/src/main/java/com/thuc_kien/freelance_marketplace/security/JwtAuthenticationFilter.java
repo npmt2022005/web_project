@@ -34,13 +34,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        String jwt = authHeader.substring(7);
         String userEmail;
         try {
-            // 2. Trích xuất Token (Cắt bỏ chuỗi "Bearer " - 7 ký tự)
-            jwt = authHeader.substring(7);
+            String jwt = authHeader.substring(7);
             
-            // 3. Giải mã token để lấy email người dùng
             userEmail = jwtService.extractUsername(jwt);
 
             // 4. Nếu lấy được email và chưa được xác thực trong SecurityContext
@@ -79,7 +76,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     // Hàm bổ trợ để trả về lỗi JSON cho Frontend
     private void handleException(HttpServletResponse response, String message) throws IOException {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.setContentType("application/json");
-        response.getWriter().write("{\"error\": \"" + message + "\"}");
+        response.setContentType("application/json;charset=UTF-8");
+        response.getWriter().write("{\"status\": \"error\", \"message\": \"" + message + "\", \"data\": null}");
     }
 }

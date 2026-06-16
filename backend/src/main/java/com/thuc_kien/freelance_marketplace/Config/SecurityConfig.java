@@ -65,15 +65,21 @@ public class SecurityConfig {
                 // Cho phép tất cả các API liên quan đến Auth và Quên mật khẩu
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers(
-                "/v3/api-docs/**",        
-                "/swagger-ui/**",          
-                "/swagger-ui.html",         
-                "/swagger-resources/**",
-                "/webjars/**",
-                "/api/v1/**"
-            ).permitAll()
-                .requestMatchers("/api//admin/**").hasRole("ADMIN")   // Chỉ ADMIN mới vào được các link này
+                    "/v3/api-docs/**",        
+                    "/swagger-ui/**",          
+                    "/swagger-ui.html",         
+                    "/swagger-resources/**",
+                    "/webjars/**"
+                ).permitAll()
+                // Các API công khai cho khách xem
+                .requestMatchers("/api/v1/gigs/featured", "/api/v1/gigs_v1/**", "/api/v1/categories/**").permitAll()
                 
+                // Các API quản trị
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
+                // Endpoint WebSocket
+                .requestMatchers("/ws/**").permitAll()
+
                 // Các API khác yêu cầu phải đăng nhập mới được dùng
                 .anyRequest().authenticated()
             )
@@ -99,7 +105,7 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(List.of("http://localhost:5173")); 
         
         // Cho phép các phương thức HTTP
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         
         // Cho phép tất cả các Header (Quan trọng để gửi JWT trong Header)
         configuration.setAllowedHeaders(List.of("*"));

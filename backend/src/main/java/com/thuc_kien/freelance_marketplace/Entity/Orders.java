@@ -78,6 +78,9 @@ public class Orders {
     @Column(name = "submission_note", columnDefinition = "TEXT")
     private String submissionNote;
 
+    @Column(name = "submission_file_url")
+    private String submissionFileUrl;
+
     @Column(name = "actual_delivery_date")
     private LocalDateTime actualDeliveryDate;
 
@@ -102,4 +105,6 @@ public class Orders {
 
     @Column(name = "revision_file_url")
     private String revisionFileUrl; 
+    
+    
 }

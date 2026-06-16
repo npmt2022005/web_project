@@ -6,12 +6,7 @@ import com.thuc_kien.freelance_marketplace.DTO.ProfileUpdateRequestDTO;
 import com.thuc_kien.freelance_marketplace.DTO.StripeOnboardingResponse;
 import com.thuc_kien.freelance_marketplace.Service.ProfileService;
 import com.thuc_kien.freelance_marketplace.security.CustomUserDetails;
-
 import lombok.RequiredArgsConstructor;
-
-import java.security.Principal;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/profiles")
+@RequestMapping("/api/v1/profile")
 public class ProfileController {
     private final ProfileService profileService;
 
@@ -34,7 +29,7 @@ public class ProfileController {
         ProfileResponseDTO profile = profileService.getFullProfile(currentUserId);
         APIResponse<ProfileResponseDTO> response = APIResponse.<ProfileResponseDTO>builder()
                 .status("success")
-                .message("Dang Profile thanh cong")
+                .message("Lấy thông tin hồ sơ thành công")
                 .data(profile)
                 .build();
 

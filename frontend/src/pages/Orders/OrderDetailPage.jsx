@@ -33,8 +33,10 @@ const OrderDetailPage = () => {
     const { orderId } = useParams();
     const navigate = useNavigate();
     const [order, setOrder] = useState(null);
+    const [isExpanded, setIsExpanded] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [deliveryDetails, setDeliveryDetails] = useState(null);
     const [timeLeft, setTimeLeft] = useState('');
     const [isUsingMock, setIsUsingMock] = useState(false);
     
@@ -47,6 +49,8 @@ const OrderDetailPage = () => {
     const [submissionLink, setSubmissionLink] = useState('');
     const [deliverNote, setDeliverNote] = useState('');
     const [deliverLoading, setDeliverLoading] = useState(false);
+
+    const DESCRIPTION_LIMIT = 700;
 
     // Khởi tạo các State phục vụ tính năng nghiệm thu & đánh giá dành cho Buyer
     const [showReviewModal, setShowReviewModal] = useState(false);
@@ -71,6 +75,7 @@ const OrderDetailPage = () => {
             setLoading(true);
             setError(null);
             setIsUsingMock(false);
+            setIsExpanded(false);
             
             const response = await fetch(`http://localhost:8080/api/v1/orders/${orderId}`, {
                 method: 'GET',
@@ -84,12 +89,37 @@ const OrderDetailPage = () => {
 
             if (response.ok && resData.status === 'success') {
                 setOrder(resData.data);
+                
+                // Nếu đơn hàng đã giao, hoàn thành hoặc đang sửa đổi (sau khi đã nộp ít nhất 1 lần)
+                if (['DELIVERED', 'COMPLETED'].includes(resData.data.status) || (resData.data.status === 'IN_PROGRESS' && resData.data.revisionCount > 0)) {
+                    const delResponse = await fetch(`http://localhost:8080/api/v1/orders/${orderId}/delivery-details`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const delData = await delResponse.json();
+                    if (delResponse.ok && delData.status === 'success') {
+                        setDeliveryDetails(delData.data);
+                    }
+                }
             } else {
                 throw new Error(resData.message || 'Có lỗi xảy ra');
             }
         } catch (err) {
             console.warn(`[API] Lỗi tải chi tiết đơn #${orderId}. Tự động kích hoạt hiển thị giao diện Mockup.`);
-            setOrder(prev => (prev && prev.orderId === orderId) ? prev : { ...FALLBACK_MOCK_DETAIL, orderId: orderId });
+            console.warn(`[API] Lỗi tải chi tiết đơn #${orderId}: ${err.message}. Tự động kích hoạt hiển thị giao diện Mockup.`);
+            const mockOrder = (order && order.orderId === orderId) ? order : { ...FALLBACK_MOCK_DETAIL, orderId: orderId };
+            setOrder(mockOrder);
+
+            // Giả lập dữ liệu bàn giao cho mockup
+            if (['DELIVERED', 'COMPLETED'].includes(mockOrder.status)) {
+                setDeliveryDetails({
+                    submissionNote: "Dữ liệu bàn giao giả lập phục vụ mục đích kiểm thử giao diện khi Server không phản hồi.",
+                    submissionLink: "https://google.com/mock-delivery-link",
+                    submissionFileUrl: "",
+                    inspectionDeadline: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+                    revisionCount: 0,
+                    maxRevisionsAllowed: 3
+                });
+            }
             setIsUsingMock(true);
         } finally {
             setLoading(false);
@@ -137,17 +167,22 @@ const OrderDetailPage = () => {
     };
 
     useEffect(() => {
-        if (!order || !order.deliveryDeadline) return;
+        // Ưu tiên đếm ngược thời gian nghiệm thu nếu đã giao hàng, ngược lại đếm ngược thời gian bàn giao
+        const deadlineSource = (order?.status === 'DELIVERED' && deliveryDetails?.inspectionDeadline)
+            ? deliveryDetails.inspectionDeadline
+            : order?.deliveryDeadline;
+
+        if (!order || !deadlineSource) return;
 
         let hasTriggeredCancel = false;
 
         const interval = setInterval(() => {
             const now = new Date().getTime();
-            const deadline = new Date(order.deliveryDeadline).getTime();
+            const deadline = new Date(deadlineSource).getTime();
             const distance = deadline - now;
 
             if (distance < 0) {
-                setTimeLeft('Đã quá hạn bàn giao!');
+                setTimeLeft(order.status === 'DELIVERED' ? 'Hết hạn nghiệm thu!' : 'Đã quá hạn bàn giao!');
                 clearInterval(interval);
 
                 if (order.status === 'IN_PROGRESS' && isBuyer && !hasTriggeredCancel) {
@@ -163,7 +198,7 @@ const OrderDetailPage = () => {
         }, 1000);
 
         return () => clearInterval(interval);
-    }, [order, isBuyer, orderId]);
+    }, [order, isBuyer, deliveryDetails]);
 
     // Hàm xử lý tương tác gọi API Cập nhật trạng thái đơn hàng (Xác nhận / Từ chối)
     const handleProcessOrder = async (decision) => {
@@ -308,7 +343,8 @@ const OrderDetailPage = () => {
             try {
                 resData = await response.json();
             } catch(e) {}
-
+            // THÊM DÒNG NÀY ĐỂ DEBUG
+            console.log("Phản hồi từ Server:", { status: response.status, ok: response.ok, body: resData });
             if (response.ok && resData.status === 'success') {
                 alert(resData.message || 'Nghiệm thu đơn hàng và gửi đánh giá thành công.');
                 setShowReviewModal(false);
@@ -389,7 +425,7 @@ const OrderDetailPage = () => {
                 setShowRevisionForm(false);
                 setRevisionNote('');
                 setRevisionFile(null);
-                alert(`[Giả Lập Fallback] Hệ thống gặp lỗi xử lý từ máy chủ (${response.status}). Đã ép chuyển trạng thái đơn hàng sang: ĐANG THỰC HIỆN.`);
+            alert(resData.message || `[Giả Lập Fallback] Hệ thống gặp lỗi xử lý từ máy chủ (${response.status}).`);
             }
         } catch (err) {
             console.warn("⚠️ [API Error] Lỗi kết nối API revision. Hệ thống tự động chuyển sang cơ chế giả lập Mock Data.");
@@ -424,7 +460,27 @@ const OrderDetailPage = () => {
                         </span>
                         <p className="order-id-label">Mã đơn hàng: #{order.orderId}</p>
                         <h1>{order.gigTitle}</h1>
-                        <p className="gig-desc-preview">{order.gigDescription}</p>
+                        
+                        <div className="gig-desc-container">
+                            <p className="gig-desc-preview">
+                                {isExpanded || (order.gigDescription || '').length <= DESCRIPTION_LIMIT
+                                    ? order.gigDescription
+                                    : `${(order.gigDescription || '').substring(0, DESCRIPTION_LIMIT)}...`}
+                            </p>
+                            {(order.gigDescription || '').length > DESCRIPTION_LIMIT && (
+                                <button 
+                                    className="see-more-btn" 
+                                    onClick={() => setIsExpanded(!isExpanded)}
+                                    style={{ 
+                                        background: 'none', border: 'none', color: '#1dbf73', 
+                                        fontWeight: 'bold', cursor: 'pointer', padding: 0, 
+                                        fontSize: '14px', marginTop: '5px' 
+                                    }}
+                                >
+                                    {isExpanded ? 'Thu gọn' : 'Xem thêm'}
+                                </button>
+                            )}
+                        </div>
                     </div>
 
                     <div className="order-progress-stepper">
@@ -443,6 +499,64 @@ const OrderDetailPage = () => {
                             )}
                             {order.status === 'DELIVERED' && (
                                 <p className="chat-system-text" style={{ color: '#1dbf73', fontWeight: 'bold' }}>Hệ thống: Người bán đã nộp sản phẩm bàn giao thành công. Chờ người mua xác nhận hoàn thành.</p>
+                            )}
+
+                            {/* HIỂN THỊ YÊU CẦU CỦA BUYER DÀNH CHO SELLER */}
+                            {!isBuyer && (order.requirementText || (order.attachedFiles && order.attachedFiles.length > 0)) && (
+                                <div className="buyer-requirements-box" style={{ marginTop: '20px', padding: '15px', border: '1px solid #0284c7', borderRadius: '8px', backgroundColor: '#e0f2fe' }}>
+                                    <h4 style={{ color: '#0284c7', margin: '0 0 10px 0' }}>Yêu cầu từ khách hàng</h4>
+                                    {order.requirementText && (
+                                        <div style={{ fontSize: '14px', marginBottom: '10px', whiteSpace: 'pre-wrap' }}>
+                                            <strong>Nội dung yêu cầu:</strong>
+                                            <p style={{ margin: '5px 0 0 0', padding: '8px', backgroundColor: '#f0f9ff', border: '1px solid #bfdbfe', borderRadius: '4px' }}>
+                                                {order.requirementText}
+                                            </p>
+                                        </div>
+                                    )}
+                                    {order.attachedFiles && order.attachedFiles.length > 0 && (
+                                        <div style={{ fontSize: '14px', marginBottom: '12px' }}>
+                                            <strong>Tệp đính kèm:</strong>
+                                            <ul style={{ listStyle: 'none', padding: 0, margin: '5px 0 0 0' }}>
+                                                {order.attachedFiles.map((fileUrl, index) => (
+                                                    <li key={index} style={{ marginBottom: '5px' }}>
+                                                        <a href={fileUrl} target="_blank" rel="noreferrer" style={{ color: '#0284c7', textDecoration: 'underline' }}>
+                                                            <FileText size={14} style={{ verticalAlign: 'middle', marginRight: '5px' }} /> Xem tệp đính kèm {index + 1}
+                                                        </a>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                            {/* HIỂN THỊ THÔNG TIN BÀN GIAO CHI TIẾT */}
+                            {deliveryDetails && (['DELIVERED', 'COMPLETED'].includes(order.status) || 
+                             (order.status === 'IN_PROGRESS' && order.revisionCount > 0)) && (
+                                <div className="delivery-info-box" style={{ marginTop: '20px', padding: '15px', border: '1px solid #1dbf73', borderRadius: '8px', backgroundColor: '#f0fff4' }}>
+                                    <h4 style={{ color: '#1dbf73', margin: '0 0 10px 0' }}>Sản phẩm đã bàn giao</h4>
+                                    <p style={{ fontSize: '14px', marginBottom: '8px' }}><strong>Lời nhắn từ người bán:</strong> {deliveryDetails.submissionNote}</p>
+
+                                    {deliveryDetails.submissionFileUrl && (
+                                        <p style={{ fontSize: '14px', marginBottom: '8px' }}>
+                                            <strong>Tệp tin đính kèm:</strong> <a href={deliveryDetails.submissionFileUrl} target="_blank" rel="noreferrer" style={{ color: '#1dbf73', textDecoration: 'underline' }}>Xem tệp tin</a>
+                                        </p>
+                                    )}
+
+                                    {deliveryDetails.submissionLink && (
+                                        <p style={{ fontSize: '14px', marginBottom: '12px' }}>
+                                            <strong>Liên kết bên ngoài:</strong> <a href={deliveryDetails.submissionLink} target="_blank" rel="noreferrer" style={{ color: '#1dbf73', textDecoration: 'underline' }}>{deliveryDetails.submissionLink}</a>
+                                        </p>
+                                    )}
+
+                                    <div style={{ fontSize: '12px', color: '#62646a', fontStyle: 'italic', borderTop: '1px solid #c8e6c9', paddingTop: '8px' }}>
+                                        {deliveryDetails.inspectionDeadline ? (
+                                            <>Đơn hàng sẽ tự động hoàn thành vào: {new Date(deliveryDetails.inspectionDeadline).toLocaleString('vi-VN')}</>
+                                        ) : (
+                                            <span style={{ color: '#1dbf73', fontWeight: '600' }}>✓ Đơn hàng đã được nghiệm thu hoàn tất.</span>
+                                        )}
+                                        <br />Số lần đã yêu cầu sửa đổi: {deliveryDetails.revisionCount} / {deliveryDetails.maxRevisionsAllowed}
+                                    </div>
+                                </div>
                             )}
                         </div>
                     </div>
@@ -474,11 +588,12 @@ const OrderDetailPage = () => {
                     )}
 
                     {/* KHU VỰC HÀNH ĐỘNG GIAO HÀNG KHI ĐƠN Ở TRẠNG THÁI IN_PROGRESS */}
-                    {order.status === 'IN_PROGRESS' && (
+                    {(order.status === 'IN_PROGRESS' || order.status === 'DELIVERED') && (
                         <React.Fragment>
                             <div className="sidebar-widget countdown-widget">
-                                <h4><Clock size={16} /> Thời gian còn lại</h4>
+                                <h4><Clock size={16} /> {order.status === 'DELIVERED' ? 'Thời gian nghiệm thu' : 'Thời gian còn lại'}</h4>
                                 <div className="countdown-clock-box">{timeLeft}</div>
+                                {order.status === 'DELIVERED' && <p style={{fontSize: '11px', color: '#74767e', marginTop: '8px', textAlign: 'center'}}>Sau thời gian này đơn hàng sẽ tự động hoàn thành.</p>}
                             </div>
 
                             {!isBuyer && (
@@ -563,12 +678,32 @@ const OrderDetailPage = () => {
                                         type="button">
                                         Chấp nhận & Nghiệm thu
                                     </button>
-                                    <button 
-                                        onClick={() => setShowRevisionForm(true)}
-                                        style={{ width: '100%', padding: '10px', backgroundColor: '#fff', color: '#62646a', border: '1px solid #b5b6ba', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}
-                                        type="button">
-                                        Yêu cầu làm lại
-                                    </button>
+                                    {(() => {
+                                        const hasRevisionsLeft = deliveryDetails && (deliveryDetails.revisionCount < deliveryDetails.maxRevisionsAllowed);
+                                        return (
+                                            <button 
+                                                onClick={() => {
+                                                    if (!hasRevisionsLeft) {
+                                                        alert(`Bạn đã hết lượt yêu cầu chỉnh sửa miễn phí (${deliveryDetails?.revisionCount}/${deliveryDetails?.maxRevisionsAllowed}). Vui lòng bấm 'Chấp nhận' hoặc thỏa thuận thêm với người bán.`);
+                                                    } else {
+                                                        setShowRevisionForm(true);
+                                                    }
+                                                }}
+                                                style={{ 
+                                                    width: '100%', 
+                                                    padding: '10px', 
+                                                    backgroundColor: hasRevisionsLeft ? '#fff' : '#f5f5f5', 
+                                                    color: hasRevisionsLeft ? '#62646a' : '#b5b6ba', 
+                                                    border: '1px solid #b5b6ba', 
+                                                    borderRadius: '4px', 
+                                                    fontWeight: 'bold', 
+                                                    cursor: hasRevisionsLeft ? 'pointer' : 'not-allowed' 
+                                                }}
+                                                type="button">
+                                                Yêu cầu làm lại
+                                            </button>
+                                        );
+                                    })()}
                                 </div>
                             ) : (
                                 <form onSubmit={handleRevisionSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px', borderTop: '1px dashed #e4e5e7', paddingTop: '10px' }}>
@@ -693,6 +828,8 @@ const OrderDetailPage = () => {
                                 <textarea
                                     rows="4"
                                     required
+                                    onInvalid={(e) => e.target.setCustomValidity('Vui lòng nhập nội dung đánh giá của bạn trước khi xác nhận!')}
+                                    onInput={(e) => e.target.setCustomValidity('')}
                                     placeholder="Chia sẻ cảm nhận của bạn về tiến độ, chất lượng code, thái độ làm việc của người bán..."
                                     value={reviewComment}
                                     onChange={(e) => setReviewComment(e.target.value)}

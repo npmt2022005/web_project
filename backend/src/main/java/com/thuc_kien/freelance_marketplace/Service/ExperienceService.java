@@ -3,6 +3,7 @@ package com.thuc_kien.freelance_marketplace.Service;
 import org.springframework.stereotype.Service;
 
 import com.thuc_kien.freelance_marketplace.DTO.ExperienceRequestDTO;
+import com.thuc_kien.freelance_marketplace.DTO.ProfileResponseDTO;
 import com.thuc_kien.freelance_marketplace.Entity.Experience;
 import com.thuc_kien.freelance_marketplace.Entity.Seller;
 import com.thuc_kien.freelance_marketplace.Repository.ExperienceRepository;
@@ -19,21 +20,23 @@ public class ExperienceService {
     private final ExperienceRepository expRepo;
     private final SellerRepository sellerRepo;
 
-    public Long createExperience(Long userId, ExperienceRequestDTO dto) {
+    public ProfileResponseDTO.TimelineDTO createExperience(Long userId, ExperienceRequestDTO dto) {
         Seller seller = sellerRepo.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Tài khoản chưa đăng ký Seller"));
 
         Experience exp = new Experience();
+        // Khóa chính id của Experience sẽ tự tăng, không dùng setId(userId)
         exp.setCompany(dto.getCompany());
         exp.setRole(dto.getRole());
         exp.setDuration(dto.getDuration());
         exp.setDescription(dto.getDescription());
         exp.setSeller(seller);
         
-        return expRepo.save(exp).getId();
+        Experience savedExp = expRepo.save(exp);
+        return mapExperienceToTimelineDTO(savedExp);
     }
 
-    public void updateExperience(Long userId, Long expId, ExperienceRequestDTO dto) {
+    public ProfileResponseDTO.TimelineDTO updateExperience(Long userId, Long expId, ExperienceRequestDTO dto) {
         Experience exp = expRepo.findById(expId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy kinh nghiệm này"));
 
@@ -47,6 +50,7 @@ public class ExperienceService {
         exp.setDuration(dto.getDuration());
         exp.setDescription(dto.getDescription());
         expRepo.save(exp);
+        return mapExperienceToTimelineDTO(exp);
     }
 
     public void deleteExperience(Long userId, Long expId) {
@@ -59,5 +63,16 @@ public class ExperienceService {
         }
 
         expRepo.delete(exp);
+    }
+
+    // Helper method to map Experience entity to ProfileResponseDTO.TimelineDTO
+    private ProfileResponseDTO.TimelineDTO mapExperienceToTimelineDTO(Experience exp) {
+        return ProfileResponseDTO.TimelineDTO.builder()
+                .id(exp.getId())
+                .duration(exp.getDuration()) // Thời gian làm việc
+                .title(exp.getRole())        // Vị trí/Chức danh (Hiện thị ở dòng chính/Title)
+                .subtitle(exp.getCompany())  // Tên công ty (Hiển thị ở dòng phụ/Subtitle)
+                .description(exp.getDescription())
+                .build();
     }
 }

@@ -42,7 +42,7 @@ public class ProfileResponseDTO {
         private Long id;
         private String duration;
         private String title;     
-        private String institution; 
-        private String desc;
+        private String subtitle; // Changed from institution
+        private String description; // Changed from desc
     }
 }

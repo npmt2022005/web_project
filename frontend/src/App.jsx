@@ -1,5 +1,7 @@
 // src/App.jsx
 import React from 'react';
+
+
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import AuthPage from './pages/Auth/AuthPage';
 import HomePage from './pages/HomePage'; // Import trang chủ chung

@@ -459,7 +459,7 @@ const CreateGigPage = () => {
       title: `I will ${generalInfo.title.replace(/^I will\s+/i, '')}`,
       categoryId: parseInt(generalInfo.categoryId),
       tags: skills.length > 0 ? skills : ["Web Development"],
-      description: `<p>${generalInfo.description.replace(/\n/g, '</p><p>')}</p>`, 
+      description: generalInfo.description, 
       thumbnailUrl: thumbnailUrl,
       galleryUrls: galleryUrls,
       packages: packages.map(pkg => ({

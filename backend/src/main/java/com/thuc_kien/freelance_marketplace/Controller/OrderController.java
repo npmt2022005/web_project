@@ -25,6 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.thuc_kien.freelance_marketplace.Service.FileUploadService;
 import com.thuc_kien.freelance_marketplace.Service.OrderService;
 import com.thuc_kien.freelance_marketplace.DTO.APIResponse;
+import com.thuc_kien.freelance_marketplace.DTO.BuyerDeliveryViewResponse;
 import com.thuc_kien.freelance_marketplace.DTO.CompleteOrderRequest;
 import com.thuc_kien.freelance_marketplace.DTO.CreateOrderRequest;
 import com.thuc_kien.freelance_marketplace.DTO.DeliverOrderRequest;
@@ -34,6 +35,7 @@ import com.thuc_kien.freelance_marketplace.DTO.OrderResponseDTO;
 import com.thuc_kien.freelance_marketplace.DTO.OrderStartRequestDTO;
 import com.thuc_kien.freelance_marketplace.DTO.OrderSummaryDTO;
 import com.thuc_kien.freelance_marketplace.DTO.RevisionOrderRequest;
+import com.thuc_kien.freelance_marketplace.DTO.SellerRevisionViewResponse;
 import com.thuc_kien.freelance_marketplace.DTO.UpdateStatusRequest;
 import com.thuc_kien.freelance_marketplace.Entity.Orders;
 import com.thuc_kien.freelance_marketplace.security.CustomUserDetails;
@@ -326,7 +328,7 @@ public class OrderController {
             @PathVariable("orderId") String orderIdStr,
             @RequestParam("revisionNote") String revisionNote,
             @RequestParam(value = "file", required = false) MultipartFile file,
-            @RequestAttribute("userId") Long currentUserId) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
         try {
             Long numericOrderId;
             try {
@@ -340,7 +342,7 @@ public class OrderController {
                 return ResponseEntity.badRequest().body(
                         new APIResponse<>("error", "Vui lòng nhập nội dung yêu cầu chỉnh sửa chi tiết.", null));
             }
-
+            Long currentUserId = userDetails.getUser().getId();
             // 2. Upload file (nếu có)
             String uploadedFileUrl = null;
             if (file != null && !file.isEmpty()) {
@@ -407,7 +409,6 @@ public class OrderController {
                             "Nghiệm thu đơn hàng thành công! Tiền đã được chuyển vào ví người bán.", data));
 
         } catch (RuntimeException e) {
-            // Bắt các lỗi nghiệp vụ (Không phải người mua, chưa giao hàng, ví đóng băng...)
             return ResponseEntity.badRequest().body(
                     new APIResponse<>("error", e.getMessage(), null));
         } catch (Exception e) {
@@ -415,5 +416,58 @@ public class OrderController {
             return ResponseEntity.internalServerError().body(
                     new APIResponse<>("error", "Đã xảy ra lỗi hệ thống: " + e.getMessage(), null));
         }
+    }
+
+    @GetMapping("/{orderId}/revision-details")
+    public ResponseEntity<APIResponse<SellerRevisionViewResponse>> getSellerRevisionDetails(
+            @PathVariable String orderId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long currentUserId = userDetails.getUser().getId();
+
+        Long numericOrderId;
+        try {
+            String numericPart = orderId.replace("ORD-", "");
+            numericOrderId = Long.parseLong(numericPart);
+        } catch (NumberFormatException e) {
+            return ResponseEntity.badRequest().body(
+                    new APIResponse<>("error", "Mã đơn hàng không hợp lệ.", null));
+        }
+        SellerRevisionViewResponse data = orderService.getSellerRevisionDetails(numericOrderId, currentUserId);
+        APIResponse<SellerRevisionViewResponse> apiResponse = new APIResponse<>("success",
+                "Lấy thông tin chỉnh sửa thành công.", data);
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    @GetMapping("/{orderId}/delivery-details")
+    public ResponseEntity<APIResponse<BuyerDeliveryViewResponse>> getDeliveryDetailsForBuyer(
+            @PathVariable String orderId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        
+        // 1. Lấy userId của Buyer đang đăng nhập từ hệ thống Security
+        Long currentBuyerId = userDetails.getUser().getId();
+
+        // 2. Xử lý cắt chuỗi nếu Frontend truyền định dạng "ORD-123" thay vì số thuần
+        Long numericOrderId;
+        try {
+            String numericPart = orderId.startsWith("ORD-") ? orderId.substring(4) : orderId;
+            numericOrderId = Long.parseLong(numericPart);
+        } catch (NumberFormatException e) {
+            return ResponseEntity.badRequest().body(
+                    new APIResponse<>("error", "Mã đơn hàng không hợp lệ.", null)
+            );
+        }
+
+        // 3. Gọi Service xử lý lấy dữ liệu đóng gói trong DTO
+        BuyerDeliveryViewResponse data = orderService.getDeliveryDetailsForBuyer(numericOrderId, currentBuyerId);
+
+        // 4. Bọc qua lớp APIResponse chuẩn để trả về cho Frontend React
+        APIResponse<BuyerDeliveryViewResponse> apiResponse = new APIResponse<>(
+                "success", 
+                "Lấy thông tin bàn giao của đơn hàng thành công.", 
+                data
+        );
+
+        return ResponseEntity.ok(apiResponse);
     }
 }

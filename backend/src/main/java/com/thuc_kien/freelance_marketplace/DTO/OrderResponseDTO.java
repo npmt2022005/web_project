@@ -1,6 +1,7 @@
 package com.thuc_kien.freelance_marketplace.DTO;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.time.LocalDateTime;
 
 import lombok.Builder;
@@ -22,4 +23,7 @@ public class OrderResponseDTO {
     private LocalDateTime deliveryDeadline;
     private String partnerAvatar;
     private LocalDateTime inspectionDeadline;
+    private String requirementText; // Nội dung yêu cầu từ Buyer
+    private List<String> attachedFiles; // Danh sách URL file đính kèm từ Buyer
+    private Integer revisionCount; // Số lần đã yêu cầu sửa đổi
 }

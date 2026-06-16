@@ -46,6 +46,8 @@ const MyProfile = () => {
     // STATE QUẢN LÝ DỮ LIỆU HỒ SƠ CHÍNH (PROFILE STATE)
     // ==========================================
     const [isEditingBasic, setIsEditingBasic] = useState(false);
+    // State phụ để lưu trữ dữ liệu gốc trước khi sửa
+    const [tempBasicInfo, setTempBasicInfo] = useState(null);
     const [basicInfo, setBasicInfo] = useState({
         fullName: '',
         email: '',
@@ -71,27 +73,58 @@ const MyProfile = () => {
     // ==========================================
     const fetchProfileData = async () => {
         try {
-            const response = await fetch('http://localhost:8080/api/profile', {
+            const response = await fetch('http://localhost:8080/api/v1/profile/me', {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
             });
             
-            if (response.ok) {
-                const data = await response.json();
+            const result = await response.json();
+            console.log(">>> [DEBUG] fetchProfileData Result:", result);
+
+            if (response.ok && result.status === 'success') {
+                const data = result.data;
+                const info = data.basicInfo || {};
+                console.log(">>> [DEBUG] Education List:", data.education);
+                console.log(">>> [DEBUG] Experience List:", data.experience);
+
                 setBasicInfo({
-                    fullName: data.fullName || '',
-                    email: data.email || '',
-                    phone: data.phone || '',
-                    country: data.country || 'Vietnam',
-                    city: data.city || '', 
-                    bio: data.bio || ''
+                    fullName: info.username || '',
+                    email: info.email || '',
+                    phone: info.phone || '',
+                    country: info.country || 'Vietnam',
+                    city: info.city || '', 
+                    bio: info.description || ''
                 });
-                if (data.avatar) {
-                    setAvatarUrl(data.avatar);
+                if (info.avatar) {
+                    setAvatarUrl(info.avatar);
                 }
-                setEducations(data.educations || []);
-                setExperiences(data.experiences || []);
+                
+                // Map lại dữ liệu từ TimelineDTO (id, duration, title, subtitle, description) 
+                // sang state (id, year, degree, school, description)
+                setEducations((data.education || []).map(edu => ({
+                    id: edu.id,
+                    year: edu.duration,    // TimelineDTO.duration -> frontend.year
+                    degree: edu.title,     // TimelineDTO.title -> frontend.degree
+                    school: edu.subtitle,  // TimelineDTO.subtitle -> frontend.school
+                    description: edu.description, // TimelineDTO.description -> frontend.description
+                    isEditing: false
+                })));
+                setExperiences((data.experience || []).map(exp => ({
+                    id: exp.id,
+                    duration: exp.duration,
+                    role: exp.title,
+                    company: exp.subtitle,
+                    description: exp.description,
+                    isEditing: false
+                })));
+                setAccountStatus({
+                    // Dòng console.log đã được di chuyển ra ngoài object literal
+                    // Sửa lại key: Jackson tự động bỏ tiền tố 'is' của boolean
+                    // isLinkedBank -> linkedBank, isVerified -> verified
+                    linkedBank: data.accountStatus?.linkedBank || false,
+                    verified: data.accountStatus?.verified || false
+                });
             } else {
                 throw new Error("Không thể lấy dữ liệu từ API, chuyển sang Mock Data.");
             }
@@ -132,7 +165,7 @@ const MyProfile = () => {
         formData.append('file', file);
 
         try {
-            const response = await fetch('http://localhost:8080/api/v1/profiles/avatar', {
+            const response = await fetch('http://localhost:8080/api/v1/profile/avatar', {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -177,16 +210,16 @@ const MyProfile = () => {
 
     const handleSaveEducationItem = async (index) => {
         const item = educations[index];
-        if (!item.school.trim() || !item.degree.trim()) {
-            alert("Vui lòng nhập đầy đủ Tên trường học và Bằng cấp trước khi lưu!");
+        if (!item.school.trim() || !item.degree.trim() || !item.year.trim()) {
+            alert("Vui lòng nhập đầy đủ Tên trường học, Bằng cấp và Niên khóa trước khi lưu!");
             return;
         }
 
         try {
             const method = item.id ? 'PUT' : 'POST';
             const url = item.id 
-                ? `http://localhost:8080/api/profile/education/${item.id}` 
-                : 'http://localhost:8080/api/profile/education';
+                ? `http://localhost:8080/api/v1/profile/education/${item.id}` 
+                : 'http://localhost:8080/api/v1/profile/education';
 
             const response = await fetch(url, {
                 method: method,
@@ -197,15 +230,25 @@ const MyProfile = () => {
                 body: JSON.stringify({
                     school: item.school,
                     degree: item.degree,
-                    year: item.year,
+                    duration: item.year, // Sửa từ 'year' thành 'duration' để khớp với Backend
                     description: item.description // Gửi kèm mô tả lên API hệ thống
                 })
             });
 
-            if (response.ok) {
-                const savedData = await response.json();
+            const result = await response.json(); // Parse response once
+            if (response.ok && result.status === 'success') {
+                console.log(">>> [DEBUG] handleSaveEducationItem Response Body:", result); // This will now contain the full TimelineDTO
+
                 const updatedList = [...educations];
-                updatedList[index] = { ...savedData, isEditing: false };
+                // Map TimelineDTO fields back to frontend state fields
+                updatedList[index] = { 
+                    id: result.data.id,
+                    school: result.data.subtitle, // TimelineDTO.subtitle -> frontend.school
+                    degree: result.data.title,     // TimelineDTO.title -> frontend.degree
+                    year: result.data.duration,    // TimelineDTO.duration -> frontend.year
+                    description: result.data.description, // TimelineDTO.description -> frontend.description
+                    isEditing: false 
+                };
                 setEducations(updatedList);
                 alert("Đã cập nhật thông tin Học vấn thành công!");
             } else {
@@ -235,7 +278,7 @@ const MyProfile = () => {
         if (!window.confirm("Bạn có chắc chắn muốn xóa vĩnh viễn mục học vấn này không?")) return;
 
         try {
-            const response = await fetch(`http://localhost:8080/api/profile/education/${item.id}`, {
+            const response = await fetch(`http://localhost:8080/api/v1/profile/education/${item.id}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -272,16 +315,16 @@ const MyProfile = () => {
 
     const handleSaveExperienceItem = async (index) => {
         const item = experiences[index];
-        if (!item.company.trim() || !item.role.trim()) {
-            alert("Vui lòng điền thông tin Tên công ty và Vị trí làm việc!");
+        if (!item.company.trim() || !item.role.trim() || !item.duration.trim()) {
+            alert("Vui lòng điền đầy đủ Tên công ty, Vị trí và Thời gian làm việc!");
             return;
         }
 
         try {
             const method = item.id ? 'PUT' : 'POST';
             const url = item.id 
-                ? `http://localhost:8080/api/profile/experience/${item.id}` 
-                : 'http://localhost:8080/api/profile/experience';
+                ? `http://localhost:8080/api/v1/profile/experience/${item.id}` 
+                : 'http://localhost:8080/api/v1/profile/experience';
 
             const response = await fetch(url, {
                 method: method,
@@ -297,10 +340,20 @@ const MyProfile = () => {
                 })
             });
 
-            if (response.ok) {
-                const savedData = await response.json();
+            const result = await response.json();
+            console.log(">>> [DEBUG] handleSaveExperienceItem Result:", result);
+
+            if (response.ok && result.status === 'success') {
                 const updatedList = [...experiences];
-                updatedList[index] = { ...savedData, isEditing: false };
+                // Map TimelineDTO fields back to frontend state fields
+                updatedList[index] = { 
+                    id: result.data.id,
+                    company: result.data.subtitle, // TimelineDTO.subtitle -> frontend.company
+                    role: result.data.title,       // TimelineDTO.title -> frontend.role
+                    duration: result.data.duration, // TimelineDTO.duration -> frontend.duration
+                    description: result.data.description, // TimelineDTO.description -> frontend.description
+                    isEditing: false 
+                };
                 setExperiences(updatedList);
                 alert("Cập nhật Kinh nghiệm làm việc thành công!");
             } else {
@@ -330,7 +383,7 @@ const MyProfile = () => {
         if (!window.confirm("Bạn có chắc chắn muốn gỡ bỏ mục kinh nghiệm việc làm này?")) return;
 
         try {
-            const response = await fetch(`http://localhost:8080/api/profile/experience/${item.id}`, {
+            const response = await fetch(`http://localhost:8080/api/v1/profile/experience/${item.id}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -379,21 +432,26 @@ const MyProfile = () => {
     // ==========================================
     const handleSaveBasicInfo = async () => {
         try {
-            const response = await fetch('http://localhost:8080/api/profile/basic', {
-                method: 'PUT',
+            const response = await fetch('http://localhost:8080/api/v1/profile/me', {
+                method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 },
-                body: JSON.stringify(basicInfo)
+                body: JSON.stringify({
+                    phone: basicInfo.phone,
+                    country: basicInfo.country,
+                    city: basicInfo.city,
+                    description: basicInfo.bio
+                })
             });
             if (response.ok) {
                 alert("Đã lưu thông tin cơ bản thành công!");
                 setIsEditingBasic(false);
-            } else {
-                setIsEditingBasic(false);
             }
         } catch (error) {
+            console.error("Lỗi cập nhật profile:", error);
+        } finally {
             setIsEditingBasic(false);
         }
     };
@@ -401,12 +459,36 @@ const MyProfile = () => {
     const handleConnectStripeBilling = async () => {
         setBankLoading(true);
         try {
-            setTimeout(() => {
-                setAccountStatus({ linkedBank: true, verified: true });
-                setBankLoading(false);
-                alert("Kết nối và đồng bộ ví tài khoản Stripe thành công!");
-            }, 1200);
-        } catch (e) {
+            if (accountStatus.linkedBank) {
+                // TRƯỜNG HỢP 1: Đã liên kết, thực hiện đồng bộ (Verify)
+                const response = await fetch('http://localhost:8080/api/v1/profile/me/verify-bank', {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                const result = await response.json();
+                if (response.ok && result.status === 'success') {
+                    alert("Đồng bộ trạng thái định danh Stripe thành công!");
+                    fetchProfileData(); // Gọi lại để cập nhật trạng thái linkedBank và verified
+                } else {
+                    alert(result.message || "Bạn chưa hoàn tất xác thực trên trang Stripe.");
+                }
+            } else {
+                // TRƯỜNG HỢP 2: Chưa liên kết, khởi tạo link Onboarding
+                const response = await fetch('http://localhost:8080/api/v1/profile/me/bank-setup', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                const result = await response.json();
+                if (response.ok && result.data?.onboardingUrl) {
+                    window.location.href = result.data.onboardingUrl;
+                } else {
+                    alert(result.message || "Lỗi thiết lập ngân hàng");
+                }
+            }
+        } catch (error) {
+            console.error("Stripe Error:", error);
+            alert("Lỗi kết nối máy chủ Stripe.");
+        } finally {
             setBankLoading(false);
         }
     };
@@ -418,12 +500,19 @@ const MyProfile = () => {
         e.preventDefault();
         
         if (!passwordData.oldPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
-            alert("Vui lòng điền đầy đủ thông tin vào các ô mật khẩu!");
+            alert("Vui lòng điền đầy đủ các thông tin mật khẩu!");
+            return;
+        }
+
+        // Kiểm tra độ mạnh của mật khẩu mới (Tiêu chuẩn: 8+ ký tự, Hoa, Thường, Số, Ký tự đặc biệt)
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        if (!passwordRegex.test(passwordData.newPassword)) {
+            alert("Mật khẩu mới phải có ít nhất 8 ký tự, bao gồm ít nhất một chữ hoa, một chữ thường, một số và một ký tự đặc biệt (@$!%*?&).");
             return;
         }
 
         if (passwordData.newPassword !== passwordData.confirmPassword) {
-            alert("Mật khẩu mới và Xác nhận mật khẩu không khớp nhau!");
+            alert("Mật khẩu xác nhận không trùng khớp!");
             return;
         }
 
@@ -447,12 +536,12 @@ const MyProfile = () => {
                 alert(result.message || "Đổi mật khẩu thành công!");
                 setPasswordData({ oldPassword: '', newPassword: '', confirmPassword: '' });
             } else {
-                alert(result.message || "Không thể thực hiện đổi mật khẩu.");
+                // Hiển thị thông báo lỗi cụ thể từ Backend (ví dụ: "Mật khẩu cũ không chính xác!")
+                alert(result.message || "Đã có lỗi xảy ra trong quá trình đổi mật khẩu.");
             }
         } catch (error) {
-            console.warn("🚩 API Change Password Error - Kích hoạt Mock Data Fallback:", error.message);
-            alert("Gửi yêu cầu thay đổi mật khẩu thành công (Chạy offline Mock Data Fallback)!");
-            setPasswordData({ oldPassword: '', newPassword: '', confirmPassword: '' });
+            console.error("🚩 Lỗi API Change Password:", error.message);
+            alert("Không thể kết nối đến máy chủ. Vui lòng thử lại sau!");
         }
     };
 
@@ -495,12 +584,24 @@ const MyProfile = () => {
                                 <button className="btn-save-check" onClick={handleSaveBasicInfo} title="Lưu lại">
                                     <Check size={16} />
                                 </button>
-                                <button className="btn-cancel-x" onClick={() => setIsEditingBasic(false)} title="Hủy bỏ">
+                                <button 
+                                    className="btn-cancel-x" 
+                                    onClick={() => {
+                                        // Khôi phục lại dữ liệu cũ từ bản sao tạm thời
+                                        setBasicInfo(tempBasicInfo);
+                                        setIsEditingBasic(false);
+                                    }} 
+                                    title="Hủy bỏ"
+                                >
                                     <X size={16} />
                                 </button>
                             </div>
                         ) : (
-                            <button className="btn-trigger-edit" onClick={() => setIsEditingBasic(true)}>
+                            <button className="btn-trigger-edit" onClick={() => {
+                                // Lưu lại bản sao của dữ liệu hiện tại trước khi cho phép sửa
+                                setTempBasicInfo({...basicInfo});
+                                setIsEditingBasic(true);
+                            }}>
                                 <PenSquare size={14} /> Chỉnh sửa
                             </button>
                         )}

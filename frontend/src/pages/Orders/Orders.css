@@ -53,7 +53,7 @@
 .order-workspace-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 30px; }
 .workspace-main-card, .sidebar-widget { background: #fff; border: 1px solid #e4e5e7; border-radius: 8px; padding: 24px; }
 .order-main-header h1 { font-size: 24px; color: #222325; margin: 12px 0 8px 0; }
-.gig-desc-preview { color: #62646a; line-height: 1.5; font-size: 14px; }
+.gig-desc-preview { color: #62646a; line-height: 1.5; font-size: 14px; white-space: pre-wrap; }
 .order-id-label { font-size: 13px; color: #95979d; margin-top: 5px; }
 
 /* Stepper */
