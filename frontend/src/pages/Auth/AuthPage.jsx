@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, ArrowLeft, Phone, CheckCircle2, AtSign } from 'lucide-react';
+import { Mail, Lock, User, ArrowLeft, Phone, CheckCircle2, AtSign, Eye, EyeOff } from 'lucide-react'; // 🌟 ĐÃ SỬA: Giữ nguyên Import Eye và EyeOff để làm con mắt ẩn/hiện mật khẩu
 import { authService } from '../../services/authService';
 import './Auth.css';
 
@@ -10,6 +10,10 @@ const AuthPage = ({ isLoginDefault = true }) => {
   const [method, setMethod] = useState('email'); // Dùng cho Login: 'email', 'phone', hoặc 'username'
   const [loading, setLoading] = useState(false);
   
+  // 🌟 ĐÃ SỬA: Trạng thái điều khiển việc ẩn/hiện mật khẩu
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const [formData, setFormData] = useState({
     fullname: '', username: '', email: '', phone: '',
     password: '', confirmPassword: '', identifier: '', otp: '', role: 'ROLE_BUYER'
@@ -155,17 +159,10 @@ const AuthPage = ({ isLoginDefault = true }) => {
     message.text ? <div className={`status-msg ${message.type}`}>{message.text}</div> : null
   );
 
-  React.useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      navigate('/', { replace: true });
-    }
-  }, [navigate]);
-
   const getMethodDetails = () => {
     switch (method) {
       case 'phone': return { label: 'Số điện thoại', icon: <Phone size={18} />, placeholder: 'Nhập số điện thoại' };
-      case 'username': return { label: 'Username', icon: <AtSign size={18} />, placeholder: 'Nhập tên đăng nhập' };
+      case 'username': return { label: 'Tên đăng nhập (Username)', icon: <AtSign size={18} />, placeholder: 'Nhập tên đăng nhập' };
       default: return { label: 'Email', icon: <Mail size={18} />, placeholder: 'Nhập địa chỉ email' };
     }
   };
@@ -176,11 +173,11 @@ const AuthPage = ({ isLoginDefault = true }) => {
     <div className="auth-container">
       <div className="auth-banner">
         <div className="banner-content">
-          <h1>Success starts here</h1>
+          <h1>Thành công bắt đầu từ đây</h1>
           <ul className="banner-features">
-            <li>Over 700 categories <CheckCircle2 size={18} /></li>
-            <li>Quality work done faster <CheckCircle2 size={18} /></li>
-            <li>Access to talent across the globe <CheckCircle2 size={18} /></li>
+            <li>Hơn 700 danh mục đa dạng <CheckCircle2 size={18} /></li>
+            <li>Hoàn thành công việc nhanh chóng, chất lượng <CheckCircle2 size={18} /></li>
+            <li>Kết nối với các tài năng trên toàn cầu <CheckCircle2 size={18} /></li>
           </ul>
         </div>
       </div>
@@ -191,12 +188,12 @@ const AuthPage = ({ isLoginDefault = true }) => {
           {/* --- LOGIN MODE --- */}
           {authMode === 'login' && (
             <>
-              <h2>Sign in to your account</h2>
-              <p className="top-switch-sub">Don't have an account? <span onClick={() => {setAuthMode('signup'); setMessage({text:'',type:''})}}>Join here</span></p>
+              <h2>Đăng nhập vào tài khoản</h2>
+              <p className="top-switch-sub">Bạn chưa có tài khoản? <span onClick={() => {setAuthMode('signup'); setMessage({text:'',type:''})}}>Đăng ký tại đây</span></p>
               <div className="method-selector">
                 {['email', 'phone', 'username'].map((m) => (
                   <button key={m} type="button" className={`method-btn ${method === m ? 'active' : ''}`} onClick={() => setMethod(m)}>
-                    {m.charAt(0).toUpperCase() + m.slice(1)}
+                    {m === 'email' ? 'Email' : m === 'phone' ? 'Số điện thoại' : 'Username'}
                   </button>
                 ))}
               </div>
@@ -209,17 +206,25 @@ const AuthPage = ({ isLoginDefault = true }) => {
                   </div>
                 </div>
                 <div className="input-group">
-                  <label>Password</label>
+                  <label>Mật khẩu</label>
                   <div className="input-wrapper">
                     <Lock size={18} />
-                    <input name="password" type="password" placeholder="Nhập mật khẩu" onChange={handleChange} />
+                    {/* 🌟 ĐÃ SỬA: Tích hợp nút hiển thị hình con mắt cho trang Đăng Nhập khớp logic với state showPassword */}
+                    <input name="password" type={showPassword ? "text" : "password"} placeholder="Nhập mật khẩu" onChange={handleChange} />
+                    <span className="password-toggle-icon" onClick={() => setShowPassword(!showPassword)}>
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </span>
                   </div>
                 </div>
                 <div className="form-options">
-                  <label className="checkbox-label"><input type="checkbox" /> Ghi nhớ đăng nhập</label>
-                  <span className="forgot-link" onClick={() => {setAuthMode('forgot'); setMessage({text:'',type:''})}}>Forgot password?</span>
+                  {/* 🌟 ĐÃ SỬA: Đưa ô input ra làm một nhánh độc lập kề cạnh text span, liên kết bằng id và htmlFor */}
+                  <label htmlFor="rememberMe" className="checkbox-label">
+                    <input type="checkbox" id="rememberMe" className="auth-checkbox" /> 
+                    <span>Ghi nhớ đăng nhập</span>
+                  </label>
+                  <span className="forgot-link" onClick={() => {setAuthMode('forgot'); setMessage({text:'',type:''})}}>Quên mật khẩu?</span>
                 </div>
-                <button type="submit" className="btn-auth" disabled={loading}>{loading ? "Processing..." : "Continue"}</button>
+                <button type="submit" className="btn-auth" disabled={loading}>{loading ? "Đang xử lý..." : "Tiếp tục"}</button>
               </form>
               <StatusMessage />
             </>
@@ -228,12 +233,12 @@ const AuthPage = ({ isLoginDefault = true }) => {
           {/* --- SIGNUP MODE --- */}
           {authMode === 'signup' && (
             <>
-              <h2>Join our community</h2>
-              <p className="top-switch-sub">Already have an account? <span onClick={() => {setAuthMode('login'); setMessage({text:'',type:''})}}>Sign In</span></p>
+              <h2>Tham gia cộng đồng của chúng tôi</h2>
+              <p className="top-switch-sub">Bạn đã có tài khoản? <span onClick={() => {setAuthMode('login'); setMessage({text:'',type:''})}}>Đăng nhập</span></p>
               
               <form onSubmit={handleRegister}>
                 <div className="input-group">
-                  <label>Full Name</label>
+                  <label>Họ và tên</label>
                   <div className="input-wrapper">
                     <User size={18} />
                     <input name="fullname" type="text" placeholder="Ví dụ: Phan Trung Kiên" value={formData.fullname} onChange={handleChange} />
@@ -241,10 +246,10 @@ const AuthPage = ({ isLoginDefault = true }) => {
                 </div>
                 
                 <div className="input-group">
-                  <label>Username</label>
+                  <label>Tên tài khoản (Username)</label>
                   <div className="input-wrapper">
                     <AtSign size={18} />
-                    <input name="username" type="text" placeholder="vana_nguyen" value={formData.username} onChange={handleChange} />
+                    <input name="username" type="text" placeholder="Ví dụ: vana_nguyen" value={formData.username} onChange={handleChange} />
                   </div>
                 </div>
 
@@ -252,7 +257,7 @@ const AuthPage = ({ isLoginDefault = true }) => {
                   <label>Email</label>
                   <div className="input-wrapper">
                     <Mail size={18} />
-                    <input name="email" type="text" placeholder="yourname@example.com" value={formData.email} onChange={handleChange} />
+                    <input name="email" type="text" placeholder="tenbancuaban@example.com" value={formData.email} onChange={handleChange} />
                   </div>
                 </div>
 
@@ -260,23 +265,30 @@ const AuthPage = ({ isLoginDefault = true }) => {
                   <label>Số điện thoại</label>
                   <div className="input-wrapper">
                     <Phone size={18} />
-                    <input name="phone" type="text" placeholder="0987654321" value={formData.phone} onChange={handleChange} />
+                    <input name="phone" type="text" placeholder="Ví dụ: 0987654321" value={formData.phone} onChange={handleChange} />
                   </div>
                 </div>
                 
                 <div className="input-group">
-                  <label>Password</label>
+                  <label>Mật khẩu</label>
                   <div className="input-wrapper">
                     <Lock size={18} />
-                    <input name="password" type="password" placeholder="Tạo mật khẩu" value={formData.password} onChange={handleChange} />
+                    <input name="password" type={showPassword ? "text" : "password"} placeholder="Tạo mật khẩu mới" value={formData.password} onChange={handleChange} />
+                    <span className="password-toggle-icon" onClick={() => setShowPassword(!showPassword)}>
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </span>
                   </div>
                 </div>
                 
                 <div className="input-group">
-                  <label>Confirm Password</label>
+                  <label>Xác nhận mật khẩu</label>
                   <div className="input-wrapper">
                     <Lock size={18} />
-                    <input name="confirmPassword" type="password" placeholder="Xác nhận mật khẩu" value={formData.confirmPassword} onChange={handleChange} />
+                    {/* 🌟 ĐÃ SỬA: Sử dụng chuẩn xác state showConfirmPassword riêng biệt tránh bị ảnh hưởng từ ô mật khẩu gốc */}
+                    <input name="confirmPassword" type={showConfirmPassword ? "text" : "password"} placeholder="Nhập lại mật khẩu để xác nhận" value={formData.confirmPassword} onChange={handleChange} />
+                    <span className="password-toggle-icon" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+                      {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </span>
                   </div>
                 </div>
 
@@ -288,7 +300,7 @@ const AuthPage = ({ isLoginDefault = true }) => {
                   </div>
                 </div>
 
-                <button type="submit" className="btn-auth" disabled={loading}>{loading ? "Processing..." : "Join Now"}</button>
+                <button type="submit" className="btn-auth" disabled={loading}>{loading ? "Đang xử lý..." : "Tham gia ngay"}</button>
               </form>
               <StatusMessage />
             </>
@@ -297,27 +309,27 @@ const AuthPage = ({ isLoginDefault = true }) => {
           {/* --- FORGOT MODE --- */}
           {authMode === 'forgot' && (
             <>
-              <h2>Reset Password</h2>
-              <div className="back-link" onClick={() => {setAuthMode('login'); setMessage({text:'',type:''})}}><ArrowLeft size={16} /> Back to Sign in</div>
+              <h2>Đặt lại mật khẩu</h2>
+              <div className="back-link" onClick={() => {setAuthMode('login'); setMessage({text:'',type:''})}}><ArrowLeft size={16} /> Quay lại Đăng nhập</div>
               <div className="input-group">
-                <label>Email or Phone</label>
+                <label>Email hoặc Số điện thoại</label>
                 <div className="input-wrapper">
                   <Mail size={18} />
                   <input name="identifier" type="text" placeholder="Nhập email hoặc số điện thoại" onChange={handleChange} />
                 </div>
               </div>
-              <button className="btn-auth" onClick={handleForgotPassword} disabled={loading}>{loading ? "Sending..." : "Send OTP"}</button>
+              <button className="btn-auth" onClick={handleForgotPassword} disabled={loading}>{loading ? "Đang gửi..." : "Gửi mã OTP"}</button>
               <div className="otp-container">
                 <div className="otp-inputs">
                   {[...Array(6)].map((_, i) => (<input key={i} type="text" maxLength="1" className="otp-field" />))}
                 </div>
               </div>
-              <button className="btn-auth" style={{marginTop: '20px'}} disabled={loading}>Verify OTP</button>
+              <button className="btn-auth" style={{marginTop: '20px'}} disabled={loading}>Xác thực mã OTP</button>
               <StatusMessage />
             </>
           )}
 
-          <p className="auth-footer">By joining, you agree to our <b>Terms of Service</b> and <b>Privacy Policy</b>.</p>
+          <p className="auth-footer">Bằng cách tham gia, bạn đồng ý với <b>Điều khoản dịch vụ</b> và <b>Chính sách bảo mật</b> của chúng tôi.</p>
         </div>
       </div>
     </div>

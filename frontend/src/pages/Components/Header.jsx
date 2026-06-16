@@ -66,18 +66,21 @@ const Header = () => {
         <header className="main-header">
             <div className="container header-flex">
                 <div className="header-left">
-                    <h1 className="logo" onClick={() => navigate('/')}>vance<span>.</span></h1>
+                    {/* 🌟 FIX LỖI LOGO: Thêm style color cố định để chữ vance luôn hiển thị rõ ràng không bị mất màu */}
+                    <h1 className="logo" onClick={() => navigate('/')} style={{ color: '#1a1b1e', fontWeight: 800 }}>
+                        vance<span style={{ color: '#1dbf73' }}>.</span>
+                    </h1>
                 </div>
                 <nav className="header-right">
 
+                    {/* Danh mục Dropdown */}
                     <div className="nav-item-dropdown">
-                        <span className="nav-link">Categories <ChevronDown size={14} /></span>
+                        <span className="nav-link">Danh mục <ChevronDown size={14} /></span>
                         <div className="dropdown-content categories-dropdown-wrapper">
                             {categories.length > 0 ? (
                                 <ul className="categories-dropdown-menu">
                                     {categories.map((parent) => (
                                         <li key={parent.slug || parent.id} className="menu-item-parent">
-
                                             <span
                                                 className="parent-link"
                                                 onClick={() => navigate(`/search?category=${parent.slug}`)}
@@ -116,24 +119,15 @@ const Header = () => {
                         </div>
                     </div>
 
+                    {/* Người dùng Dropdown (Đã loại bỏ lựa chọn buyer) */}
                     <div className="nav-item-dropdown">
-                        <span className="nav-link">Listings <ChevronDown size={14} /></span>
+                        <span className="nav-link">Người dùng <ChevronDown size={14} /></span>
                         <div className="dropdown-content">
-                            <span onClick={() => navigate('/listings/services')}>Services</span>
-                            <span onClick={() => navigate('/listings/projects')}>Projects</span>
+                            <span onClick={() => navigate('/users/seller')}>Người bán</span>
                         </div>
                     </div>
 
-                    <div className="nav-item-dropdown">
-                        <span className="nav-link">Users <ChevronDown size={14} /></span>
-                        <div className="dropdown-content">
-                            <span onClick={() => navigate('/users/seller')}>Seller</span>
-                            <span onClick={() => navigate('/users/buyer')}>Buyer</span>
-                        </div>
-                    </div>
-
-                    <span className="nav-link" onClick={() => navigate('/pages')}>Pages</span>
-                    <span className="nav-link"><Globe size={16} /> English</span>
+                    <span className="nav-link"><Globe size={16} /> Tiếng Việt</span>
 
                     {role ? (
                         <div className="auth-nav">
@@ -163,21 +157,21 @@ const Header = () => {
                                             onClick={() => { navigate('/profile'); setShowUserDropdown(false); }}
                                             style={{ padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: '#333', fontSize: '14px' }}
                                         >
-                                            <User size={14} /> My Profile
+                                            <User size={14} /> Hồ sơ của tôi
                                         </div>
 
-                                        {/* 🌟 THÊM MỚI: Hiển thị My Orders dành riêng cho tài khoản BUYER */}
+                                        {/* Hiển thị Đơn hàng của tôi dành riêng cho tài khoản BUYER */}
                                         {role && (role.toUpperCase() === 'ROLE_BUYER' || role.toUpperCase() === 'BUYER') && (
                                             <div 
                                                 className="avatar-dropdown-item"
                                                 onClick={() => { navigate('/my-orders'); setShowUserDropdown(false); }}
                                                 style={{ padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: '#1dbf73', fontSize: '14px', fontWeight: '500', borderTop: '1px solid #f1f1f1' }}
                                             >
-                                                <ShoppingBag size={14} /> My Orders
+                                                <ShoppingBag size={14} /> Đơn mua của tôi
                                             </div>
                                         )}
 
-                                        {/* Chuyển đổi tên sang Manage Services phù hợp với vai trò Seller */}
+                                        {/* Phù hợp với vai trò Seller */}
                                         {role && (role.toUpperCase() === 'ROLE_SELLER' || role.toLowerCase() === 'seller') && (
                                             <>
                                                 <div 
@@ -185,16 +179,15 @@ const Header = () => {
                                                     onClick={() => { navigate('/manage-services'); setShowUserDropdown(false); }}
                                                     style={{ padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: '#1dbf73', fontSize: '14px', fontWeight: '500', borderTop: '1px solid #f1f1f1' }}
                                                 >
-                                                    <PlusCircle size={14} /> Manage Services
+                                                    <PlusCircle size={14} /> Quản lý dịch vụ
                                                 </div>
                                                 
-                                                {/* 🌟 ĐÃ SỬA: Thay đổi navigate thành '/manage-orders' để trỏ chính xác đến trang quản lý đơn hàng */}
                                                 <div 
                                                     className="avatar-dropdown-item"
                                                     onClick={() => { navigate('/manage-orders'); setShowUserDropdown(false); }}
                                                     style={{ padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: '#1dbf73', fontSize: '14px', fontWeight: '500', borderTop: '1px solid #f1f1f1' }}
                                                 >
-                                                    <ShoppingBag size={14} /> Manage Orders
+                                                    <ShoppingBag size={14} /> Quản lý đơn hàng
                                                 </div>
                                             </>
                                         )}
@@ -204,7 +197,7 @@ const Header = () => {
                                             onClick={handleLogout}
                                             style={{ padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: '#f44336', fontSize: '14px', borderTop: '1px solid #f1f1f1' }}
                                         >
-                                            <LogOut size={14} /> Logout
+                                            <LogOut size={14} /> Đăng xuất
                                         </div>
                                     </div>
                                 )}
@@ -212,12 +205,13 @@ const Header = () => {
                         </div>
                     ) : (
                         <div className="guest-nav">
-                            <span className="btn-signin" onClick={() => navigate('/login')}>Sign In</span>
+                            <span className="btn-signin" onClick={() => navigate('/login')}>Đăng nhập</span>
                         </div>
                     )}
                 </nav>
             </div>
 
+            {/* Thanh menu phụ danh mục trượt ngang phía dưới */}
             <div className="category-menu hide-mobile">
                 <div className="menu-scroll-container">
                     <button className="scroll-arrow-btn left" onClick={() => handleScroll('left')}>
@@ -255,7 +249,6 @@ const Header = () => {
                             </li>
                         ))}
                     </ul>
-                    {/* Nút mũi tên PHẢI */}
                     <button className="scroll-arrow-btn right" onClick={() => handleScroll('right')}>
                         <ChevronRight size={18} />
                     </button>

@@ -123,7 +123,7 @@ const HomePage = () => {
   return (
     <div className="common-home">
       
-      {/* 1. HERO SECTION (Bỏ Header cũ bị xung đột ở đây) */}
+      {/* 1. HERO SECTION */}
       <section className="hero-section">
         <div className="hero-bg-wrapper">
           <img 
@@ -134,7 +134,7 @@ const HomePage = () => {
         </div>
         <div className="container hero-content">
           <div className="hero-text">
-            <h1>Find the perfect <i>freelance</i> services for your business</h1>
+            <h1>Tìm kiếm dịch vụ <i>freelance</i> hoàn hảo cho doanh nghiệp của bạn</h1>
             
             <div className="hero-search-container">
               <div className="search-wrapper">
@@ -143,7 +143,7 @@ const HomePage = () => {
                     value={selectedCategory} 
                     onChange={(e) => setSelectedCategory(e.target.value)}
                   >
-                    <option value="All Categories">All Categories</option>
+                    <option value="All Categories">Tất cả danh mục</option>
                     {categories.map(cat => (
                       <option key={cat.id} value={cat.slug}>{cat.name}</option>
                     ))}
@@ -153,7 +153,7 @@ const HomePage = () => {
                 <div className="search-input-group">
                   <input 
                     type="text" 
-                    placeholder="What service are you looking for today?" 
+                    placeholder="Hôm nay bạn đang cần tìm dịch vụ gì?" 
                     value={searchKeyword}
                     onChange={(e) => setSearchKeyword(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit()}
@@ -166,14 +166,14 @@ const HomePage = () => {
             </div>
 
             <div className="popular-tags">
-              <span>Popular:</span>
+              <span>Phổ biến:</span>
               {(popularCategories && popularCategories.length > 0 
                   ? popularCategories 
                   : [
-                      { name: "Website Design", categorySlug: "website-design" },
+                      { name: "Thiết kế Website", categorySlug: "website-design" },
                       { name: "WordPress", categorySlug: "wordpress" },
-                      { name: "Logo Design", categorySlug: "logo-design" },
-                      { name: "AI Services", categorySlug: "ai-services" }
+                      { name: "Thiết kế Logo", categorySlug: "logo-design" },
+                      { name: "Dịch vụ AI", categorySlug: "ai-services" }
                     ]
                 ).map((category, index) => (
                   <button 
@@ -194,7 +194,7 @@ const HomePage = () => {
       {/* 2. CATEGORY CAROUSEL TỰ ĐỘNG THEO BACKEND */}
       <section className="category-carousel">
         <div className="container">
-          <h2>Popular professional services</h2>
+          <h2>Các dịch vụ chuyên nghiệp nổi bật</h2>
           <div className="carousel-grid">
             {categories.slice(0, 5).map((cat) => (
               <div 
@@ -216,7 +216,7 @@ const HomePage = () => {
       {/* 3. FEATURED GIGS LIÊN KẾT DATABASE THẬT */}
       <section className="featured-section">
         <div className="container">
-          <h2 className="section-title">Inspirational work made on our platform</h2>
+          <h2 className="section-title">Những sản phẩm đầy cảm hứng được thực hiện trên nền tảng</h2>
           
           {loadingGigs ? (
             <div style={{ textAlign: 'center', padding: '40px', color: '#1dbf73', fontWeight: 'bold' }}>
@@ -237,9 +237,9 @@ const HomePage = () => {
                         {gig.seller ? gig.seller[0].toUpperCase() : 'F'}
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
-                        <p className="seller-name" style={{ margin: 0, lineHeight: 1.2 }}><b>{gig.seller || "Freelancer"}</b></p>
+                        <p className="seller-name" style={{ margin: 0, lineHeight: 1.2 }}><b>{gig.seller || "Người bán công tác"}</b></p>
                         <span className="seller-meta" style={{ fontSize: '12px', color: '#74767e' }}>
-                          {gig.level ? gig.level : 'New Seller'} {gig.country ? ` • ${gig.country}` : ''}
+                          {gig.level ? gig.level : 'Người bán mới'} {gig.country ? ` • ${gig.country}` : ''}
                         </span>
                       </div>
                     </div>
@@ -256,7 +256,7 @@ const HomePage = () => {
                       {gig.deliveryTime ? `Giao trong: ${gig.deliveryTime} ngày` : 'Giao linh hoạt'}
                     </span>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                      <span className="price-label">STARTING AT</span>
+                      <span className="price-label">GIÁ KHỞI ĐIỂM</span>
                       <span className="price-value">${gig.price}</span>
                     </div>
                   </div>
@@ -275,37 +275,37 @@ const HomePage = () => {
       <section className="value-prop">
         <div className="container prop-grid">
           <div className="prop-content">
-            <h2>A whole world of freelance talent at your fingertips</h2>
+            <h2>Cả thế giới tài năng freelance trong tầm tay bạn</h2>
             
             <div className="prop-item">
               <div className="prop-title-row">
                 <ShieldCheck size={24} className="prop-icon" />
-                <h4>Secure Payments</h4>
+                <h4>Thanh toán an toàn</h4>
               </div>
-              <p>Your money is only released to the freelancer once you approve the work. Protected by our reliable Escrow system.</p>
+              <p>Tiền của bạn chỉ được chuyển cho freelancer sau khi bạn phê duyệt sản phẩm. Được bảo vệ bởi hệ thống Ký quỹ (Escrow) đáng tin cậy của chúng tôi.</p>
             </div>
 
             <div className="prop-item">
               <div className="prop-title-row">
                 <Headphones size={24} className="prop-icon" />
-                <h4>24/7 Professional Support</h4>
+                <h4>Hỗ trợ chuyên nghiệp 24/7</h4>
               </div>
-              <p>Our dedicated support team is available round the clock to assist you with any questions or order disputes.</p>
+              <p>Đội ngũ hỗ trợ tận tâm của chúng tôi luôn sẵn sàng hỗ trợ bạn bất cứ lúc nào để giải đáp thắc mắc hoặc xử lý tranh chấp đơn hàng.</p>
             </div>
 
             <div className="prop-item">
               <div className="prop-title-row">
                 <UserCheck size={24} className="prop-icon" />
-                <h4>Vetted Quality Talent</h4>
+                <h4>Tài năng chất lượng đã qua kiểm duyệt</h4>
               </div>
-              <p>Every freelancer's profile, portfolio, and skills are carefully reviewed to ensure top-tier service on our platform.</p>
+              <p>Hồ sơ, năng lực và kỹ năng của mỗi freelancer đều được xem xét kỹ lưỡng để đảm bảo dịch vụ hàng đầu trên nền tảng của chúng tôi.</p>
             </div>
           </div>
           
           <div className="prop-image-wrapper">
             <img 
               src="https://images.pexels.com/photos/3182811/pexels-photo-3182811.jpeg?auto=compress&cs=tinysrgb&w=800" 
-              alt="Platform Benefits" 
+              alt="Lợi ích của nền tảng" 
               className="prop-main-img"
             />
           </div>
@@ -316,7 +316,7 @@ const HomePage = () => {
       <section className="social-proof-section">
         <div className="partner-logos-wrapper">
           <div className="container partner-flex">
-            <span className="partner-title">Trusted by:</span>
+            <span className="partner-title">Được tin dùng bởi:</span>
             <div className="logos-grid">
               <img src={googleLogo} alt="Google" className="partner-brand-img" style={{ height: '32px' }} />
               <img src={metaLogo} alt="Meta" className="partner-brand-img" style={{ height: '32px' }} />
@@ -329,17 +329,17 @@ const HomePage = () => {
 
         <div className="testimonials-wrapper">
           <div className="container">
-            <h2 className="section-title-center">What our customers say</h2>
+            <h2 className="section-title-center">Khách hàng nói gì về chúng tôi</h2>
             <div className="testimonials-grid">
               <div className="testimonial-card">
                 <div className="client-info">
                   <div className="client-avatar">KT</div>
                   <div>
-                    <h5>Kien Thuc</h5>
-                    <p className="client-role">Founder at TechStart</p>
+                    <h5>Kiến Thức</h5>
+                    <p className="client-role">Sáng lập viên tại TechStart</p>
                   </div>
                 </div>
-                <p className="client-comment">"Finding web developers on this platform is incredibly fast. The interface is intuitive, and the Escrow payment protection gives me complete peace of mind for large projects."</p>
+                <p className="client-comment">"Tìm kiếm các nhà phát triển web trên nền tảng này vô cùng nhanh chóng. Giao diện trực quan và tính năng bảo vệ thanh toán Ký quỹ giúp tôi hoàn toàn an tâm đối với các dự án lớn."</p>
                 <div className="client-stars">⭐⭐⭐⭐⭐</div>
               </div>
 
@@ -347,11 +347,11 @@ const HomePage = () => {
                 <div className="client-info">
                   <div className="client-avatar">MD</div>
                   <div>
-                    <h5>Minh Duc</h5>
-                    <p className="client-role">Marketing Manager</p>
+                    <h5>Minh Đức</h5>
+                    <p className="client-role">Quản lý Marketing</p>
                   </div>
                 </div>
-                <p className="client-comment">"The 24/7 support team handles everything fairly and quickly. The SEO writers here are highly professional and deliver exceptional content that drives results."</p>
+                <p className="client-comment">"Đội ngũ hỗ trợ 24/7 xử lý mọi việc rất công bằng và nhanh chóng. Các cây viết SEO ở đây làm việc vô cùng chuyên nghiệp và đem lại những nội dung xuất sắc giúp thúc đẩy hiệu quả kinh doanh."</p>
                 <div className="client-stars">⭐⭐⭐⭐⭐</div>
               </div>
 
@@ -359,11 +359,11 @@ const HomePage = () => {
                 <div className="client-info">
                   <div className="client-avatar">AH</div>
                   <div>
-                    <h5>An Hoang</h5>
-                    <p className="client-role">Product Designer</p>
+                    <h5>An Hoàng</h5>
+                    <p className="client-role">Nhà thiết kế sản phẩm</p>
                   </div>
                 </div>
-                <p className="client-comment">"I hired a logo designer here. The freelancer was very dedicated and delivered revisions right on schedule. The approval process is as professional as global platforms."</p>
+                <p className="client-comment">"Tôi đã thuê một nhà thiết kế logo tại đây. Bạn freelancer làm việc rất tận tâm và bàn giao các bản sửa đổi đúng tiến độ. Quy trình phê duyệt sản phẩm chuyên nghiệp không thua kém gì các nền tảng toàn cầu."</p>
                 <div className="client-stars">⭐⭐⭐⭐⭐</div>
               </div>
             </div>
@@ -371,40 +371,13 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* 6. NEW USER PROMO BANNER SECTION */}
-      <section className="promo-banner-section">
-        <div className="container">
-          <h2 className="section-title">Special Offers for New Users</h2>
-          <div className="promo-grid">
-            <div className="promo-card discount-main" onClick={() => navigate('/login')}>
-              <div className="promo-content-left">
-                <span className="promo-badge">NEW USER ONLY</span>
-                <h3>Get <b>20% OFF</b> Your First Order</h3>
-                <p>Find top-tier freelance experts for your project today. Use code: <span className="promo-code">WELCOME20</span></p>
-                <button className="promo-btn">Claim Offer Now</button>
-              </div>
-              <div className="promo-image-right">
-                <img src="https://images.pexels.com/photos/5849559/pexels-photo-5849559.jpeg?auto=compress&cs=tinysrgb&w=600" alt="New User Discount" />
-              </div>
-            </div>
-
-            <div className="promo-card protection-sub">
-              <div className="promo-content-left">
-                <span className="promo-badge-blue">100% SECURE</span>
-                <h3>Free Escrow Protection</h3>
-                <p>Your budget is safe with us. Freelancers are only paid after your final approval.</p>
-                <span className="promo-link" onClick={() => navigate('/pages')}>Learn how it works →</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* 🌟 ĐÃ XÓA: Khối PROMO BANNER SECTION theo yêu cầu để giao diện gọn gàng hơn */}
 
       {/* 7. FOOTER */}
       <footer className="footer-section">
         <div className="container footer-top">
           <div className="footer-col">
-            <h2>Categories</h2>
+            <h2>Danh mục</h2>
             <ul>
               {categories.map((cat) => (
                 <li key={cat.id} onClick={() => navigate(`/categories/${cat.slug}`)} style={{ cursor: 'pointer' }}>
@@ -414,22 +387,23 @@ const HomePage = () => {
             </ul>
           </div>
           <div className="footer-col">
-            <h2>Support</h2>
-            <ul><li>Help & Support</li><li>Trust & Safety</li><li>Selling on Vance</li></ul>
+            <h2>Hỗ trợ</h2>
+            <ul><li>Trợ giúp & Hỗ trợ</li><li>Niềm tin & An toàn</li><li>Bán hàng trên Vance</li></ul>
           </div>
           <div className="footer-col">
-            <h2>About</h2>
-            <ul><li>Careers</li><li>Privacy Policy</li><li>Terms of Service</li></ul>
+            <h2>Giới thiệu</h2>
+            <ul><li>Cơ hội nghề nghiệp</li><li>Chính sách bảo mật</li><li>Điều khoản dịch vụ</li></ul>
           </div>
         </div>
         <div className="footer-bottom">
           <div className="container bottom-flex">
             <div className="f-left">
-              <span className="f-logo">vance<span>.</span></span>
+              {/* 🌟 ĐÃ SỬA: Thêm CSS inline định màu rõ ràng cho logo để không bị ẩn chìm vào màu nền footer */}
+              <span className="f-logo" style={{ color: '#202124', fontWeight: 'bold' }}>vance<span style={{ color: '#1dbf73' }}>.</span></span>
               <span className="copyright">© Vance International Ltd. 2026</span>
             </div>
             <div className="f-right settings">
-              <span><Globe size={16} /> English</span>
+              <span><Globe size={16} /> Tiếng Việt</span>
               <span>$ USD</span>
               <LayoutGrid size={20} />
               <Info size={20} />

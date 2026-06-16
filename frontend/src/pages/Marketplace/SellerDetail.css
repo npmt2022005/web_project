@@ -1,0 +1,410 @@
+/* src/pages/Marketplace/SellerDetail.css */
+
+.seller-detail-loading,
+.seller-detail-error {
+    text-align: center;
+    padding: 100px;
+    color: #666;
+    font-family: 'Inter', sans-serif;
+}
+
+.seller-detail-container {
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 0 20px;
+    font-family: 'Inter', sans-serif;
+}
+
+/* Nút quay lại */
+.seller-detail-back-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: none;
+    background-color: transparent;
+    color: #666;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 25px;
+    padding: 0;
+}
+
+.seller-detail-back-btn:hover {
+    color: #222;
+}
+
+/* Khung thông tin chính */
+.seller-detail-card {
+    background-color: #fff;
+    border: 1px solid #eae9e6;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+/* Phần Header Profile */
+.seller-detail-header {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+}
+
+.seller-detail-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #555;
+}
+
+.seller-detail-info {
+    flex: 1;
+}
+
+.seller-detail-name-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.seller-detail-fullname {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 700;
+    color: #222;
+}
+
+.seller-detail-badge {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background-color: #e8f7f0;
+    color: #1dbf73;
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+.seller-detail-title {
+    margin: 6px 0 12px 0;
+    font-size: 16px;
+    color: #1dbf73;
+    font-weight: 600;
+}
+
+.seller-detail-meta {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    font-size: 13px;
+    color: #666;
+}
+
+.seller-detail-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Huy hiệu liên kết cổng tài chính Stripe mới thêm */
+.seller-stripe-badge {
+    color: #1dbf73;
+    font-weight: 500;
+}
+
+/* Điểm đánh giá */
+.seller-detail-rating-box {
+    background-color: #fafafa;
+    border: 1px solid #eae9e6;
+    padding: 12px 20px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.seller-detail-rating-score {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    color: #ffb33e;
+    font-weight: 700;
+    font-size: 18px;
+}
+
+.seller-detail-rating-label {
+    font-size: 12px;
+    color: #888;
+}
+
+/* Đường gạch ngang dòng phân chia */
+.seller-detail-divider {
+    border: none;
+    border-top: 1px solid #eae9e6;
+    margin: 0;
+}
+
+/* Các khối nội dung lớn */
+.seller-detail-section-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #222;
+    margin-bottom: 10px;
+}
+
+/* Tiêu đề Học vấn và Kinh nghiệm có icon đi kèm */
+.seller-detail-history-section .seller-detail-section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.seller-detail-bio {
+    font-size: 14px;
+    color: #444;
+    line-height: 1.6;
+    margin: 0;
+    white-space: pre-line;
+}
+
+.seller-detail-skills-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.seller-detail-skill-item {
+    background-color: #f5f5f5;
+    color: #333;
+    font-size: 13px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+/* 🆕 KHỐI CSS MỚI: GRID 2 CỘT CHO HỌC VẤN & KINH NGHIỆM */
+.seller-detail-history-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin: 24px 0;
+}
+
+.seller-detail-history-list {
+    margin-top: 12px;
+}
+
+.seller-detail-history-list p.no-data {
+    color: #74767e;
+    font-size: 14px;
+    margin: 0;
+}
+
+/* Các item nhỏ bên trong học vấn / kinh nghiệm */
+.seller-detail-history-item {
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f4f5f7;
+}
+
+.seller-detail-history-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: 0;
+}
+
+.seller-detail-history-item h4 {
+    margin: 0 0 4px 0;
+    font-size: 15px;
+    color: #222325;
+    font-weight: 600;
+}
+
+.seller-detail-history-item .history-sub {
+    margin: 0 0 4px 0;
+    font-size: 13px;
+    color: #62646a;
+    font-weight: 500;
+}
+
+.seller-detail-history-item .history-desc {
+    margin: 0;
+    font-size: 13px;
+    color: #74767e;
+    line-height: 1.4;
+}
+
+.seller-detail-history-item .history-desc.italic {
+    font-style: italic;
+}
+
+/* 🆕 KHỐI CSS MỚI: PHẦN REVIEWS & COMMENTS CỦA BUYER */
+.seller-reviews-container {
+    margin: 24px 0;
+}
+
+.seller-reviews-container .seller-detail-section-title {
+    margin-bottom: 16px;
+}
+
+.seller-reviews-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.seller-reviews-stack p.no-reviews {
+    color: #74767e;
+    font-size: 14px;
+    font-style: italic;
+    margin: 0;
+}
+
+/* Thẻ card bao quanh mỗi bình luận đánh giá */
+.review-comment-card {
+    padding: 16px;
+    background-color: #fafafa;
+    border: 1px solid #e4e5e7;
+    border-radius: 8px;
+}
+
+.review-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.review-user-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.review-avatar-placeholder {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: #e4e5e7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.review-buyer-name {
+    font-weight: 700;
+    font-size: 14px;
+    color: #222325;
+}
+
+.review-meta-data {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    color: #74767e;
+}
+
+.review-stars {
+    display: flex;
+    color: #ffb33e;
+}
+
+.review-text {
+    margin: 0;
+    font-size: 14px;
+    color: #404145;
+    line-height: 1.5;
+}
+
+/* Khối liên hệ nhanh dưới cùng */
+.seller-detail-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.seller-detail-contact-label {
+    font-size: 12px;
+    color: #888;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.seller-detail-contact-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: #222;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.seller-detail-contact-btn {
+    padding: 12px 24px;
+    background-color: #222;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.seller-detail-contact-btn:hover {
+    background-color: #444;
+}
+
+/* 📱 RESPONSIVE MEDIA QUERIES - TỐI ƯU TRÊN THIẾT BỊ DI ĐỘNG */
+@media (max-width: 768px) {
+    .seller-detail-history-grid {
+        grid-template-columns: 1fr; /* Chuyển grid 2 cột thành 1 cột đứng */
+        gap: 20px;
+    }
+    
+    .seller-detail-header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .seller-detail-name-wrapper {
+        justify-content: center;
+    }
+
+    .seller-detail-meta {
+        justify-content: center;
+    }
+
+    .seller-detail-rating-box {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .review-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+
+    .seller-detail-footer {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .seller-detail-contact-btn {
+        width: 100%;
+    }
+}

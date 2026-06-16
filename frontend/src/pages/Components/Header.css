@@ -28,10 +28,11 @@
     font-weight: 900;
     letter-spacing: -1.5px;
     cursor: pointer;
+    color: #1a1b1e; /* 🌟 FIX LỖI LOGO: Ép màu chữ tối để luôn hiển thị sắc nét trên nền trắng */
 }
 
 .logo span {
-    color: #1dbf73;
+    color: #1dbf73; /* Dấu chấm màu xanh thương hiệu */
 }
 
 /* --- Left & Right sections --- */
@@ -226,12 +227,12 @@
     to { opacity: 1; transform: translateX(0); }
 }
 
-/* 🟢 TÍCH HỢP MỚI: Định dáng chuẩn hóa cho Hộp Dropdown của Avatar Người Dùng */
+/* Định dáng chuẩn hóa cho Hộp Dropdown của Avatar Người Dùng */
 .avatar-dropdown-box {
     animation: dropdownFadeIn 0.15s ease-out forwards;
 }
 
-/* 🌟 BỔ SUNG MỚI: Xử lý hiệu ứng Hover trực tiếp cho các thẻ con bên trong hộp Avatar Dropdown */
+/* Xử lý hiệu ứng Hover trực tiếp cho các thẻ con bên trong hộp Avatar Dropdown */
 .avatar-dropdown-item {
     transition: background-color 0.15s ease, color 0.15s ease;
 }
@@ -288,9 +289,7 @@
     color: #62646a;
     transition: all 0.2s ease;
     z-index: 1000; 
-    
-    /* THÊM DÒNG NÀY: Đảm bảo mũi tên luôn click được */
-    pointer-events: auto;
+    pointer-events: auto; /* Đảm bảo mũi tên luôn click được */
 }
 
 .scroll-arrow-btn:hover {
@@ -319,9 +318,9 @@
     scrollbar-width: none;
     -ms-overflow-style: none;
 
-    /* 3 DÒNG PHÉP THUẬT GIẢI CỨU MENU CON */
-    padding: 4px 0 400px 0; /* Tạo một khoảng trống ảo 400px bên dưới */
-    margin-bottom: -400px;   /* Kéo nội dung trang web bên dưới giật ngược lên 400px */
+    /* Xử lý không gian ảo cho menu con */
+    padding: 4px 0 400px 0; 
+    margin-bottom: -400px;   
     pointer-events: none;    /* Cho phép click chuột xuyên thấu qua khoảng trống ảo này */
 }
 
@@ -330,8 +329,6 @@
     cursor: pointer;
     white-space: nowrap;
     padding: 8px 0;
-    
-    /* BẮT BUỘC THÊM DÒNG NÀY */
     pointer-events: auto; /* Đánh thức lại khả năng click cho chữ Danh mục và menu con của nó */
 }
 
@@ -349,7 +346,7 @@
 
 /* Menu con thả xuống */
 .horizontal-sub-menu {
-    display: none; /* Mặc định ẩn */
+    display: none; 
     position: absolute;
     top: 100%;
     left: 0;
@@ -357,10 +354,10 @@
     align-items: flex-start;
     
     background: #fff;
-    width: max-content; /* Hộp tự nở vừa với chữ dài nhất */
+    width: max-content; 
     min-width: 240px;
-    max-height: 60vh; /* Tối đa 60% màn hình */
-    overflow-y: auto; /* Hiện thanh cuộn dọc nếu mục con quá nhiều */
+    max-height: 60vh; 
+    overflow-y: auto; 
     
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
     border: 1px solid #e4e5e7;
@@ -372,10 +369,10 @@
 }
 
 .horizontal-menu-item:hover .horizontal-sub-menu {
-    display: flex !important; /* Dùng flex để kích column */
+    display: flex !important; 
 }
 
-/* Custom thanh cuộn của menu dọc (Làm cho đẹp) */
+/* Custom thanh cuộn của menu dọc */
 .horizontal-sub-menu::-webkit-scrollbar,
 .sub-menu-flyout::-webkit-scrollbar {
     width: 6px;
@@ -402,7 +399,7 @@
     color: #62646a;
     font-size: 14px;
     text-align: left;
-    white-space: nowrap; /* Cấm rớt dòng chữ */
+    white-space: nowrap; 
     transition: all 0.2s ease;
     box-sizing: border-box;
 }
@@ -412,9 +409,11 @@
     color: #1dbf73;
     padding-left: 24px;
 }
+
+/* Các danh mục cuối cùng tự động đảo hướng hiển thị sang trái để chống tràn màn hình */
 .horizontal-category-list .horizontal-menu-item:nth-last-child(-n+4) .horizontal-sub-menu {
-    left: auto;  /* Gỡ bỏ lệnh neo lề trái mặc định */
-    right: 0;    /* Neo chặt vào mép phải của chữ, tự động xổ ngược sang trái */
+    left: auto;  
+    right: 0;    
 }
 
 /* ============================================================

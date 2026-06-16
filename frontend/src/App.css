@@ -1,4 +1,5 @@
 .counter {
+  font-family: 'Inter', sans-serif;
   font-size: 16px;
   padding: 5px 10px;
   border-radius: 5px;
@@ -63,6 +64,9 @@
   place-content: center;
   place-items: center;
   flex-grow: 1;
+  
+  /* Đảm bảo khối trung tâm kết xuất chữ mượt */
+  text-rendering: optimizeLegibility;
 
   @media (max-width: 1024px) {
     padding: 32px 20px 24px;
@@ -116,6 +120,7 @@
   }
 
   a {
+    font-family: 'Inter', sans-serif;
     color: var(--text-h);
     font-size: 16px;
     border-radius: 6px;
