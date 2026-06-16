@@ -3,17 +3,21 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import AuthPage from './pages/Auth/AuthPage';
 import HomePage from './pages/HomePage'; // Import trang chủ chung
-import BuyerHome from './pages/Marketplace/BuyerHome';   // Import trang Buyer
-import SellerHome from './pages/Dashboard/SellerHome'; // Import trang Seller
 import MyProfile from './pages/Profile/MyProfile'; // 🌟 Đã cập nhật import sang file MyProfile mới
 import GigsPage from './pages/Gigs/GigsPage';
 import Header from './pages/Components/Header';
+
+// 🌟 TÍCH HỢP IMPORT TRANG KHÁM PHÁ DANH SÁCH SELLER MỚI
+import SellerExploration from './pages/Marketplace/SellerExploration';
+
+// 🆕 TÍCH HỢP ĐƯỜNG DẪN ĐẾN TRANG CHI TIẾT PROFILE SELLER MỚI TẠO
+import SellerDetail from './pages/Marketplace/SellerDetail';
 
 // 1. Tích hợp Import trang chi tiết bài đăng dịch vụ vào đây
 import GigDetailPage from './pages/Gigs/GigDetailPage';
 
 // 🟢 TÍCH HỢP IMPORT TRANG TẠO BÀI ĐĂNG DỊCH VỤ (CHẾ ĐỘ TEST GIAO DIỆN)
-import CreateGigPage  from './pages/Gigs/CreateGigPage';
+import CreateGigPage from './pages/Gigs/CreateGigPage';
 
 // 🔵 TÍCH HỢP IMPORT TRANG THANH TOÁN / XÁC NHẬN ĐƠN HÀNG (CHECKOUT PAGE)
 import CheckoutPage from './pages/Orders/CheckoutPage';
@@ -57,7 +61,6 @@ const AppContent = () => {
   return (
     <>
       {/* Nếu KHÔNG phải trang đăng nhập/đăng ký thì mới hiển thị Header */}
-      {/* Nếu KHÔNG phải trang đăng nhập/đăng ký thì mới hiển thị Header */}
       {!shouldHideHeader && <Header />}
 
       <Routes>
@@ -69,6 +72,9 @@ const AppContent = () => {
 
         {/* Giữ lại Route động xem Profile người khác của bạn */}
         <Route path="/profile/:username" element={<MyProfile />} /> 
+
+        {/* 🆕 ROUTE ĐIỀU HƯỚNG CHI TIẾT SELLER THEO ID */}
+        <Route path="/seller/:id" element={<SellerDetail />} />
 
         {/* Giữ lại Route Tìm kiếm từ code trên GitHub về */}
         <Route path="/search" element={<GigsPage />} />
@@ -97,12 +103,8 @@ const AppContent = () => {
         {/* 🔵 TÍCH HỢP ROUTE DẪN ĐẾN TRANG THANH TOÁN XÁC NHẬN ĐƠN HÀNG THỰC TẾ */}
         <Route path="/checkout/:orderId" element={<CheckoutPage />} />
         
-        {/* 2. Các trang Home quản trị theo vai trò hệ thống */}
-        <Route path="/buyer-home" element={<BuyerHome />} />
-        <Route path="/seller-home" element={<SellerHome />} />
-        
         {/* 3. Các tuyến đường xử lý điều hướng Menu Dropdown & Carousel */}
-        {/* Categories (Danh mục dịch vụ) */}
+        /* Categories (Danh mục dịch vụ) */
         <Route path="/categories/graphics-design" element={<PlaceholderPage title="Graphics & Design" />} />
         <Route path="/categories/programming-tech" element={<PlaceholderPage title="Programming & Tech" />} />
         <Route path="/categories/digital-marketing" element={<PlaceholderPage title="Digital Marketing" />} />
@@ -113,8 +115,8 @@ const AppContent = () => {
         <Route path="/listings/services" element={<PlaceholderPage title="Services Listings" />} />
         <Route path="/listings/projects" element={<PlaceholderPage title="Projects Listings" />} />
         
-        {/* Users (Danh sách người dùng) */}
-        <Route path="/users/seller" element={<PlaceholderPage title="Seller Directory" />} />
+        {/* Users (Danh sách người dùng) - 🌟 ĐÃ CẬP NHẬT TRANG KHÁM PHÁ SELLER CHÍNH THỨC VÀO ĐÂY */}
+        <Route path="/users/seller" element={<SellerExploration />} />
         <Route path="/users/buyer" element={<PlaceholderPage title="Buyer Directory" />} />
         
         {/* Các trang tĩnh phụ trợ */}
