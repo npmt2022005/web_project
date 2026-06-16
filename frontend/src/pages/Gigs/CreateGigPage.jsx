@@ -72,16 +72,62 @@ const CreateGigPage = () => {
   ]);
 
   // ==========================================================================
-  // EFFECT: KIỂM TRA PHÂN QUYỀN TRUY CẬP (Bảo vệ Route cho tài khoản Seller)
+  // EFFECT: KIỂM TRA PHÂN QUYỀN TRUY CẬP & TÍNH ĐẦY ĐỦ CỦA HỒ SƠ SELLER
   // ==========================================================================
   useEffect(() => {
+    // 1. Kiểm tra quyền truy cập cơ bản
     const storedRole = localStorage.getItem('role');
-    
     if (!storedRole || (storedRole.toUpperCase() !== 'ROLE_SELLER' && storedRole.toLowerCase() !== 'seller')) {
       alert("Bạn không có quyền truy cập vào chức năng này. Vui lòng đăng nhập với tài khoản Seller!");
       navigate('/'); 
+      return;
     }
-  }, [navigate]);
+
+    // 2. Chỉ thực hiện chặn điền thông tin khi ở chế độ "TẠO MỚI" dịch vụ (Tránh chặn khi đang sửa bài cũ)
+    if (!isEditMode) {
+      const rawProfile = localStorage.getItem('mockProfileData');
+      let isProfileComplete = false;
+      let missingFields = [];
+
+      if (rawProfile) {
+        try {
+          const profile = JSON.parse(rawProfile);
+          
+          // Kiểm tra thông tin cơ bản bắt buộc
+          if (!profile.phone || profile.phone.trim() === '') missingFields.push("Số điện thoại");
+          if (!profile.tagline || profile.tagline.trim() === '') missingFields.push("Tagline công việc");
+          if (!profile.city || profile.city.trim() === '') missingFields.push("Thành phố");
+          if (!profile.description || profile.description.trim() === '') missingFields.push("Giới thiệu bản thân (Introduce Yourself)");
+
+          // Giả lập đọc thông tin Skills, Education, Experience đi kèm từ hệ thống Profile
+          // Trong trường hợp mock dữ liệu độc lập chưa đồng bộ mảng, ta kiểm tra trực tiếp độ dài mảng từ profile object lưu trữ (nếu có)
+          const profileSkills = profile.skills || [];
+          const profileEducation = profile.education || [];
+          const profileExperience = profile.experience || [];
+
+          // Nếu cấu trúc lưu trữ chưa có mảng con trong local, tạm thời gán mặc định kiểm tra để đảm bảo trải nghiệm uy tín năng lực
+          // (Lưu ý: Mặc định ở file MyProfile ban đầu đã có sẵn mock mảng nên nếu đã nhấn Save sẽ lưu được xuống)
+          if (!profileSkills || profileSkills.length === 0) missingFields.push("Kỹ năng (Cần ít nhất 1 Kỹ năng)");
+          if (!profileEducation || profileEducation.length === 0) missingFields.push("Học vấn (Cần ít nhất 1 Học vấn)");
+          if (!profileExperience || profileExperience.length === 0) missingFields.push("Kinh nghiệm làm việc (Cần ít nhất 1 Kinh nghiệm)");
+
+          if (missingFields.length === 0) {
+            isProfileComplete = true;
+          }
+        } catch (e) {
+          isProfileComplete = false;
+        }
+      } else {
+        missingFields.push("Toàn bộ thông tin hồ sơ bắt buộc");
+      }
+
+      // Nếu thiếu thông tin năng lực uy tín, cảnh báo và quay về trang cá nhân
+      if (!isProfileComplete) {
+        alert(`⚠️ Hồ sơ của bạn thiếu các thông tin bắt buộc để đảm bảo uy tín và năng lực làm việc:\n- ${missingFields.join('\n- ')}\n\nVui lòng hoàn thiện đầy đủ hồ sơ trước khi đăng tải sản phẩm/dịch vụ (Gig) mới!`);
+        navigate('/profile'); // Chuyển hướng sang trang profile (Điều chỉnh endpoint /profile cho khớp với React Router của bạn)
+      }
+    }
+  }, [navigate, isEditMode]);
 
   // ==========================================================================
   // EFFECT: GỌI API LẤY DANH SÁCH DANH MỤC & CÀI ĐẶT MOCK DATA CHO TAGS
