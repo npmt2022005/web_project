@@ -169,7 +169,8 @@ const ManageSellerOrders = () => {
                         );
                     }
 
-                    setOrders(extractedOrders.length > 0 ? extractedOrders : getMockOrdersByStatus(activeTab));
+                    // SỬA ĐỔI TẠI ĐÂY: Gán trực tiếp dữ liệu từ API kể cả mảng rỗng [] mà không chèn Mock Data nữa
+                    setOrders(extractedOrders);
                 } else {
                     console.error(`API trả về mã lỗi ${response.status}. Khởi động Mock Data cứu hộ.`);
                     setOrders(getMockOrdersByStatus(activeTab));

@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Globe, Mail, Bell, User, ChevronDown, ChevronLeft, ChevronRight, LogOut, PlusCircle, ShoppingBag } from 'lucide-react'; 
+import { Globe, Mail, Bell, User, ChevronDown, ChevronLeft, ChevronRight, LogOut, PlusCircle, ShoppingBag, MessageSquare } from 'lucide-react'; 
 import './Header.css'
 
 const Header = () => {
@@ -127,11 +127,22 @@ const Header = () => {
                         </div>
                     </div>
 
+                    {/* 🟢 TÍCH HỢP THÊM: Mục "Trở thành người bán" dành riêng cho BUYER */}
+                    {role && (role.toUpperCase() === 'ROLE_BUYER' || role.toUpperCase() === 'BUYER') && (
+                        <span 
+                            className="nav-link become-seller-nav-btn" 
+                            onClick={() => navigate('/profile?mode=upgrade')}
+                            style={{ color: '#1dbf73', fontWeight: '600', cursor: 'pointer' }}
+                        >
+                            Trở thành người bán
+                        </span>
+                    )}
+
                     <span className="nav-link"><Globe size={16} /> Tiếng Việt</span>
 
                     {role ? (
                         <div className="auth-nav">
-                            <Mail size={20} className="nav-icon" style={{ cursor: 'pointer', color: '#74767e' }} />
+                            <Mail size={20} className="nav-icon" style={{ cursor: 'pointer', color: '#74767e' }} onClick={() => navigate('/chat')} />
                             <Bell size={20} className="nav-icon" style={{ cursor: 'pointer', color: '#74767e' }} />
                             
                             {/* KHU VỰC AVATAR ĐỂ THẢ MENU DOWN */}
@@ -160,6 +171,15 @@ const Header = () => {
                                             <User size={14} /> Hồ sơ của tôi
                                         </div>
 
+                                        {/* 💬 MỤC TIN NHẮN CHUNG CHO CẢ BUYER VÀ SELLER */}
+                                        <div 
+                                            className="avatar-dropdown-item"
+                                            onClick={() => { navigate('/chat'); setShowUserDropdown(false); }}
+                                            style={{ padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: '#333', fontSize: '14px', borderTop: '1px solid #f1f1f1' }}
+                                        >
+                                            <MessageSquare size={14} /> Tin nhắn
+                                        </div>
+
                                         {/* Hiển thị Đơn hàng của tôi dành riêng cho tài khoản BUYER */}
                                         {role && (role.toUpperCase() === 'ROLE_BUYER' || role.toUpperCase() === 'BUYER') && (
                                             <div 
@@ -174,6 +194,15 @@ const Header = () => {
                                         {/* Phù hợp với vai trò Seller */}
                                         {role && (role.toUpperCase() === 'ROLE_SELLER' || role.toLowerCase() === 'seller') && (
                                             <>
+                                                {/* ➕ BỔ SUNG: Cho phép Seller quản lý và theo dõi các đơn dịch vụ mà chính mình đi đặt mua */}
+                                                <div 
+                                                    className="avatar-dropdown-item"
+                                                    onClick={() => { navigate('/my-orders'); setShowUserDropdown(false); }}
+                                                    style={{ padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: '#1dbf73', fontSize: '14px', fontWeight: '500', borderTop: '1px solid #f1f1f1' }}
+                                                >
+                                                    <ShoppingBag size={14} /> Đơn mua của tôi
+                                                </div>
+
                                                 <div 
                                                     className="avatar-dropdown-item"
                                                     onClick={() => { navigate('/manage-services'); setShowUserDropdown(false); }}

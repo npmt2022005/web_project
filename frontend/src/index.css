@@ -19,7 +19,7 @@
 
 body {
   margin: 0;
-  display: flex;
+  display: block; /* 🌟 ĐÃ SỬA: Chuyển từ flex thành block để tránh làm vỡ giao diện các trang con */
   min-width: 320px;
   min-height: 100vh;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -31,8 +31,4 @@ body {
 /* Ép các thành phần form, nút bấm, liên kết kế thừa font chuẩn để không bị méo chữ */
 input, select, textarea, button, a {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-}
-
-#root {
-  width: 100%;
 }

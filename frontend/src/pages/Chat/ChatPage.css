@@ -1,0 +1,421 @@
+/* src/pages/Chat/ChatPage.css */
+
+.chat-page-container {
+  background-color: #f1f2f4;
+  padding: 30px;
+  height: calc(100vh - 120px); /* Co dãn khít màn hình trừ thanh Header hệ thống */
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.chat-layout-box {
+  display: flex;
+  background: #ffffff;
+  border: 1px solid #e4e5e7;
+  border-radius: 12px;
+  height: 100%;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+}
+
+/* ================= SIDBAR CỘT TRÁI (1/3) ================= */
+.chat-sidebar {
+  width: 32%;
+  border-right: 1px solid #e4e5e7;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+}
+
+.sidebar-search-area {
+  padding: 16px;
+  border-bottom: 1px solid #e4e5e7;
+}
+
+.search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon-inside {
+  position: absolute;
+  left: 12px;
+  color: #a6a9ad;
+}
+
+.search-input-wrapper input {
+  width: 100%;
+  padding: 10px 12px 10px 38px;
+  border: 1px solid #e4e5e7;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  background-color: #f8f9fa;
+  color: #1a1b1e; /* SỬA LỖI: Thêm màu chữ tối khi gõ ở ô tìm kiếm */
+  transition: border-color 0.15s;
+}
+
+.search-input-wrapper input:focus {
+  border-color: #1dbf73;
+  background-color: #fff;
+}
+
+.conversation-list-scroll {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.conversation-card {
+  display: flex;
+  padding: 16px;
+  gap: 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #f4f5f7;
+  transition: background-color 0.15s;
+}
+
+.conversation-card:hover {
+  background-color: #f8f9fa;
+}
+
+.active-card {
+  background-color: #e6f9f0 !important;
+}
+
+/* Xử lý Avatar & trạng thái dot */
+.avatar-wrapper {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+}
+
+.avatar-fallback {
+  width: 100%;
+  height: 100%;
+  background: #e4e5e7;
+  color: #62646a;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.partner-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block; /* Đảm bảo không bị khoảng trống dòng của thẻ img bọc ngoài */
+}
+
+.status-dot {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+}
+
+.status-dot.online { background-color: #1dbf73; }
+.status-dot.offline { background-color: #a6a9ad; }
+
+/* Thông tin thẻ */
+.card-info-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.card-info-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.partner-name-text {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1b1e;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.update-time-text {
+  font-size: 12px;
+  color: #74767e;
+  flex-shrink: 0;
+}
+
+.card-info-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.last-message-preview {
+  margin: 0;
+  font-size: 13px;
+  color: #62646a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 85%;
+}
+
+.unread-badge-count {
+  background-color: #f44336;
+  color: #fff;
+  font-size: 11px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+
+.no-chat-notify {
+  text-align: center;
+  padding: 30px 20px;
+  color: #74767e;
+  font-size: 14px;
+}
+
+
+/* ================= CỬA SỔ CHAT CỘT PHẢI (2/3) ================= */
+.chat-window {
+  width: 68%;
+  display: flex;
+  flex-direction: column;
+  background: #f8f9fa;
+}
+
+.chat-window-header {
+  padding: 16px 24px;
+  background: #fff;
+  border-bottom: 1px solid #e4e5e7;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-partner-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-name-title {
+  margin: 0 0 2px 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a1b1e;
+}
+
+.header-status-text {
+  font-size: 12px;
+  color: #74767e;
+}
+
+.view-profile-btn {
+  background: transparent;
+  border: 1px solid #e4e5e7;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #404145;
+  transition: all 0.15s;
+}
+
+.view-profile-btn:hover {
+  border-color: #1dbf73;
+  color: #1dbf73;
+}
+
+/* Thân chat bong bóng tin nhắn */
+.chat-messages-body {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background-color: #f8f9fa;
+}
+
+.message-row-wrapper {
+  display: flex;
+  width: 100%;
+}
+
+.row-me { justify-content: flex-end; }
+.row-partner { justify-content: flex-start; }
+
+.message-bubble {
+  max-width: 65%;
+  padding: 12px 16px;
+  border-radius: 12px;
+  position: relative;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+}
+
+/* Phân biệt màu sắc bong bóng của Tôi và Đối tác */
+.bubble-me {
+  background-color: #1dbf73; /* Màu xanh thương hiệu */
+  color: #ffffff;
+  border-top-right-radius: 2px;
+}
+
+.bubble-partner {
+  background-color: #ffffff; /* Nền trắng */
+  color: #333333;
+  border-top-left-radius: 2px;
+  border: 1px solid #e4e5e7;
+}
+
+.message-text-content {
+  margin: 0 0 6px 0;
+  font-size: 14px;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.message-time-stamp {
+  display: block;
+  font-size: 10px;
+  text-align: right;
+  opacity: 0.75;
+}
+
+.bubble-me .message-time-stamp {
+  color: #ffffff;
+}
+
+.bubble-partner .message-time-stamp {
+  color: #74767e;
+}
+
+/* Render Khung Ảnh Đính Kèm */
+.attachment-image-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.06);
+  padding: 8px;
+  border-radius: 6px;
+  margin-bottom: 6px;
+}
+
+.file-link-mock {
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+
+/* Render File đính kèm tải về */
+.attachment-file-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255, 255, 255, 0.15);
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-bottom: 6px;
+  gap: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.bubble-partner .attachment-file-box {
+  background: #f1f2f4;
+  border: 1px solid #e4e5e7;
+}
+
+.file-info-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.download-icon-btn {
+  color: inherit;
+  opacity: 0.8;
+  transition: opacity 0.15s;
+}
+
+.download-icon-btn:hover {
+  opacity: 1;
+}
+
+/* Thanh nhập liệu dưới cùng */
+.chat-input-bar-form {
+  padding: 16px 24px;
+  background: #fff;
+  border-top: 1px solid #e4e5e7;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.attach-file-label {
+  color: #62646a;
+  cursor: pointer;
+  transition: color 0.15s;
+  padding: 4px;
+}
+
+.attach-file-label:hover {
+  color: #1dbf73;
+}
+
+.chat-main-input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 1px solid #e4e5e7;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  background: #f8f9fa;
+  color: #1a1b1e; /* SỬA LỖI: Thêm màu chữ tối khi gõ tin nhắn để chat */
+  transition: all 0.15s;
+}
+
+.chat-main-input:focus {
+  border-color: #1dbf73;
+  background: #fff;
+}
+
+.chat-send-submit-btn {
+  background: #1dbf73;
+  color: #fff;
+  border: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.chat-send-submit-btn:hover {
+  background: #17a863;
+}
+
+.empty-chat-view {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #74767e;
+  font-size: 15px;
+}

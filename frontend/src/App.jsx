@@ -39,6 +39,9 @@ import OrderDetailPage from './pages/Orders/OrderDetailPage';
 // 🆕 THÊM MỚI: Tích hợp trang nộp yêu cầu đơn hàng vừa tạo
 import OrderRequirementPage from './pages/Orders/OrderRequirementPage';
 
+// 💬 TÍCH HỢP ĐƯỜNG DẪN TRANG CHAT HỘI THOẠI MỚI
+import ChatPage from './pages/Chat/ChatPage';
+
 // Component giữ chỗ tạm thời cho các trang danh mục chưa phát triển xong
 const PlaceholderPage = ({ title }) => (
   <div style={{ padding: '100px', textAlign: 'center', fontFamily: 'sans-serif' }}>
@@ -66,7 +69,7 @@ const AppContent = () => {
       {!shouldHideHeader && <Header />}
 
       <Routes>
-        {/* 1. Trang đầu tiên xuất hiện khi truy cập link hệ thống */}
+        /* 1. Trang đầu tiên xuất hiện khi truy cập link hệ thống */
         <Route path="/" element={<HomePage />} />
         
         {/* 🌟 ĐIỀU HƯỚNG PROFILE: Cấu hình gọi component MyProfile khi vào tuyến đường /profile */}
@@ -104,6 +107,9 @@ const AppContent = () => {
 
         {/* 🔵 TÍCH HỢP ROUTE DẪN ĐẾN TRANG THANH TOÁN XÁC NHẬN ĐƠN HÀNG THỰC TẾ */}
         <Route path="/checkout/:orderId" element={<CheckoutPage />} />
+
+        {/* 💬 ROUTE MỚI: Tuyến đường chính thức truy cập vào trang nhắn tin (Chat Workspace) */}
+        <Route path="/chat" element={<ChatPage />} />
         
         {/* 3. Các tuyến đường xử lý điều hướng Menu Dropdown & Carousel */}
         /* Categories (Danh mục dịch vụ) */

@@ -76,15 +76,18 @@ const MyOrders = () => {
 
                 const resData = await response.json();
                 
+                // KIỂM TRA PHẢN HỒI: Chấp nhận cả trường hợp API trả về mảng trống [] khi chưa có đơn hàng
                 if (response.ok && Array.isArray(resData)) {
                     setOrders(resData);
-                } else if (response.ok && resData.data) {
+                } else if (response.ok && resData.data && Array.isArray(resData.data)) {
+                    setOrders(resData.data);
+                } else if (response.ok && resData.status === 'success' && Array.isArray(resData.data)) {
                     setOrders(resData.data);
                 } else {
-                    throw new Error("Lỗi phản hồi từ hệ thống");
+                    throw new Error("Lỗi cấu trúc phản hồi từ hệ thống endpoint");
                 }
             } catch (error) {
-                console.warn("[API] Lỗi lấy danh sách đơn mua hoặc lỗi hệ thống. Tự động chuyển sang Mock Data.");
+                console.warn("[API] Lỗi kết nối API hoặc Server gặp sự cố. Tự động kích hoạt Mock Data.");
                 if (statusFilter === '') {
                     setOrders(FALLBACK_MOCK_ORDERS);
                 } else {
@@ -99,6 +102,7 @@ const MyOrders = () => {
         if (token) {
             fetchBuyerOrders();
         } else {
+            // Trường hợp khách chưa đăng nhập (Không có token)
             if (statusFilter === '') {
                 setOrders(FALLBACK_MOCK_ORDERS);
             } else {

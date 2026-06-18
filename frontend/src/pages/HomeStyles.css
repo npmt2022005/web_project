@@ -134,24 +134,30 @@
   margin-bottom: 32px;
 }
 
-.search-wrapper {
-  display: flex;
+/* 🌟 ĐÃ SỬA: Bảo vệ layout hàng ngang tuyệt đối bằng !important chống đè mã chéo */
+.search-wrapper, .search-bar-wrapper {
+  display: flex !important;
+  align-items: center !important;
   background: var(--white) !important;
-  border-radius: 8px;
-  box-shadow: 0 12px 30px rgba(0,0,0,0.15);
-  overflow: hidden;
-  height: 56px;
+  border-radius: 8px !important;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.15) !important;
+  overflow: hidden !important;
+  height: 56px !important;
+  width: 100% !important;
+  max-width: 580px !important;
 }
 
 /* Category Dropdown Area */
+/* 🌟 ĐÃ SỬA: Đồng bộ bảo vệ class dropdown selector */
 .category-select {
-  position: relative;
-  display: flex;
-  align-items: center;
-  border-right: 1px solid var(--border);
-  padding: 0 16px;
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  border-right: 1px solid var(--border) !important;
+  padding: 0 16px !important;
   background: var(--surface) !important;
-  min-width: 160px;
+  min-width: 160px !important;
+  height: 100% !important;
 }
 
 .category-select select {
@@ -181,6 +187,7 @@
   flex: 1;
   align-items: center;
   background: var(--white) !important;
+  height: 100% !important;
 }
 
 .search-input-group input {
@@ -644,7 +651,6 @@
   gap: 24px;
 }
 
-/* 🌟 ĐÃ SỬA: Thay đổi mã màu sang tối hẳn để text logo vance hiện lên tự nhiên */
 .f-logo {
   font-size: var(--text-xl);
   font-weight: 800;
@@ -709,10 +715,36 @@
 
 @media (max-width: 768px) {
   .hero-section { height: auto; padding: 60px 0; }
-  .search-wrapper { flex-direction: column; height: auto; background: transparent; box-shadow: none; gap: 12px; }
-  .category-select { width: 100%; border-right: none; border-radius: 8px; height: 50px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-  .search-input-group { background: var(--white); border-radius: 8px; height: 50px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow: hidden; }
-  .hero-search-btn { width: 60px; }
+  
+  /* 🌟 ĐÃ SỬA: Ép layout hàng ngang ổn định ở tablet, cấm không gãy hàng dọc tự do */
+  .search-wrapper, .search-bar-wrapper { 
+    flex-direction: row !important; 
+    height: 56px !important; 
+    background: var(--white) !important; 
+    box-shadow: 0 12px 30px rgba(0,0,0,0.15) !important; 
+    gap: 0 !important; 
+  }
+  
+  /* 🌟 ĐÃ SỬA: Giữ nguyên cấu trúc dropdown danh mục bên trái */
+  .category-select { 
+    width: auto !important; 
+    min-width: 130px !important; 
+    border-right: 1px solid var(--border) !important; 
+    border-radius: 0 !important; 
+    height: 100% !important; 
+    box-shadow: none !important; 
+  }
+  
+  /* 🌟 ĐÃ SỬA: Giữ nguyên ô input bên phải thẳng hàng */
+  .search-input-group { 
+    background: var(--white) !important; 
+    border-radius: 0 !important; 
+    height: 100% !important; 
+    box-shadow: none !important; 
+    overflow: visible !important; 
+  }
+  
+  .hero-search-btn { width: 64px !important; }
 
   .carousel-grid { grid-template-columns: repeat(2, 1fr); }
   .testimonials-grid { grid-template-columns: 1fr; }
@@ -728,4 +760,9 @@
   .carousel-grid { grid-template-columns: repeat(2, 1fr); }
   .gig-grid { grid-template-columns: 1fr; }
   .hero-text h1 { font-size: 28px; }
+  
+  /* Thiết bị quá nhỏ sẽ thu hẹp dropdown để nhường chỗ cho ô nhập liệu */
+  .category-select { min-width: 100px !important; padding: 0 8px !important; }
+  .category-select select { font-size: 13px !important; padding-right: 14px !important; }
+  .select-icon { right: 4px !important; }
 }

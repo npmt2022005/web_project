@@ -137,7 +137,8 @@ const HomePage = () => {
             <h1>Tìm kiếm dịch vụ <i>freelance</i> hoàn hảo cho doanh nghiệp của bạn</h1>
             
             <div className="hero-search-container">
-              <div className="search-wrapper">
+              {/* 🌟 ĐÃ SỬA: Đồng bộ đồng thời cả 2 class search-wrapper và search-bar-wrapper để tránh lỗi biên dịch cache css */}
+              <div className="search-wrapper search-bar-wrapper">
                 <div className="category-select">
                   <select 
                     value={selectedCategory} 
@@ -371,8 +372,6 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* 🌟 ĐÃ XÓA: Khối PROMO BANNER SECTION theo yêu cầu để giao diện gọn gàng hơn */}
-
       {/* 7. FOOTER */}
       <footer className="footer-section">
         <div className="container footer-top">
@@ -398,7 +397,6 @@ const HomePage = () => {
         <div className="footer-bottom">
           <div className="container bottom-flex">
             <div className="f-left">
-              {/* 🌟 ĐÃ SỬA: Thêm CSS inline định màu rõ ràng cho logo để không bị ẩn chìm vào màu nền footer */}
               <span className="f-logo" style={{ color: '#202124', fontWeight: 'bold' }}>vance<span style={{ color: '#1dbf73' }}>.</span></span>
               <span className="copyright">© Vance International Ltd. 2026</span>
             </div>
