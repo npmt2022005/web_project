@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Globe, Mail, Bell, User, ChevronDown, ChevronLeft, ChevronRight, LogOut, PlusCircle, ShoppingBag, MessageSquare } from 'lucide-react'; 
+import { Globe, Mail, Bell, User, ChevronDown, ChevronLeft, ChevronRight, LogOut, PlusCircle, ShoppingBag, MessageSquare, ShieldAlert } from 'lucide-react'; 
 import './Header.css'
 
 const Header = () => {
@@ -127,6 +127,17 @@ const Header = () => {
                         </div>
                     </div>
 
+                    {/* 👑 NÚT CHUYỂN NHANH QUA TRANG ADMIN TRÊN NAVBAR (DÀNH RIÊNG CHO ADMIN) */}
+                    {role && (role.toUpperCase() === 'ROLE_ADMIN' || role.toUpperCase() === 'ADMIN') && (
+                        <span 
+                            className="nav-link admin-nav-shortcut" 
+                            onClick={() => navigate('/admin/users')}
+                            style={{ color: '#f44336', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                        >
+                            <ShieldAlert size={14} /> Quản trị Admin
+                        </span>
+                    )}
+
                     {/* 🟢 TÍCH HỢP THÊM: Mục "Trở thành người bán" dành riêng cho BUYER */}
                     {role && (role.toUpperCase() === 'ROLE_BUYER' || role.toUpperCase() === 'BUYER') && (
                         <span 
@@ -219,6 +230,17 @@ const Header = () => {
                                                     <ShoppingBag size={14} /> Quản lý đơn hàng
                                                 </div>
                                             </>
+                                        )}
+
+                                        {/* 👑 LỰA CHỌN TRANG ADMIN TRONG AVATAR DROPDOWN (DÀNH RIÊNG CHO ADMIN) */}
+                                        {role && (role.toUpperCase() === 'ROLE_ADMIN' || role.toUpperCase() === 'ADMIN') && (
+                                            <div 
+                                                className="avatar-dropdown-item admin-action"
+                                                onClick={() => { navigate('/admin/users'); setShowUserDropdown(false); }}
+                                                style={{ padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: '#f44336', fontSize: '14px', fontWeight: '600', borderTop: '1px solid #f1f1f1' }}
+                                            >
+                                                <ShieldAlert size={14} /> Hệ thống Admin
+                                            </div>
                                         )}
 
                                         <div 

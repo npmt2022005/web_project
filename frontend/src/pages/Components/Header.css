@@ -66,6 +66,15 @@
     color: #1dbf73;
 }
 
+/* 👑 BỔ SUNG: Hiệu ứng Hover cho nút tắt Admin trên thanh Navbar chính */
+.admin-nav-shortcut {
+    transition: color 0.2s ease !important;
+}
+
+.admin-nav-shortcut:hover {
+    color: #d32f2f !important; /* Đổi sang màu đỏ đậm hơn khi Admin hover vào */
+}
+
 .btn-signin {
     font-weight: 600;
     cursor: pointer;
@@ -239,6 +248,12 @@
 
 .avatar-dropdown-item:hover {
     background-color: #f7f7f7 !important;
+}
+
+/* 👑 BỔ SUNG: Hiệu ứng Hover chuyển nền đỏ nhạt riêng khi đưa chuột vào mục Quản trị Hệ thống Admin */
+.avatar-dropdown-item.admin-action:hover {
+    background-color: #fff5f5 !important;
+    color: #d32f2f !important;
 }
 
 .avatar-dropdown-item.logout-action:hover {
@@ -431,5 +446,18 @@
 
     .header-right {
         gap: 14px;
+    }
+
+    /* 👑 ĐÃ TỐI ƯU RESPONSIVE CHO ADMIN:
+       Ẩn chữ "Quản trị Admin" dài trên thanh Navbar điện thoại để tránh đẩy lệch/vỡ các nút Icon và Avatar,
+       chỉ giữ lại để người dùng nhấn vào thông qua menu Dropdown của Avatar một cách gọn gàng. */
+    .admin-nav-shortcut {
+        display: none !important;
+    }
+
+    /* Tăng diện tích nhấn cho mục Admin trong Dropdown trên điện thoại nhằm giúp thao tác bằng ngón tay dễ dàng hơn */
+    .avatar-dropdown-item.admin-action {
+        padding: 14px 16px !important;
+        font-size: 15px !important;
     }
 }

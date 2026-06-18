@@ -1,7 +1,6 @@
 // src/App.jsx
 import React from 'react';
 
-
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import AuthPage from './pages/Auth/AuthPage';
 import HomePage from './pages/HomePage'; // Import trang chủ chung
@@ -42,6 +41,14 @@ import OrderRequirementPage from './pages/Orders/OrderRequirementPage';
 // 💬 TÍCH HỢP ĐƯỜNG DẪN TRANG CHAT HỘI THOẠI MỚI
 import ChatPage from './pages/Chat/ChatPage';
 
+// 👑 TÍCH HỢP CÁC THÀNH PHẦN TRANG ADMIN MỚI TỪ THƯ MỤC GOM CHUNG TRONG PAGES
+import AdminLayout from './pages/admin/AdminLayout';
+import AdminUserManagement from './pages/admin/AdminUserManagement';
+import AdminCategoryManagement from './pages/admin/AdminCategoryManagement'; // 👑 BỔ SUNG: Import trang quản lý danh mục thực tế
+
+// 🛡️ TÍCH HỢP THÀNH PHẦN BẢO VỆ TUYẾN ĐƯỜNG ADMIN (ROUTE GUARD)
+import ProtectedRoute from './pages/admin/ProtectedRoute';
+
 // Component giữ chỗ tạm thời cho các trang danh mục chưa phát triển xong
 const PlaceholderPage = ({ title }) => (
   <div style={{ padding: '100px', textAlign: 'center', fontFamily: 'sans-serif' }}>
@@ -60,12 +67,12 @@ const AppContent = () => {
   // Danh sách các đường dẫn (URL) mà bạn muốn ẨN thanh Header đi
   const hideHeaderPaths = ['/login', '/signup'];
 
-  // Kiểm tra xem trang hiện tại có thuộc danh sách cần ẩn hay không
-  const shouldHideHeader = hideHeaderPaths.includes(location.pathname);
+  // Kiểm tra xem trang hiện tại có thuộc danh sách cần ẩn hay bắt đầu bằng /admin không
+  const shouldHideHeader = hideHeaderPaths.includes(location.pathname) || location.pathname.startsWith('/admin');
 
   return (
     <>
-      {/* Nếu KHÔNG phải trang đăng nhập/đăng ký thì mới hiển thị Header */}
+      {/* Nếu KHÔNG phải trang đăng nhập/đăng ký/admin thì mới hiển thị Header */}
       {!shouldHideHeader && <Header />}
 
       <Routes>
@@ -110,8 +117,29 @@ const AppContent = () => {
 
         {/* 💬 ROUTE MỚI: Tuyến đường chính thức truy cập vào trang nhắn tin (Chat Workspace) */}
         <Route path="/chat/:conversationId?" element={<ChatPage />} />
+        <Route path="/chat" element={<ChatPage />} />
+
+        {/* 👑 ROUTE ADMIN MỚI: Đã tạm thời bỏ ProtectedRoute để test giao diện trực tiếp */}
+        <Route 
+          path="/admin/users" 
+          element={
+            <AdminLayout>
+              <AdminUserManagement />
+            </AdminLayout>
+          } 
+        />
+
+        {/* 🛠️ CẬP NHẬT: Đã tạm thời bỏ ProtectedRoute để test giao diện trực tiếp */}
+        <Route 
+          path="/admin/categories" 
+          element={
+            <AdminLayout>
+              <AdminCategoryManagement />
+            </AdminLayout>
+          } 
+        />
         
-        {/* 3. Các tuyến đường xử lý điều hướng Menu Dropdown & Carousel */}
+        {/* 3. Các tuyến đường xử lý điều hiện Menu Dropdown & Carousel */}
         /* Categories (Danh mục dịch vụ) */
         <Route path="/categories/graphics-design" element={<PlaceholderPage title="Graphics & Design" />} />
         <Route path="/categories/programming-tech" element={<PlaceholderPage title="Programming & Tech" />} />
@@ -119,17 +147,9 @@ const AppContent = () => {
         <Route path="/categories/video-animation" element={<PlaceholderPage title="Video & Animation" />} />
         <Route path="/categories/writing-translation" element={<PlaceholderPage title="Writing & Translation" />} />
         
-        {/* Listings (Danh sách hiển thị) */}
-        <Route path="/listings/services" element={<PlaceholderPage title="Services Listings" />} />
-        <Route path="/listings/projects" element={<PlaceholderPage title="Projects Listings" />} />
-        
         {/* Users (Danh sách người dùng) - 🌟 ĐÃ CẬP NHẬT TRANG KHÁM PHÁ SELLER CHÍNH THỨC VÀO ĐÂY */}
         <Route path="/users/seller" element={<SellerExploration />} />
-        <Route path="/users/buyer" element={<PlaceholderPage title="Buyer Directory" />} />
         
-        {/* Các trang tĩnh phụ trợ */}
-        <Route path="/pages" element={<PlaceholderPage title="Static Pages" />} />
-
         {/* 4. Trang Authentication (Đăng nhập / Đăng ký) */}
         <Route path="/login" element={<AuthPage isLoginDefault={true} />} />
         <Route path="/signup" element={<AuthPage isLoginDefault={false} />} />
