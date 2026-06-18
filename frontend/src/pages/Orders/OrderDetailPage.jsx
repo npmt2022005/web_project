@@ -440,6 +440,31 @@ const OrderDetailPage = () => {
         }
     };
 
+    const handleContactPartner = async () => {
+        if (!token) {
+            alert("Phiên đăng nhập đã hết hạn!");
+            navigate('/login');
+            return;
+        }
+        try {
+            const response = await fetch(`http://localhost:8080/api/v1/conversations/initiate/order/${orderId}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            const result = await response.json();
+            if (response.ok && result.status === 'success') {
+                navigate(`/chat/${result.data}`);
+            } else {
+                alert(result.message || "Không thể kết nối không gian chat đôi.");
+            }
+        } catch (error) {
+            console.error("Lỗi hệ thống khởi tạo phòng chat đối tác:", error);
+        }
+    };
+
     if (loading) return <div className="order-loading">Đang tải thông tin đơn hàng...</div>;
     if (error) return <div className="order-error-card"><p>{error}</p><button onClick={() => navigate(-1)}><ArrowLeft size={16}/> Quay lại</button></div>;
     if (!order) return null;
@@ -762,6 +787,13 @@ const OrderDetailPage = () => {
                                 <strong>{order.partnerName}</strong>
                             </div>
                         </div>
+                        <button 
+                            className="contact-partner-btn" 
+                            onClick={handleContactPartner}
+                            style={{ width: '100%', marginTop: '10px', padding: '8px', border: '1px solid #e4e5e7', borderRadius: '4px', backgroundColor: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}
+                        >
+                            Nhắn tin với {order.partnerName}
+                        </button>
                         <hr />
                         <div className="info-row-item">
                             <span>Gói dịch vụ:</span>

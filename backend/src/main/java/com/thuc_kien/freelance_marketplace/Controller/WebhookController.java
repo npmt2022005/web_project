@@ -35,7 +35,7 @@ public class WebhookController {
     ) {
 
         Event event = null;
-        System.out.println("🤖 Robot Stripe đã gõ cửa Endpoint Webhook!");
+        System.out.println("Robot Stripe đã gõ cửa Endpoint Webhook!");
         try {
             event = Webhook.constructEvent(payload, sigHeader, endpointSecret);
         } catch (SignatureVerificationException e) {

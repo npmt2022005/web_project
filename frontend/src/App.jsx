@@ -109,7 +109,7 @@ const AppContent = () => {
         <Route path="/checkout/:orderId" element={<CheckoutPage />} />
 
         {/* 💬 ROUTE MỚI: Tuyến đường chính thức truy cập vào trang nhắn tin (Chat Workspace) */}
-        <Route path="/chat" element={<ChatPage />} />
+        <Route path="/chat/:conversationId?" element={<ChatPage />} />
         
         {/* 3. Các tuyến đường xử lý điều hướng Menu Dropdown & Carousel */}
         /* Categories (Danh mục dịch vụ) */

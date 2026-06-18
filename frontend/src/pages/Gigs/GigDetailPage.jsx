@@ -238,6 +238,31 @@ const GigDetailPage = () => {
     }
   };
 
+  const handleContactSeller = async () => {
+    if (!token) {
+      alert("Vui lòng đăng nhập hệ thống để liên hệ trao đổi!");
+      navigate('/login');
+      return;
+    }
+    try {
+      const response = await fetch(`http://localhost:8080/api/v1/conversations/initiate/seller/${gig.seller.id}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      const result = await response.json();
+      if (response.ok && result.status === 'success') {
+        navigate(`/chat/${result.data}`);
+      } else {
+        alert(result.message || "Không thể khởi tạo phòng chat với người bán.");
+      }
+    } catch (error) {
+      console.error("Lỗi kết nối khởi tạo phòng chat:", error);
+    }
+  };
+
   if (loading) {
     return <div className="gig-detail-loading">Đang tải cấu trúc thông tin dịch vụ...</div>;
   }
@@ -339,7 +364,14 @@ const GigDetailPage = () => {
                       <Star size={14} fill="#ffb33e" stroke="#ffb33e" /> {(gig.seller.rating ?? 0).toFixed(1)} ({gig.seller.reviewCount ?? 0} đánh giá)
                     </span>
                   </div>
-                  <button className="contact-seller-btn-outline" onClick={() => alert('Chức năng liên hệ chat sẽ kết nối ở bước sau!')}>Liên hệ tôi</button>
+                <button 
+                  className="contact-seller-btn-outline" 
+                  onClick={handleContactSeller}
+                  disabled={isSellerOfThisGig}
+                  style={isSellerOfThisGig ? { opacity: 0.5, cursor: 'not-allowed' } : { cursor: 'pointer' }}
+                >
+                  Liên hệ tôi
+                </button>
                 </div>
               </div>
 
@@ -457,6 +489,15 @@ const GigDetailPage = () => {
                   } : {}}
                 >
                   {isSellerOfThisGig ? 'Bạn không thể mua dịch vụ của mình' : `Tiếp tục với (${selectedPackage.price}$)`}
+                </button>
+
+                <button 
+                  className="contact-seller-btn-sidebar" 
+                  onClick={handleContactSeller}
+                  disabled={isSellerOfThisGig}
+                  style={isSellerOfThisGig ? { opacity: 0.5, cursor: 'not-allowed', width: '100%', marginTop: '12px', padding: '12px', border: '1px solid #222', background: '#fff', fontWeight: '600', borderRadius: '4px' } : { width: '100%', marginTop: '12px', padding: '12px', border: '1px solid #222', background: '#fff', fontWeight: '600', borderRadius: '4px', cursor: 'pointer' }}
+                >
+                  Liên hệ người bán
                 </button>
               </div>
             )}
