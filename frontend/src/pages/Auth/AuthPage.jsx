@@ -27,8 +27,13 @@ const AuthPage = ({ isLoginDefault = true }) => {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
+    const role = localStorage.getItem('role');
     if (token) {
-      navigate('/', { replace: true });
+      if (role === 'ROLE_ADMIN' || role === 'ADMIN') {
+        navigate('/admin/users', { replace: true });
+      } else {
+        navigate('/', { replace: true });
+      }
     }
   }, [navigate]);
 
@@ -43,6 +48,8 @@ const AuthPage = ({ isLoginDefault = true }) => {
         password: formData.password 
       });
 
+      let userRole = 'ROLE_BUYER';
+
       if (res.data.data?.token) {
         localStorage.setItem('token', res.data.data.token);
         localStorage.setItem('fullname', res.data.data.fullname || '');
@@ -51,7 +58,8 @@ const AuthPage = ({ isLoginDefault = true }) => {
         localStorage.setItem('username', res.data.data.username || '');
         
         if (res.data.data.roles && res.data.data.roles.length > 0) {
-          localStorage.setItem('role', res.data.data.roles[0]);
+          userRole = res.data.data.roles[0];
+          localStorage.setItem('role', userRole);
         } else {
           localStorage.setItem('role', 'ROLE_BUYER');
         }
@@ -60,7 +68,12 @@ const AuthPage = ({ isLoginDefault = true }) => {
       setMessage({ text: "Đăng nhập thành công!", type: 'success' });
 
       setTimeout(() => {
-        navigate('/', { replace: true }); 
+        // 👑 RẼ NHÁNH ĐIỀU HƯỚNG THEO VAI TRÒ (ROLE) ADMIN
+        if (userRole === 'ROLE_ADMIN' || userRole === 'ADMIN') {
+          navigate('/admin/users', { replace: true });
+        } else {
+          navigate('/', { replace: true }); 
+        }
       }, 1000);
 
     } catch (err) {
