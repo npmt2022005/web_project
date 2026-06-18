@@ -14,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.http.HttpMethod;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
@@ -69,16 +70,28 @@ public class SecurityConfig {
                     "/swagger-ui/**",          
                     "/swagger-ui.html",         
                     "/swagger-resources/**",
-                    "/webjars/**"
+                    "/webjars/**",
+                    "/ws/**" // Endpoint WebSocket
                 ).permitAll()
-                // Các API công khai cho khách xem
-                .requestMatchers("/api/v1/gigs/featured", "/api/v1/gigs_v1/**", "/api/v1/categories/**").permitAll()
+                // Các API công khai cho khách xem (chỉ GET requests)
+                .requestMatchers(HttpMethod.GET, "/api/v1/gigs/featured").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/gigs_v1/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/categories/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/gigs/{id}").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/gigs/{id}/similar").permitAll()
+
+                // Các API cho Seller (tạo, cập nhật, xóa gig, upload ảnh)
+                // Admin cũng có thể thực hiện các hành động này nếu cần, nên dùng hasAnyRole
+                .requestMatchers(HttpMethod.POST, "/api/v1/gigs/create_gig").hasAnyRole("SELLER", "ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/v1/gigs/update/**").hasAnyRole("SELLER", "ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/v1/gigs/delete/**").hasAnyRole("SELLER", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/v1/uploads/image").hasAnyRole("SELLER", "ADMIN")
+
+                // Các API liên quan đến Order (yêu cầu xác thực, logic chi tiết trong service)
+                .requestMatchers("/api/v1/orders/**").authenticated()
                 
                 // Các API quản trị
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
-
-                // Endpoint WebSocket
-                .requestMatchers("/ws/**").permitAll()
 
                 // Các API khác yêu cầu phải đăng nhập mới được dùng
                 .anyRequest().authenticated()

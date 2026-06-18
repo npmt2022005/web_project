@@ -166,7 +166,15 @@ const GigDetailPage = () => {
         }
 
       } catch (error) {
-        console.warn("⚠️ Cảnh báo: Không thể kết nối API Backend. Tự động chuyển sang Mock Data mẫu.", error.message);
+        if (error.response) {
+          // Server đã phản hồi nhưng trả về mã lỗi (4xx, 5xx)
+          console.error("❌ API Error:", error.response.status, error.response.data);
+        } else if (error.request) {
+          // Yêu cầu đã gửi nhưng không nhận được phản hồi (Backend chưa bật)
+          console.error("🌐 Network Error: Không thể kết nối tới Server. Hãy kiểm tra Backend Spring Boot.");
+        } else {
+          console.error("⚙️ App Error:", error.message);
+        }
         
         const currentId = MOCK_GIG_DETAILS[id] ? id : "1";
         const targetGig = MOCK_GIG_DETAILS[currentId];
