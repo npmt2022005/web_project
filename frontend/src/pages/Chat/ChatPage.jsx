@@ -59,10 +59,8 @@ const ChatPage = () => {
   let currentUserId = null;
   if (token) {
     try {
-      console.log("👉 Chuỗi Token thô lấy từ localStorage:", token);
       const decoded = jwtDecode(token);
       currentUserId = decoded.userId || decoded.id || decoded.sub;
-      console.log("🟢 Giải mã token thành công! User ID thật:", currentUserId);
     } catch (error) {
       console.error("Token không hợp lệ hoặc đã hết hạn:", error);
     }

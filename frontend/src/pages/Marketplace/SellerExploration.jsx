@@ -5,7 +5,7 @@ import { Search, Filter, User, MapPin, Globe, Star, ArrowRight, ChevronLeft, Che
 
 const SellerExploration = () => {
     const navigate = useNavigate();
-    
+
     // 📦 State lưu danh sách Seller (Gốc từ API hoặc Fallback Mock Data)
     const [sellers, setSellers] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -27,7 +27,7 @@ const SellerExploration = () => {
 
     // Danh sách 20 quốc gia phục vụ bộ lọc (Khớp dữ liệu bảng Profile của bạn)
     const popularCountries = [
-        "Vietnam", "United States", "United Kingdom", "Singapore", "Japan", 
+        "Vietnam", "United States", "United Kingdom", "Singapore", "Japan",
         "South Korea", "Australia", "Canada", "France", "Germany",
         "Thailand", "Malaysia", "Indonesia", "Philippines", "India",
         "China", "Netherlands", "Sweden", "Switzerland", "New Zealand"
@@ -61,16 +61,22 @@ const SellerExploration = () => {
     // 🔍 Hàm lấy danh sách Seller từ Backend API công khai
     const fetchSellerList = async () => {
         setLoading(true);
+        
         try {
-            const response = await fetch('http://localhost:8080/api/public/sellers');
-            if (response.ok) {
-                const data = await response.json();
-                setSellers(data);
+            const response = await fetch('http://localhost:8080/api/v1/sellers');
+            const result = await response.json(); // Đổi tên biến thành result cho rõ ràng
+
+            console.log("👉 Dữ liệu nhận được từ API:", result);
+
+            // Truy cập đúng vào result.data (là mảng 301 phần tử)
+            if (result && Array.isArray(result.data)) {
+                setSellers(result.data);
             } else {
+                console.warn("Cấu trúc API không chứa mảng data, dùng Mock Data.");
                 setSellers(MOCK_SELLERS);
             }
         } catch (error) {
-            console.warn("🚩 Chưa có API Backend danh sách Seller - Chuyển sang dùng dữ liệu mẫu.");
+            console.error("🚩 Lỗi API, chuyển sang dùng Mock Data:", error);
             setSellers(MOCK_SELLERS);
         } finally {
             setLoading(false);
@@ -79,11 +85,11 @@ const SellerExploration = () => {
 
     // ⚙️ Logic xử lý lọc dữ liệu kết hợp đồng thời trên Frontend
     const filteredSellers = sellers.filter(seller => {
-        const matchesSearch = 
+        const matchesSearch =
             seller.fullname?.toLowerCase().includes(searchKeyword.toLowerCase()) ||
             seller.title?.toLowerCase().includes(searchKeyword.toLowerCase()) ||
             seller.skills?.some(skill => skill.toLowerCase().includes(searchKeyword.toLowerCase()));
-            
+
         const matchesCountry = selectedCountry === '' || seller.country === selectedCountry;
 
         return matchesSearch && matchesCountry;
@@ -110,7 +116,7 @@ const SellerExploration = () => {
 
     return (
         <div style={{ maxWidth: '1100px', margin: '40px auto', padding: '0 20px', fontFamily: "'Inter', sans-serif" }}>
-            
+
             {/* TIÊU ĐỀ TRANG KHÁM PHÁ */}
             <div style={{ marginBottom: '30px' }}>
                 <h1 style={{ fontSize: '28px', fontWeight: '700', color: '#222', marginBottom: '8px' }}>Khám phá các Chuyên gia (Sellers)</h1>
@@ -118,16 +124,16 @@ const SellerExploration = () => {
             </div>
 
             {/* THANH BỘ LỌC TÌM KIẾM CHI TIẾT ĐÃ TÍCH HỢP */}
-            <div style={{ 
-                display: 'flex', gap: '15px', backgroundColor: '#fff', padding: '16px', 
+            <div style={{
+                display: 'flex', gap: '15px', backgroundColor: '#fff', padding: '16px',
                 borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', marginBottom: '30px',
                 flexWrap: 'wrap', alignItems: 'center'
             }}>
                 {/* Ô Nhập từ khóa tìm kiếm */}
                 <div style={{ flex: '1', minWidth: '250px', position: 'relative', display: 'flex', alignItems: 'center' }}>
                     <Search size={18} style={{ position: 'absolute', left: '12px', color: '#999' }} />
-                    <input 
-                        type="text" 
+                    <input
+                        type="text"
                         placeholder="Tìm theo tên, chức danh hoặc kỹ năng (Java, React...)..."
                         value={searchKeyword}
                         onChange={(e) => setSearchKeyword(e.target.value)}
@@ -198,7 +204,7 @@ const SellerExploration = () => {
                 <>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
                         {currentSellersInPage.map((seller) => (
-                            <div 
+                            <div
                                 key={seller.id}
                                 style={{
                                     backgroundColor: '#fff', border: '1px solid #eae9e6', borderRadius: '8px',
@@ -209,7 +215,7 @@ const SellerExploration = () => {
                                 {/* Khối thông tin trên */}
                                 <div>
                                     <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '12px' }}>
-                                        <div style={{ 
+                                        <div style={{
                                             width: '48px', height: '48px', borderRadius: '50%', backgroundColor: '#f0f0f0',
                                             display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#555'
                                         }}>
@@ -272,7 +278,7 @@ const SellerExploration = () => {
                             >
                                 <ChevronLeft size={16} />
                             </button>
-                            
+
                             {Array.from({ length: totalPages }, (_, index) => {
                                 const pageNumber = index + 1;
                                 return (

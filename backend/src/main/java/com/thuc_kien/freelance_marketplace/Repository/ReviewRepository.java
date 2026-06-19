@@ -1,5 +1,7 @@
 package com.thuc_kien.freelance_marketplace.Repository;
 
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -23,4 +25,7 @@ public interface ReviewRepository extends JpaRepository<Review, Integer> {
     // Đếm tổng số lượt đánh giá của Dịch vụ (Gig) đó
     @Query("SELECT COUNT(r) FROM Review r JOIN r.order o WHERE o.gig.id = :gigId AND r.rating IS NOT NULL")
     Integer countReviewsByGig(@Param("gigId") Long gigId);
+
+    @Query("SELECT r FROM Review r where r.seller.id= :sellerId")
+    List<Review> findReviewsBySellerId(@Param("sellerId") Long sellerId);
 }

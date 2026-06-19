@@ -40,6 +40,32 @@ const AuthPage = ({ isLoginDefault = true }) => {
   // --- API HANDLERS ---
   const handleLogin = async (e) => {
     e.preventDefault();
+    const identifier = formData.identifier.trim();
+
+    // 🔴 1. KIỂM TRA KHÔNG ĐƯỢC BỎ TRỐNG
+    if (!identifier || !formData.password) {
+      return setMessage({ text: "Vui lòng nhập đầy đủ thông tin đăng nhập!", type: 'error' });
+    }
+
+    // 🔴 2. CHẶN ĐỊNH DẠNG THEO TỪNG TAB (METHOD)
+    if (method === 'email') {
+      // Regex kiểm tra phải là Email hợp lệ (có chữ @ và dấu chấm)
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(identifier)) {
+        return setMessage({ text: "Vui lòng nhập đúng định dạng Email (vd: ten@gmail.com)!", type: 'error' });
+      }
+    } else if (method === 'phone') {
+      // Regex kiểm tra SĐT Việt Nam (bắt đầu bằng 0 hoặc +84, độ dài 10-11 số)
+      const phoneRegex = /^(0|\+84)[3|5|7|8|9][0-9]{8}$/;
+      if (!phoneRegex.test(identifier)) {
+        return setMessage({ text: "Số điện thoại không hợp lệ!", type: 'error' });
+      }
+    } else if (method === 'username') {
+      // Username thì không được phép chứa dấu @ (để tránh nhập nhầm Email)
+      if (identifier.includes('@')) {
+        return setMessage({ text: "Tên đăng nhập (Username) không được chứa ký tự @", type: 'error' });
+      }
+    }
     setMessage({ text: '', type: '' });
     setLoading(true);
     try {

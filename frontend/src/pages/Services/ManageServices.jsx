@@ -40,7 +40,7 @@ const MOCK_GIGS_DATA = [
 
 const ManageServices = () => {
     const navigate = useNavigate();
-    
+
     // Quản lý danh sách dịch vụ (Gigs) từ API backend
     const [gigs, setGigs] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -66,11 +66,11 @@ const ManageServices = () => {
         setIsLoading(true);
         try {
             // SỬA ĐỔI AN TOÀN: Kiểm tra token từ cả 'token' hoặc 'JWT_TOKEN' để tránh bị thiếu thông tin xác thực
-            const token = localStorage.getItem('token') || localStorage.getItem('JWT_TOKEN'); 
-            
+            const token = localStorage.getItem('token') || localStorage.getItem('JWT_TOKEN');
+
             // Backend Spring Boot nhận trang bắt đầu từ 0, nên cần (currentPage - 1)
             const apiPage = currentPage - 1;
-            
+
             // SỬA ĐỔI: Đồng bộ tham số sortDir thành 'DESC' (viết hoa) để tránh lỗi 400 từ bộ lọc JPA Spring
             const response = await fetch(`${BASE_URL}/api/v1/gigs/me?page=${apiPage}&size=${gigsPerPage}&sortBy=createdAt&sortDir=DESC`, {
                 method: 'GET',
@@ -119,14 +119,62 @@ const ManageServices = () => {
     // ==========================================================================
     // HÀM XỬ LÝ THAO TÁC (SỬA, XÓA, XEM, THÊM MỚI)
     // ==========================================================================
-    
+
     const handleViewGigDetail = (gig) => {
         // ĐÃ SỬA: Thay đổi URL điều hướng sang trang chi tiết gig phù hợp với GigDetailPage thay vì OrderDetailPage
         navigate(`/gigs/${gig.id}`, { state: { detailGigData: gig } });
     };
 
-    const handleAddNewService = () => {
-        navigate('/create-gig'); 
+    const handleAddNewService = async () => {
+        console.log("Đã bấm nút!");
+
+        try {
+            const token = localStorage.getItem('token');
+            // Bây giờ 'await' đã hợp lệ vì hàm đã là 'async'
+            const response = await fetch('http://localhost:8080/api/v1/profile/me', {
+                method: 'GET',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const result = await response.json();
+            if (!response.ok || result.status !== 'success') {
+                alert("Bạn chưa cập nhật hồ sơ người bán. Vui lòng cập nhật nhé!");
+                navigate('/profile');
+                return;
+            }
+            try {
+
+                const profile = result.data; // Dữ liệu thật từ Server
+                let missingFields = [];
+
+                // Kiểm tra các trường trong basicInfo
+                const info = profile.basicInfo || {};
+                if (!info.phone || info.phone.trim() === "") missingFields.push("Số điện thoại");
+                if (!info.city || info.city.trim() === "") missingFields.push("Thành phố");
+                if (!info.description || info.description.trim() === "") missingFields.push("Giới thiệu bản thân");
+
+                // Kiểm tra mảng education và experience (Lưu ý: trong JSON của bạn là 'education' và 'experience', không có 's' ở cuối)
+                if (!profile.education || profile.education.length === 0) missingFields.push("Học vấn");
+                if (!profile.experience || profile.experience.length === 0) missingFields.push("Kinh nghiệm làm việc");
+
+                if (missingFields.length > 0 && missingFields.length < 2) {
+                    const message = "⚠️ Bạn chưa thể tạo dịch vụ vì thiếu các thông tin sau:\n- " + missingFields.join("\n- ");
+                    alert(message);
+                    navigate('/profile');
+                } else {
+                    navigate('/create-gig');
+                }
+            } catch (e) {
+                console.error("Lỗi parse dữ liệu profile:", e);
+                alert("Dữ liệu hồ sơ bị lỗi, vui lòng kiểm tra lại.");
+            }
+        } catch (error) {
+            console.error("Lỗi:", error);
+        }
+
+
+
+
+
     };
 
     const handleEditGig = (gig) => {
@@ -134,7 +182,6 @@ const ManageServices = () => {
         navigate('/create-gig', { state: { editGigData: gig } });
     };
 
-    // Bước 1: Kích hoạt hiển thị modal tùy chỉnh và lưu lại Long ID
     const handleDeleteGig = (gigId) => {
         setDeleteModal({
             isOpen: true,
@@ -147,7 +194,7 @@ const ManageServices = () => {
         const gigId = deleteModal.gigId;
         try {
             const token = localStorage.getItem('token') || localStorage.getItem('JWT_TOKEN');
-            
+
             // ĐÃ THAY ĐỔI: Gọi chính xác API Contract DELETE bằng cách nối chuỗi BASE_URL
             const response = await fetch(`${BASE_URL}/api/v1/gigs/delete_gig/${gigId}`, {
                 method: 'DELETE',
@@ -164,7 +211,7 @@ const ManageServices = () => {
                 if (result.status === 'success') {
                     // Đóng modal và tiến hành tải lại danh sách mới từ server để cập nhật UI mượt mà
                     setDeleteModal({ isOpen: false, gigId: null });
-                    
+
                     // Kiểm tra xem trang hiện tại có phải trang cuối cùng và chỉ còn 1 phần tử hay không
                     if (gigs.length === 1 && currentPage > 1) {
                         setCurrentPage(prev => prev - 1);
@@ -174,7 +221,7 @@ const ManageServices = () => {
                     return;
                 }
             }
-            
+
             // Hỗ trợ xóa giả lập trên giao diện UI nếu đang test với Mock Data nhằm tránh nghẽn mạch ứng dụng
             if (isMockData) {
                 console.log(`[Mock Mode] Đang xóa giả lập phần tử Mock có ID: ${gigId}`);
@@ -187,10 +234,10 @@ const ManageServices = () => {
             const errorResult = await response.json().catch(() => ({}));
             alert(errorResult.message || "Xóa dịch vụ thất bại. Vui lòng kiểm tra lại quyền sở hữu!");
             setDeleteModal({ isOpen: false, gigId: null });
-            
+
         } catch (error) {
             console.error("Lỗi khi kết nối API xóa dịch vụ:", error);
-            
+
             // Hỗ trợ xử lý xóa trực tiếp trên State của Mock Data trong môi trường offline/lỗi mạng
             const isMockData = MOCK_GIGS_DATA.some(mock => mock.id === gigId);
             if (isMockData) {
@@ -235,18 +282,18 @@ const ManageServices = () => {
                                     {gigs.map((gig) => (
                                         <tr key={gig.id}>
                                             <td>
-                                                <div 
-                                                    className="service-info-cell" 
+                                                <div
+                                                    className="service-info-cell"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         handleViewGigDetail(gig);
                                                     }}
                                                     style={{ cursor: 'pointer' }}
                                                 >
-                                                    <img 
-                                                        src={gig.thumbnailUrl || 'https://images.pexels.com/photos/3182773/pexels-photo-3182773.jpeg'} 
-                                                        alt={gig.title} 
-                                                        className="service-thumb-img" 
+                                                    <img
+                                                        src={gig.thumbnailUrl || 'https://images.pexels.com/photos/3182773/pexels-photo-3182773.jpeg'}
+                                                        alt={gig.title}
+                                                        className="service-thumb-img"
                                                     />
                                                     <div className="service-details-text">
                                                         <h4 className="service-title-link" style={{ margin: '0 0 4px 0', color: '#1dbf73' }}>
@@ -258,34 +305,34 @@ const ManageServices = () => {
                                                     </div>
                                                 </div>
                                             </td>
-                                            
+
                                             <td>
                                                 <span className="category-text-badge" style={{ background: '#f4f4f4', color: '#333', fontWeight: 600 }}>
                                                     {gig.categoryName}
                                                 </span>
                                             </td>
-                                            
+
                                             <td>
                                                 <span className="cost-text-bold" style={{ color: '#222' }}>
-                                                    ${gig.startingPrice ? gig.startingPrice.toFixed(2) : '0.00'} 
+                                                    ${gig.startingPrice ? gig.startingPrice.toFixed(2) : '0.00'}
                                                     <span style={{ fontSize: '12px', color: '#74767e', fontWeight: 400 }}>
                                                         / Khởi điểm
                                                     </span>
                                                 </span>
                                             </td>
-                                            
+
                                             <td style={{ textAlign: 'center' }}>
                                                 <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', alignItems: 'center' }}>
-                                                    <button 
+                                                    <button
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             handleEditGig(gig);
                                                         }}
                                                         title="Chỉnh sửa nội dung dịch vụ này"
-                                                        style={{ 
-                                                            padding: '6px 10px', 
-                                                            display: 'inline-flex', 
-                                                            alignItems: 'center', 
+                                                        style={{
+                                                            padding: '6px 10px',
+                                                            display: 'inline-flex',
+                                                            alignItems: 'center',
                                                             gap: '4px',
                                                             borderRadius: '4px',
                                                             backgroundColor: '#e8f5e9',
@@ -299,16 +346,16 @@ const ManageServices = () => {
                                                         <Edit3 size={14} /> Sửa
                                                     </button>
 
-                                                    <button 
+                                                    <button
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             handleDeleteGig(gig.id);
                                                         }}
                                                         title="Xóa vĩnh viễn dịch vụ này"
-                                                        style={{ 
-                                                            padding: '6px 10px', 
-                                                            display: 'inline-flex', 
-                                                            alignItems: 'center', 
+                                                        style={{
+                                                            padding: '6px 10px',
+                                                            display: 'inline-flex',
+                                                            alignItems: 'center',
                                                             gap: '4px',
                                                             borderRadius: '4px',
                                                             backgroundColor: '#ffebee',
@@ -380,10 +427,10 @@ const ManageServices = () => {
                             Xác nhận xóa dịch vụ
                         </h3>
                         <p style={{ margin: '0 0 24px 0', color: '#62646a', fontSize: '14px', lineHeight: '1.5' }}>
-                            Bạn có chắc chắn muốn xóa vĩnh viễn dịch vụ có ID hệ thống <strong style={{color: '#c62828'}}>#{deleteModal.gigId}</strong> không? Thao tác này không thể hoàn tác.
+                            Bạn có chắc chắn muốn xóa vĩnh viễn dịch vụ có ID hệ thống <strong style={{ color: '#c62828' }}>#{deleteModal.gigId}</strong> không? Thao tác này không thể hoàn tác.
                         </p>
                         <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-                            <button 
+                            <button
                                 onClick={() => setDeleteModal({ isOpen: false, gigId: null })}
                                 style={{
                                     padding: '10px 20px', borderRadius: '4px', border: '1px solid #e0e0e0',
@@ -393,7 +440,7 @@ const ManageServices = () => {
                             >
                                 Hủy bỏ
                             </button>
-                            <button 
+                            <button
                                 onClick={confirmDeleteGig}
                                 style={{
                                     padding: '10px 20px', borderRadius: '4px', border: 'none',

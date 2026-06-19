@@ -7,8 +7,6 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import com.thuc_kien.freelance_marketplace.Entity.*;
 import lombok.*;
 
 @Entity
@@ -54,11 +52,11 @@ public class Gig {
     private Double ratingAvg ;
     private Integer totalReviews = 0;
     private Boolean isPaused = false;
-
-    
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name="saleCount")
+    private Long salesCount = 0L; 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 

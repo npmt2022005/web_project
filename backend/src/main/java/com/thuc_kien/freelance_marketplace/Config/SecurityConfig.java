@@ -79,6 +79,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/v1/categories/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/gigs/{id}").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/gigs/{id}/similar").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/sellers/{id}").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/sellers/**").permitAll()
 
                 // Các API cho Seller (tạo, cập nhật, xóa gig, upload ảnh)
                 // Admin cũng có thể thực hiện các hành động này nếu cần, nên dùng hasAnyRole
@@ -86,6 +88,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.PUT, "/api/v1/gigs/update/**").hasAnyRole("SELLER", "ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/v1/gigs/delete/**").hasAnyRole("SELLER", "ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/v1/uploads/image").hasAnyRole("SELLER", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/v1/gigs/features/**").hasAnyRole("SELLER", "ADMIN")
 
                 // Các API liên quan đến Order (yêu cầu xác thực, logic chi tiết trong service)
                 .requestMatchers("/api/v1/orders/**").authenticated()

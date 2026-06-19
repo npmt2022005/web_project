@@ -24,7 +24,6 @@ public class GigDetailResponseDTO {
     private List<PackageDTO> packages; 
 
     private MediaDTO media;
-    // --- CÁC CLASS CON TRỰC THUỘC ---
 
     @Data
     @Builder
@@ -41,15 +40,14 @@ public class GigDetailResponseDTO {
     public static class GigStatsDTO {
         private Double rating;
         private Integer reviewCount;
-        private Integer salesCount;
-        private Integer viewsCount;
+        private Long  salesCount;
     }
 
     @Data
     @Builder
     public static class PackageDTO {
         private Long id;
-        private String type; // BASIC, STANDARD, PREMIUM
+        private String type; 
         private BigDecimal price;
         private String shortDescription;
         private Integer deliveryDays;

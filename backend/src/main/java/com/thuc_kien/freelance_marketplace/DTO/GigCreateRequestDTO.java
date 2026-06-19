@@ -2,7 +2,7 @@ package com.thuc_kien.freelance_marketplace.DTO;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,24 +23,26 @@ public class GigCreateRequestDTO {
     private String thumbnailUrl;
     private List<String> galleryUrls;
 
-    private List<PackageRequestDTO> packages;
-    private List<GigRequirementDTO> requirements;
+    private Set<PackageRequestDTO> packages;
+    private Set<GigRequirementDTO> requirements;
 
     @Data
     public static class PackageRequestDTO {
+        private Long id; // Bổ sung ID để định danh khi cập nhật
         private String type; 
         private BigDecimal price;
         private String shortDescription;
         private Integer deliveryDays;
         private Integer revisions;
         
-        private Map<String, Boolean> features; 
+        private java.util.Map<String, Boolean> features; 
         
     }
     @Data
     public static class GigRequirementDTO {
+        private Long id; 
         private String question;
-        private String answerType; // VD: "TEXT" hoặc "ATTACHMENT"
-        private Boolean isMandatory; // Bắt buộc hay không
+        private String answerType; 
+        private Boolean isMandatory; 
     }
 }

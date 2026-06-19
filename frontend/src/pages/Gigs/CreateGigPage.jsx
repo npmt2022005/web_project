@@ -2,14 +2,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom'; // Thêm useLocation để nhận state dữ liệu từ ManageServices
 import { Plus, Trash, Save, Image, Folder, DollarSign, FileText, Upload, Loader2 } from 'lucide-react';
-import './CreateGigPage.css'; 
+import './CreateGigPage.css';
 
 const CreateGigPage = () => {
   const navigate = useNavigate();
   const location = useLocation(); // Khởi tạo hook để bóc tách editGigData
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  
+  const [isPopulating, setIsPopulating] = useState(false);
   // State nhận diện xem đây là chế độ SỬA dịch vụ hay TẠO MỚI dịch vụ
   const isEditMode = !!location.state?.editGigData;
   const editGigId = location.state?.editGigData?.id || null;
@@ -23,6 +23,9 @@ const CreateGigPage = () => {
 
   // State lưu danh sách tất cả các Tags hệ thống (Hiện tại đang dùng Mock Data)
   const [availableTags, setAvailableTags] = useState([]);
+
+  // State mới: Lưu danh sách các tính năng (features) có thể có cho các gói
+  const [availableFeatures, setAvailableFeatures] = useState([]);
 
   // === STATE TỔNG QUAN (OVERVIEW), MÔ TẢ & HÌNH ẢNH ===
   const [generalInfo, setGeneralInfo] = useState({
@@ -46,7 +49,7 @@ const CreateGigPage = () => {
       deliveryDays: 3,
       revisions: 1,
       price: 50,
-      features: { "Source Code": true, "Commercial Use": false }
+      features: {}
     },
     {
       type: 'STANDARD',
@@ -54,7 +57,7 @@ const CreateGigPage = () => {
       deliveryDays: 5,
       revisions: 3,
       price: 100,
-      features: { "Source Code": true, "Commercial Use": true }
+      features: {}
     },
     {
       type: 'PREMIUM',
@@ -62,7 +65,7 @@ const CreateGigPage = () => {
       deliveryDays: 7,
       revisions: -1, // -1 đại diện cho Unlimited Revisions theo mẫu thiết kế
       price: 150,
-      features: { "Source Code": true, "Commercial Use": true }
+      features: {}
     }
   ]);
 
@@ -70,7 +73,32 @@ const CreateGigPage = () => {
   const [requirements, setRequirements] = useState([
     { question: '', answerType: 'TEXT', isMandatory: true }
   ]);
-
+  const fetchAvailableFeatures = async (catId) => {
+    try {
+      // Trong tương lai, bạn có thể truyền categoryId vào đây
+      const response = await fetch(`http://localhost:8080/api/v1/gigs/features?categoryId=${catId}`);
+      const result = await response.json();
+      if (result.status === 'success' && Array.isArray(result.data)) {
+        const newFeatures = result.data;
+        setAvailableFeatures(result.data);
+        // Đồng thời, khởi tạo các features cho package với giá trị mặc định là false
+        // 2. Cập nhật mảng packages để đồng bộ cấu trúc mới
+        setPackages(prev => prev.map(pkg => ({
+          ...pkg,
+          features: newFeatures.reduce((acc, featureName) => {
+            // Giữ lại giá trị cũ nếu đã có, nếu chưa có thì mặc định là false
+            acc[featureName] = pkg.features && pkg.features.hasOwnProperty(featureName)
+              ? pkg.features[featureName]
+              : false;
+            return acc;
+          }, {})
+        })));
+      }
+    } catch (err) {
+      console.error("Lỗi lấy danh sách features:", err);
+      setAvailableFeatures(["Source Code", "Commercial Use", "24/7 Support"]); // Fallback data
+    }
+  };
   // ==========================================================================
   // EFFECT: KIỂM TRA PHÂN QUYỀN TRUY CẬP & TÍNH ĐẦY ĐỦ CỦA HỒ SƠ SELLER (ĐÃ SỬA LỖI CHẶN)
   // ==========================================================================
@@ -79,53 +107,55 @@ const CreateGigPage = () => {
     const storedRole = localStorage.getItem('role');
     if (!storedRole || (storedRole.toUpperCase() !== 'ROLE_SELLER' && storedRole.toLowerCase() !== 'seller')) {
       alert("Bạn không có quyền truy cập vào chức năng này. Vui lòng đăng nhập với tài khoản Seller!");
-      navigate('/'); 
+      navigate('/');
       return;
     }
 
     // 2. Chỉ thực hiện chặn điền thông tin khi ở chế độ "TẠO MỚI" dịch vụ (Tránh chặn khi đang sửa bài cũ)
     if (!isEditMode) {
       const rawProfile = localStorage.getItem('mockProfileData') || localStorage.getItem('profileData');
+      console.log("Dữ liệu lấy từ localStorage:", rawProfile);
       let isProfileComplete = false;
       let missingFields = [];
 
-      if (rawProfile) {
-        try {
-          const profile = JSON.parse(rawProfile);
-          
-          // Kiểm tra thông tin cơ bản bắt buộc chu đáo
-          if (!profile.phone || String(profile.phone).trim() === '') missingFields.push("Số điện thoại");
-          if (!profile.tagline || String(profile.tagline).trim() === '') missingFields.push("Tagline công việc");
-          if (!profile.city || String(profile.city).trim() === '') missingFields.push("Thành phố");
-          if (!profile.description || String(profile.description).trim() === '') missingFields.push("Giới thiệu bản thân (Introduce Yourself)");
+      // if (rawProfile) {
+      //   try {
+      //     const profile = JSON.parse(rawProfile);
 
-          // SỬA ĐỔI: Sử dụng Optional Chaining nhằm tránh lỗi đọc thuộc tính undefined
-          const profileSkills = profile?.skills;
-          const profileEducation = profile?.education;
-          const profileExperience = profile?.experience;
+      //     // Kiểm tra thông tin cơ bản bắt buộc chu đáo
+      //     if (!profile.phone || String(profile.phone).trim() === '') missingFields.push("Số điện thoại");
+      //     if (!profile.city || String(profile.city).trim() === '') missingFields.push("Thành phố");
+      //     if (!profile.description || String(profile.description).trim() === '') missingFields.push("Giới thiệu bản thân (Introduce Yourself)");
+      //     if (!profile.bio || profile.bio.trim() === '') missingFields.push("Mô tả bản thân (Bio)");
+      //     // SỬA ĐỔI: Sử dụng Optional Chaining nhằm tránh lỗi đọc thuộc tính undefined
+      //     const profileSkills = profile?.skills;
+      //     const profileEducation = profile?.education;
+      //     const profileExperience = profile?.experience;
 
-          // SỬA ĐỔI: Nới lỏng điều kiện kiểm tra mảng. Chỉ chặn khi mảng được định nghĩa cụ thể nhưng rỗng [].
-          if (Array.isArray(profileSkills) && profileSkills.length === 0) missingFields.push("Kỹ năng (Cần ít nhất 1 Kỹ năng)");
-          if (Array.isArray(profileEducation) && profileEducation.length === 0) missingFields.push("Học vấn (Cần ít nhất 1 Học vấn)");
-          if (Array.isArray(profileExperience) && profileExperience.length === 0) missingFields.push("Kinh nghiệm làm việc (Cần ít nhất 1 Kinh nghiệm)");
+      //     // SỬA ĐỔI: Nới lỏng điều kiện kiểm tra mảng. Chỉ chặn khi mảng được định nghĩa cụ thể nhưng rỗng [].
+      //     if (Array.isArray(profileSkills) && profileSkills.length === 0) missingFields.push("Kỹ năng (Cần ít nhất 1 Kỹ năng)");
+      //     if (Array.isArray(profileEducation) && profileEducation.length === 0) missingFields.push("Học vấn (Cần ít nhất 1 Học vấn)");
+      //     if (Array.isArray(profileExperience) && profileExperience.length === 0) missingFields.push("Kinh nghiệm làm việc (Cần ít nhất 1 Kinh nghiệm)");
 
-          if (missingFields.length === 0) {
-            isProfileComplete = true;
-          }
-        } catch (e) {
-          // Nếu có lỗi parse JSON, cho phép qua nếu thông tin phân quyền hợp lệ hoặc tạm thời gán false để bảo vệ luồng dữ liệu
-          isProfileComplete = true; 
-        }
-      } else {
-        // Nếu không có cả 2 key lưu trữ trong localStorage, tạm thời bỏ qua bước check nghiêm ngặt này để tránh lỗi chặn nhầm do API
-        isProfileComplete = true;
-      }
+      //     if (missingFields.length === 0) {
+      //       isProfileComplete = true;
+      //     }
+      //   } catch (e) {
+      //     // Nếu có lỗi parse JSON, cho phép qua nếu thông tin phân quyền hợp lệ hoặc tạm thời gán false để bảo vệ luồng dữ liệu
+      //     console.error("Lỗi parse Profile dữ liệu", e);
+      //     isProfileComplete = true; 
+      //   }
+      // } else {
+      //   // Nếu không có cả 2 key lưu trữ trong localStorage, tạm thời bỏ qua bước check nghiêm ngặt này để tránh lỗi chặn nhầm do API
+      //   missingFields.push("Toàn bộ hồ sơ chưa được cập nhật");
+      //   isProfileComplete = true;
+      // }
 
-      // Nếu thực sự thiếu thông tin năng lực cốt lõi thì mới cảnh báo và điều hướng
-      if (!isProfileComplete && missingFields.length > 0) {
-        alert(`⚠️ Hồ sơ của bạn thiếu các thông tin bắt buộc để đảm bảo uy tín và năng lực làm việc:\n- ${missingFields.join('\n- ')}\n\nVui lòng hoàn thiện đầy đủ hồ sơ trước khi đăng tải sản phẩm/dịch vụ (Gig) mới!`);
-        navigate('/profile'); 
-      }
+      // // Nếu thực sự thiếu thông tin năng lực cốt lõi thì mới cảnh báo và điều hướng
+      // if (!isProfileComplete && missingFields.length > 0) {
+      //   alert(`⚠️ Hồ sơ của bạn thiếu các thông tin bắt buộc để đảm bảo uy tín và năng lực làm việc:\n- ${missingFields.join('\n- ')}\n\nVui lòng hoàn thiện đầy đủ hồ sơ trước khi đăng tải sản phẩm/dịch vụ (Gig) mới!`);
+      //   navigate('/profile'); 
+      // }
     }
   }, [navigate, isEditMode]);
 
@@ -146,14 +176,18 @@ const CreateGigPage = () => {
       } catch (err) {
         console.error("Lỗi lấy danh mục danh mục từ hệ thống:", err);
         setBackendCategories([
-          { id: 1, name: "Lập trình & Công nghệ", subCategories: [
-            { id: 5, name: "Spring Boot & React" },
-            { id: 6, name: "Phát triển Website" }
-          ]},
-          { id: 2, name: "Thiết kế & Đồ họa", subCategories: [
-            { id: 7, name: "Thiết kế Logo" },
-            { id: 8, name: "UI/UX Mobile" }
-          ]}
+          {
+            id: 1, name: "Lập trình & Công nghệ", subCategories: [
+              { id: 5, name: "Spring Boot & React" },
+              { id: 6, name: "Phát triển Website" }
+            ]
+          },
+          {
+            id: 2, name: "Thiết kế & Đồ họa", subCategories: [
+              { id: 7, name: "Thiết kế Logo" },
+              { id: 8, name: "UI/UX Mobile" }
+            ]
+          }
         ]);
       }
     };
@@ -171,16 +205,29 @@ const CreateGigPage = () => {
       ]);
     };
 
+    // Hàm gọi API lấy danh sách các features mặc định
+
+
     fetchCategories();
     fetchTags();
   }, []);
-
+  useEffect(() => {
+    // Chỉ gọi API nếu categoryId tồn tại và không phải là chuỗi rỗng
+    if (generalInfo.categoryId && generalInfo.categoryId !== '') {
+      console.log("👉 Đang tải features cho danh mục:", generalInfo.categoryId);
+      fetchAvailableFeatures(generalInfo.categoryId);
+    }
+  }, [generalInfo.categoryId]);
   // ==========================================================================
   // EFFECT TÍCH HỢP: ĐIỀN NGƯỢC DỮ LIỆU TỪ BACKEND KHI ẤN SỬA (ĐÃ SỬA LỖI ĐỔ FORM)
   // ==========================================================================
   useEffect(() => {
-    if (location.state?.editGigData && backendCategories.length > 0) {
-      const targetGig = location.state.editGigData;
+    // Hàm để điền dữ liệu vào form
+    const populateFormWithData = (gigData) => {
+      setIsPopulating(true);
+      if (!gigData || backendCategories.length === 0) return;
+
+      const targetGig = gigData;
 
       // Xử lý loại bỏ tiền tố "I will " hoặc "Tôi sẽ " nếu có ở tiêu đề
       let cleanTitle = targetGig.title || '';
@@ -189,19 +236,19 @@ const CreateGigPage = () => {
       // Tìm kiếm danh mục dựa vào categoryId hoặc tên category được truyền qua
       let finalCategoryId = targetGig.categoryId ? targetGig.categoryId.toString() : '';
       let matchedParentId = '';
-      
+
       for (const parent of backendCategories) {
         const subList = parent.subCategories || parent.children || [];
-        const isMatched = subList.some(sub => 
-          sub.id.toString() === finalCategoryId || 
-          sub.name === targetGig.categoryName || 
+        const isMatched = subList.some(sub =>
+          sub.id.toString() === finalCategoryId ||
+          sub.name === targetGig.categoryName ||
           sub.name === targetGig.category
         );
 
         if (isMatched) {
-          const foundSub = subList.find(sub => 
-            sub.id.toString() === finalCategoryId || 
-            sub.name === targetGig.categoryName || 
+          const foundSub = subList.find(sub =>
+            sub.id.toString() === finalCategoryId ||
+            sub.name === targetGig.categoryName ||
             sub.name === targetGig.category
           );
           matchedParentId = parent.id.toString();
@@ -212,11 +259,15 @@ const CreateGigPage = () => {
       }
 
       setSelectedParentId(matchedParentId);
-      
+
       // ĐÃ SỬA: Lấy mô tả chi tiết chuẩn xác từ DB mà không bị bộ lọc regex chặn làm mất chữ
       let rawDescription = targetGig.description || '';
       rawDescription = rawDescription.replace(/<\/p>/g, '\n').replace(/<\/?p>/g, '').trim();
-
+      console.log("👉 [DEBUG POPULATE] Dữ liệu vừa đổ vào generalInfo:", {
+        title: cleanTitle,
+        categoryId: finalCategoryId,
+        description: rawDescription
+      });
       setGeneralInfo({
         title: cleanTitle,
         categoryId: finalCategoryId,
@@ -230,13 +281,14 @@ const CreateGigPage = () => {
           return (order[a.type] || 9) - (order[b.type] || 9);
         });
 
+        // Set packages trước mà không dùng availableFeatures (sẽ được cập nhật sau)
         setPackages(sortedPackages.map(pkg => ({
           type: pkg.type || 'BASIC',
           shortDescription: pkg.shortDescription || pkg.description || '',
           deliveryDays: pkg.deliveryDays || 3,
           revisions: pkg.revisions ?? 1,
           price: pkg.price || 0,
-          features: pkg.features || { "Source Code": true, "Commercial Use": false }
+          features: pkg.features || {}
         })));
       }
 
@@ -275,28 +327,87 @@ const CreateGigPage = () => {
           }
         ]);
       }
+      setIsPopulating(false); // Tắt
+    };
+
+    // Logic chính: Ưu tiên lấy dữ liệu mới nhất từ API nếu ở chế độ sửa
+    if (isEditMode && editGigId) {
+      const fetchGigDetailsForEdit = async () => {
+        try {
+          setLoading(true);
+          const response = await fetch(`http://localhost:8080/api/v1/gigs/${editGigId}`);
+          const result = await response.json();
+          if (response.ok && result.status === 'success') {
+            // Gọi hàm điền form với dữ liệu mới nhất từ API
+            populateFormWithData(result.data);
+          } else {
+            // Nếu API lỗi, fallback về dữ liệu từ location.state (nếu có)
+            console.warn("Không thể fetch chi tiết Gig, fallback về location.state");
+            populateFormWithData(location.state?.editGigData);
+          }
+        } catch (error) {
+          console.error("Lỗi fetch chi tiết Gig:", error);
+          populateFormWithData(location.state?.editGigData);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchGigDetailsForEdit();
+    } else if (location.state?.editGigData) {
+      // Trường hợp cũ, vẫn giữ để tương thích
+      populateFormWithData(location.state.editGigData);
     }
-  }, [location.state, backendCategories]);
+
+  }, [isEditMode, editGigId, location.state, backendCategories]);
+
+  // EFFECT MỚI: Đồng bộ availableFeatures vào packages sau khi form được populate
+  // Điều này tránh được vòng lặp dependency mà vẫn giữ các feature được cập nhật đúng cách
+  useEffect(() => {
+    if (!isPopulating && generalInfo.categoryId && availableFeatures.length > 0) {
+      setPackages(prev => prev.map(pkg => ({
+        ...pkg,
+        features: availableFeatures.reduce((acc, featureName) => {
+          // Giữ lại giá trị cũ nếu đã có, nếu chưa có thì mặc định là false
+          acc[featureName] = pkg.features && pkg.features.hasOwnProperty(featureName)
+            ? pkg.features[featureName]
+            : false;
+          return acc;
+        }, {})
+      })));
+    }
+  }, [availableFeatures, isPopulating]);
 
   // Xử lý khi thay đổi Category cha
   const handleParentCategoryChange = (e) => {
     const parentId = e.target.value;
-    setSelectedParentId(parentId);
-    
-    const selectedCategory = backendCategories.find(cat => cat.id === parseInt(parentId));
-    if (selectedCategory && (selectedCategory.subCategories || selectedCategory.children)) {
-      setSubCategories(selectedCategory.subCategories || selectedCategory.children || []);
-    } else {
-      setSubCategories([]);
+    // Ghi lại Stack Trace để biết ai là người gọi hàm này
+    console.group("👉 DEBUG: handleParentCategoryChange");
+    console.log("Parent ID:", parentId);
+    console.trace("Lịch sử gọi hàm (Stack Trace):");
+    console.groupEnd();
+
+    if (parentId !== selectedParentId) {
+      setSelectedParentId(parentId);
+      const selectedCategory = backendCategories.find(cat => cat.id === parseInt(parentId));
+      if (selectedCategory && (selectedCategory.subCategories || selectedCategory.children)) {
+        setSubCategories(selectedCategory.subCategories || selectedCategory.children || []);
+      } else {
+        setSubCategories([]);
+      }
+
+      if (!isPopulating) {
+        setGeneralInfo(prev => ({ ...prev, categoryId: '' }));
+      } else {
+      }
     }
-    
-    setGeneralInfo(prev => ({ ...prev, categoryId: '' }));
   };
 
   // Xử lý thay đổi Input thông tin chung
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setGeneralInfo(prev => ({ ...prev, [name]: value }));
+    if (name === 'categoryId') {
+    }
   };
 
   // Xử lý kỹ năng (Tags) chọn từ danh sách dropdown
@@ -330,7 +441,7 @@ const CreateGigPage = () => {
         remoteUrl: '',
         isUploading: true
       };
-      
+
       setUploadedImages(prev => [...prev, temporaryItem]);
 
       const formData = new FormData();
@@ -342,17 +453,17 @@ const CreateGigPage = () => {
           headers: {
             'Authorization': token ? `Bearer ${token}` : ''
           },
-          body: formData 
+          body: formData
         });
 
         if (!response.ok) throw new Error('Upload ảnh thất bại từ Server');
-        
+
         const result = await response.json();
-        
+
         if (result.status === "success" && result.data) {
-          setUploadedImages(prev => 
-            prev.map(img => img.id === localId 
-              ? { ...img, remoteUrl: result.data, isUploading: false } 
+          setUploadedImages(prev =>
+            prev.map(img => img.id === localId
+              ? { ...img, remoteUrl: result.data, isUploading: false }
               : img
             )
           );
@@ -375,7 +486,7 @@ const CreateGigPage = () => {
   const handlePackageChange = (packageIdx, field, value) => {
     setPackages(prevPackages => {
       const updated = [...prevPackages];
-      
+
       let finalValue = value;
       if (field === 'price') {
         finalValue = value === '' ? '' : (parseFloat(value) || 0);
@@ -393,7 +504,7 @@ const CreateGigPage = () => {
     setPackages(prevPackages => {
       const updated = [...prevPackages];
       if (updated[0]) {
-        updated[0].price = numericValue; 
+        updated[0].price = numericValue;
       }
       return updated;
     });
@@ -448,6 +559,12 @@ const CreateGigPage = () => {
       setError('Vui lòng viết mô tả chi tiết nội dung dịch vụ của bạn.');
       return;
     }
+    const readyUrls = uploadedImages.filter(img => !img.isUploading && img.remoteUrl).map(img => img.remoteUrl);
+    if (readyUrls.length === 0) {
+      setError('Vui lòng tải lên ít nhất 1 hình ảnh đại diện cho dịch vụ của bạn!');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
 
     const validRequirements = requirements
       .filter(req => req.question.trim() !== '')
@@ -457,15 +574,14 @@ const CreateGigPage = () => {
         isMandatory: req.isMandatory
       }));
 
-    const readyUrls = uploadedImages.filter(img => !img.isUploading && img.remoteUrl).map(img => img.remoteUrl);
     const thumbnailUrl = readyUrls.length > 0 ? readyUrls[0] : "https://res.cloudinary.com/your-project/image/upload/v12345/gig-thumb.jpg";
     const galleryUrls = readyUrls.length > 0 ? readyUrls : [thumbnailUrl];
-
+    console.log("👉 Giá trị categoryId đang gửi lên:", generalInfo.categoryId);
     const finalPayload = {
       title: `I will ${generalInfo.title.replace(/^I will\s+/i, '')}`,
       categoryId: parseInt(generalInfo.categoryId),
       tags: skills.length > 0 ? skills : ["Web Development"],
-      description: generalInfo.description, 
+      description: generalInfo.description,
       thumbnailUrl: thumbnailUrl,
       galleryUrls: galleryUrls,
       packages: packages.map(pkg => ({
@@ -476,15 +592,15 @@ const CreateGigPage = () => {
         revisions: parseInt(pkg.revisions),
         features: pkg.features
       })),
-      requirements: validRequirements 
+      requirements: validRequirements
     };
 
     const token = localStorage.getItem('token') || localStorage.getItem('JWT_TOKEN');
 
-    const apiUrl = isEditMode 
-      ? `http://localhost:8080/api/v1/gigs/update/${editGigId}` 
+    const apiUrl = isEditMode
+      ? `http://localhost:8080/api/v1/gigs/update/${editGigId}`
       : 'http://localhost:8080/api/v1/gigs/create_gig';
-    
+
     const apiMethod = isEditMode ? 'PUT' : 'POST';
 
     try {
@@ -499,9 +615,9 @@ const CreateGigPage = () => {
       });
 
       if (!response.ok) throw new Error(isEditMode ? 'Yêu cầu cập nhật dịch vụ không thành công' : 'Yêu cầu tạo bài đăng dịch vụ không thành công');
-      
+
       const result = await response.json();
-      
+
       if (result.status === "success") {
         alert(isEditMode ? "Cập nhật thông tin dịch vụ thành công!" : "Đăng dịch vụ mới thành công!");
         navigate('/manage-services');
@@ -522,9 +638,9 @@ const CreateGigPage = () => {
         <div className="header-left">
           <h2>{isEditMode ? 'Chỉnh Sửa Dịch Vụ' : 'Thêm Dịch Vụ Mới'}</h2>
         </div>
-        <button 
-          type="button" 
-          onClick={handleSubmit} 
+        <button
+          type="button"
+          onClick={handleSubmit}
           className="btn-save-publish-top"
           disabled={loading}
         >
@@ -535,20 +651,20 @@ const CreateGigPage = () => {
       {error && <div className="create-error-message fixed-error" style={{ color: 'red', padding: '10px', backgroundColor: '#fff0f0', marginBottom: '15px', borderRadius: '4px' }}>{error}</div>}
 
       <div className="create-gig-form-layout single-column-flow">
-        
+
         {/* KHỐI 1: THÔNG TIN CƠ BẢN */}
         <div className="form-section-card visual-card">
           <div className="section-title-line">
             <h4>Thông Tin Cơ Bản</h4>
           </div>
-          
+
           <div className="form-row-grid two-columns">
             <div className="form-group">
               <label>Tiêu Đề Dịch Vụ *</label>
               <div className="prefix-input-container standard-input-ui">
                 <span className="title-prefix-fix">tôi sẽ</span>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   name="title"
                   value={generalInfo.title}
                   onChange={handleInputChange}
@@ -563,8 +679,8 @@ const CreateGigPage = () => {
               <label>Giá Khởi Điểm (Gói Cơ Bản) *</label>
               <div className="prefix-input-container standard-input-ui">
                 <span className="title-prefix-fix">$</span>
-                <input 
-                  type="number" 
+                <input
+                  type="number"
                   name="startingPrice"
                   value={packages[0]?.price === '' ? '' : (packages[0]?.price ?? '')}
                   onChange={(e) => handleStartingPriceChange(e.target.value)}
@@ -579,8 +695,8 @@ const CreateGigPage = () => {
           <div className="form-row-grid two-columns" style={{ marginTop: '15px' }}>
             <div className="form-group">
               <label>Danh Mục Chính *</label>
-              <select 
-                value={selectedParentId} 
+              <select
+                value={selectedParentId}
                 onChange={handleParentCategoryChange}
                 required
               >
@@ -595,9 +711,9 @@ const CreateGigPage = () => {
 
             <div className="form-group">
               <label>Danh Mục Phụ *</label>
-              <select 
-                name="categoryId" 
-                value={generalInfo.categoryId} 
+              <select
+                name="categoryId"
+                value={generalInfo.categoryId}
                 onChange={handleInputChange}
                 disabled={!selectedParentId}
                 required
@@ -646,11 +762,11 @@ const CreateGigPage = () => {
             <h4>Chi Tiết Nội Dung Dịch Vụ</h4>
           </div>
           <div className="form-group">
-            <textarea 
+            <textarea
               name="description"
               value={generalInfo.description}
               onChange={handleInputChange}
-              placeholder="Nhập mô tả chi tiết đầy đủ về sản phẩm/dịch vụ bạn cung cấp tại đây..." 
+              placeholder="Nhập mô tả chi tiết đầy đủ về sản phẩm/dịch vụ bạn cung cấp tại đây..."
               rows={8}
               required
             />
@@ -662,7 +778,7 @@ const CreateGigPage = () => {
           <div className="section-title-line" style={{ padding: '0 24px' }}>
             <h4>Ma Trận Cấu Hình Gói Dịch Vụ & Giá Cả</h4>
           </div>
-          
+
           <div className="packages-table-responsive-container">
             <table className="packages-pricing-grid-table alternative-style">
               <thead>
@@ -674,8 +790,8 @@ const CreateGigPage = () => {
                         <span className="pkg-title-bold text-green">
                           {pkg.type === 'BASIC' ? 'CƠ BẢN (BASIC)' : pkg.type === 'STANDARD' ? 'TIÊU CHUẨN (STANDARD)' : 'CAO CẤP (PREMIUM)'}
                         </span>
-                        <textarea 
-                          value={pkg.shortDescription} 
+                        <textarea
+                          value={pkg.shortDescription}
                           placeholder={`Mô tả ngắn gọn đặc điểm của gói ${pkg.type.toLowerCase()}...`}
                           className="inline-edit-pkg-desc"
                           onChange={(e) => handlePackageChange(idx, 'shortDescription', e.target.value)}
@@ -686,37 +802,28 @@ const CreateGigPage = () => {
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td className="row-header-label">Cung cấp Mã Nguồn (Source Code)</td>
-                  {packages.map((pkg, idx) => (
-                    <td key={`sc-${idx}`} className="text-center">
-                      <input 
-                        type="checkbox" 
-                        checked={pkg.features?.["Source Code"] || false}
-                        onChange={() => handleFeatureToggle(idx, "Source Code")}
-                      />
-                    </td>
-                  ))}
-                </tr>
-                <tr>
-                  <td className="row-header-label">Sử dụng Thương Mại (Commercial Use)</td>
-                  {packages.map((pkg, idx) => (
-                    <td key={`cu-${idx}`} className="text-center">
-                      <input 
-                        type="checkbox" 
-                        checked={pkg.features?.["Commercial Use"] || false}
-                        onChange={() => handleFeatureToggle(idx, "Commercial Use")}
-                      />
-                    </td>
-                  ))}
-                </tr>
+                {/* === Dựng các hàng Feature một cách linh động === */}
+                {availableFeatures.map((featureName) => (
+                  <tr key={featureName}>
+                    <td className="row-header-label">{featureName}</td>
+                    {packages.map((pkg, idx) => (
+                      <td key={`${featureName}-${idx}`} className="text-center">
+                        <input
+                          type="checkbox"
+                          checked={pkg.features?.[featureName] || false}
+                          onChange={() => handleFeatureToggle(idx, featureName)}
+                        />
+                      </td>
+                    ))}
+                  </tr>
+                ))}
                 <tr>
                   <td className="row-header-label">Số lần sửa đổi (Revisions)</td>
                   {packages.map((pkg, idx) => (
                     <td key={`rev-${idx}`} className="text-center">
                       <div className="inline-numeric-edit">
-                        <input 
-                          type="number" 
+                        <input
+                          type="number"
                           value={pkg.revisions}
                           onChange={(e) => handlePackageChange(idx, 'revisions', e.target.value)}
                         />
@@ -732,8 +839,8 @@ const CreateGigPage = () => {
                   {packages.map((pkg, idx) => (
                     <td key={`del-${idx}`} className="text-center">
                       <div className="inline-numeric-edit">
-                        <input 
-                          type="number" 
+                        <input
+                          type="number"
                           value={pkg.deliveryDays}
                           onChange={(e) => handlePackageChange(idx, 'deliveryDays', e.target.value)}
                         />
@@ -748,8 +855,8 @@ const CreateGigPage = () => {
                     <td key={`price-${idx}`} className="text-center font-bold text-green">
                       <div className="price-input-table-container">
                         <span>$</span>
-                        <input 
-                          type="number" 
+                        <input
+                          type="number"
                           value={pkg.price === '' ? '' : pkg.price}
                           className="table-price-clean-input"
                           onChange={(e) => handlePackageChange(idx, 'price', e.target.value)}
@@ -768,7 +875,7 @@ const CreateGigPage = () => {
           <div className="section-title-line">
             <h4>Thư Viện Hình Ảnh Dịch Vụ</h4>
           </div>
-          
+
           <div className="gallery-upload-grid-flow">
             {uploadedImages.map((img, index) => (
               <div key={img.id} className="gallery-preview-item-box" style={{ position: 'relative' }}>
@@ -776,15 +883,15 @@ const CreateGigPage = () => {
                 {img.isUploading && (
                   <div className="image-loading-overlay" style={{
                     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-                    backgroundColor: 'rgba(255,255,255,0.7)', display: 'flex', 
+                    backgroundColor: 'rgba(255,255,255,0.7)', display: 'flex',
                     alignItems: 'center', justifyContent: 'center'
                   }}>
                     <Loader2 className="animate-spin" color="#76b783" />
                   </div>
                 )}
-                <button 
-                  type="button" 
-                  className="btn-delete-image-preview" 
+                <button
+                  type="button"
+                  className="btn-delete-image-preview"
                   onClick={() => handleRemoveUploadedImage(img.id)}
                   disabled={img.isUploading}
                 >
@@ -795,12 +902,12 @@ const CreateGigPage = () => {
             ))}
 
             <label className="gallery-upload-trigger-square">
-              <input 
-                type="file" 
-                multiple 
-                accept="image/*" 
-                onChange={handleImageUpload} 
-                style={{ display: 'none' }} 
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={handleImageUpload}
+                style={{ display: 'none' }}
               />
               <div className="trigger-inner-content">
                 <Upload size={22} color="#999" />
@@ -815,15 +922,15 @@ const CreateGigPage = () => {
           <div className="section-title-line">
             <h4>Yêu Cầu Đối Với Người Mua (Buyer Requirements)</h4>
           </div>
-          
+
           <div className="requirements-list-wrapper" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
             {requirements.map((req, idx) => (
               <div key={`req-${idx}`} className="requirement-item-row" style={{ border: '1px solid #e4e5e7', padding: '15px', borderRadius: '6px', backgroundColor: '#fafafa' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                   <span style={{ fontWeight: '600', fontSize: '14px', color: '#404145' }}>Yêu cầu câu hỏi #{idx + 1}</span>
-                  <button 
-                    type="button" 
-                    onClick={() => handleRemoveRequirement(idx)} 
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveRequirement(idx)}
                     style={{ background: 'none', border: 'none', color: '#f44336', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px' }}
                   >
                     <Trash size={14} /> Xóa câu hỏi
@@ -832,7 +939,7 @@ const CreateGigPage = () => {
 
                 <div className="form-group" style={{ marginBottom: '12px' }}>
                   <label style={{ fontSize: '13px', fontWeight: '500' }}>Nội dung câu hỏi yêu cầu *</label>
-                  <input 
+                  <input
                     type="text"
                     value={req.question}
                     onChange={(e) => handleRequirementChange(idx, 'question', e.target.value)}
@@ -855,7 +962,7 @@ const CreateGigPage = () => {
                   </div>
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '20px' }}>
-                    <input 
+                    <input
                       type="checkbox"
                       id={`mandatory-${idx}`}
                       checked={req.isMandatory}
@@ -894,9 +1001,9 @@ const CreateGigPage = () => {
         </div>
 
         <div className="form-bottom-sticky-action-bar">
-          <button 
-            type="button" 
-            onClick={handleSubmit} 
+          <button
+            type="button"
+            onClick={handleSubmit}
             className="btn-submit-green-save"
             disabled={loading}
           >

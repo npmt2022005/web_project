@@ -1,5 +1,6 @@
 package com.thuc_kien.freelance_marketplace.Controller;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -28,6 +30,7 @@ import com.thuc_kien.freelance_marketplace.DTO.GigDetailResponseDTO;
 import com.thuc_kien.freelance_marketplace.DTO.GigFeaturedResponseDTO;
 import com.thuc_kien.freelance_marketplace.DTO.SellerGigResponse;
 import com.thuc_kien.freelance_marketplace.Service.GigService;
+import com.thuc_kien.freelance_marketplace.Repository.PackageFeatureRepository;
 import com.thuc_kien.freelance_marketplace.security.CustomUserDetails;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -40,6 +43,7 @@ import lombok.RequiredArgsConstructor;
 public class GigController {
 
     private final GigService gigService;
+    private final PackageFeatureRepository packageFeatureRepository;
 
     @Operation(summary = "Lấy danh sách dịch vụ nổi bật (Featured Gigs)", description = "API này mở công khai để lấy các dịch vụ có rating và lượt review cao nhất hiển thị lên trang chủ.")
 
@@ -84,9 +88,9 @@ public class GigController {
     public ResponseEntity<APIResponse<Long>> createGig(@AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody GigCreateRequestDTO request) {
 
-        Long currentSellerId = userDetails.getUser().getId();
+        Long currentUserId = userDetails.getUser().getId();
 
-        Long newGigId = gigService.createGig(currentSellerId, request);
+        Long newGigId = gigService.createGig(currentUserId, request);
 
         // Trả kết quả chuẩn JSON
         APIResponse<Long> response = new APIResponse<>();
@@ -97,13 +101,31 @@ public class GigController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "Cập nhật thông tin một dịch vụ", description = "API này yêu cầu xác thực. Chỉ chủ sở hữu của Gig mới có quyền cập nhật.")
+    @PutMapping("/update/{gigId}")
+    public ResponseEntity<APIResponse<Long>> updateGig(
+            @Parameter(description = "ID của Gig cần cập nhật", example = "1") @PathVariable Long gigId,
+            @RequestBody GigCreateRequestDTO request,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        Long currentUserId = userDetails.getUser().getId();
+        Long updatedGigId = gigService.updateGig(gigId, currentUserId, request);
+
+        APIResponse<Long> response = new APIResponse<>();
+        response.setStatus("success");
+        response.setMessage("Cập nhật thông tin dịch vụ thành công!");
+        response.setData(updatedGigId);
+
+        return ResponseEntity.ok(response);
+    }
+
     @DeleteMapping("/delete_gig/{gigId}")
     public ResponseEntity<APIResponse<String>> deleteGig(@AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long gigId) {
 
-        Long currentSellerId = userDetails.getUser().getId();
+        Long currentUserId = userDetails.getUser().getId();
 
-        gigService.deleteGig(gigId, currentSellerId);
+        gigService.deleteGig(gigId, currentUserId);
 
         APIResponse<String> response = new APIResponse<>();
         response.setStatus("success");
@@ -145,5 +167,22 @@ public class GigController {
                             .data(null)
                             .build());
         }
+    }
+
+    @GetMapping("/features")
+    public ResponseEntity<APIResponse<List<String>>> getGigFeatures(
+            @RequestParam(required = true) Long categoryId) {
+
+        // 1. Lấy dữ liệu từ Repo (hàm này trả về List<String>)
+        List<String> featureNames = packageFeatureRepository.findDistinctFeatureNamesByCategoryId(categoryId);
+
+        // 2. Tạo đối tượng APIResponse với kiểu List<String> khớp với khai báo
+        APIResponse<List<String>> response = new APIResponse<>();
+        response.setStatus("success");
+        response.setMessage("Lấy danh sách tính năng thành công!");
+
+        response.setData(featureNames);
+
+        return ResponseEntity.ok(response);
     }
 }

@@ -26,4 +26,7 @@ public interface UserRepository extends JpaRepository<User, Long>{
 
     @Query("SELECT DISTINCT u.country FROM User u WHERE u.country IS NOT NULL AND u.country != ''")
     List<String> findDistinctActiveCountries();
+    
+
+    
 }

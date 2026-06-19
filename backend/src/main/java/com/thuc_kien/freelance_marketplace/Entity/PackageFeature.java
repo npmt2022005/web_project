@@ -15,7 +15,7 @@ public class PackageFeature {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Quan hệ N-1: Nhiều Feature thuộc về 1 Package
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "package_id", nullable = false)
     private GigPackages gigPackage;
@@ -25,4 +25,11 @@ public class PackageFeature {
 
     @Column(name = "is_included", nullable = false)
     private Boolean isIncluded; 
+
+    // Constructor tùy chỉnh để dễ dàng tạo đối tượng từ Service
+    public PackageFeature(String name, Boolean isIncluded, GigPackages gigPackage) {
+        this.name = name;
+        this.isIncluded = isIncluded;
+        this.gigPackage = gigPackage;
+    }
 }

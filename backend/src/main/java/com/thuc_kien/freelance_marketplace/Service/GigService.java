@@ -287,9 +287,8 @@ public class GigService {
         GigDetailResponseDTO.GigStatsDTO statsDTO = null;
         statsDTO = GigDetailResponseDTO.GigStatsDTO.builder()
                 .rating(gig.getRatingAvg())
-                .reviewCount(Integer.valueOf(10))
-                .salesCount(Integer.valueOf(10))
-                .viewsCount(Integer.valueOf(10))
+                .reviewCount(gig.getTotalReviews())
+                .salesCount(gig.getSalesCount())
                 .build();
 
         List<GigDetailResponseDTO.PackageDTO> packageDTOs = new ArrayList<>();
@@ -373,8 +372,7 @@ public class GigService {
             GigDetailResponseDTO.GigStatsDTO statsDTO = GigDetailResponseDTO.GigStatsDTO.builder()
                     .rating(gig.getRatingAvg())
                     .reviewCount(gig.getTotalReviews())
-                    .salesCount(0)
-                    .viewsCount(0)
+                    .salesCount(gig.getSalesCount())
                     .build();
 
             return GigCardDTO.builder()
@@ -422,14 +420,13 @@ public class GigService {
         }
     }
 
-    @Transactional
+    
     public Long createGig(Long userId, GigCreateRequestDTO request) {
 
         Seller seller = sellerRepo.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Tài khoản này chưa đăng ký làm Người bán (Seller)!"));
 
-        // 2. Kiểm tra điều kiện (Nếu thiếu thông tin, nó sẽ ném Exception và dừng hàm tại đây)
-        // validateSellerProfile(seller);
+        validateSellerProfile(seller);
         
         Category category = cateRepo.findById(request.getCategoryId())
                 .orElseThrow(() -> new RuntimeException("Danh mục không hợp lệ!"));
@@ -442,63 +439,200 @@ public class GigService {
         newGig.setThumbnailUrl(request.getThumbnailUrl());
         newGig.setGalleryUrls(request.getGalleryUrls());
         newGig.setSlug(generateSlug(request.getTitle()));
-        newGig.setCreatedAt(LocalDateTime.now());
+        newGig.setUpdatedAt(LocalDateTime.now());
         newGig.setPrice(BigDecimal.ZERO);
         newGig.setDeliveryTime(0);
         newGig.setRatingAvg(0.0);
+
         if (request.getPackages() != null && !request.getPackages().isEmpty()) {
-            Set<GigPackages> packagesToSave = request.getPackages().stream().map(pkgDto -> {
+            // Sử dụng forEach để xử lý từng package và thêm trực tiếp vào Gig
+            for (GigCreateRequestDTO.PackageRequestDTO pkgDto : request.getPackages()) {
                 GigPackages pkg = new GigPackages();
                 pkg.setName(pkgDto.getType());
                 pkg.setPrice(pkgDto.getPrice());
                 pkg.setDescription(pkgDto.getShortDescription());
                 pkg.setDeliveryDays(pkgDto.getDeliveryDays());
                 pkg.setRevisions(pkgDto.getRevisions());
-                pkg.setGig(newGig);
-
+    
                 if (pkgDto.getFeatures() != null && !pkgDto.getFeatures().isEmpty()) {
                     Set<PackageFeature> features = pkgDto.getFeatures()
                             .entrySet()
                             .stream()
-                            .map(entry -> {
-                                PackageFeature feature = new PackageFeature();
-                                feature.setName(entry.getKey());
-                                feature.setIsIncluded(entry.getValue());
-                                feature.setGigPackage(pkg);
-                                return feature;
-                            })
+                            .map(entry -> new PackageFeature(entry.getKey(), entry.getValue(), pkg))
                             .collect(Collectors.toSet());
-
+    
                     pkg.setFeatures(features);
                 }
-                return pkg;
-            }).collect(Collectors.toSet());
-            newGig.setPackages(packagesToSave);
-
-            GigPackages basicPackage = packagesToSave.stream()
+                // Thêm package vào Gig, thiết lập quan hệ hai chiều
+                newGig.addPackage(pkg);
+            }
+    
+            // Lấy package BASIC từ danh sách vừa được thêm vào newGig
+            GigPackages basicPackage = newGig.getPackages().stream()
                     .filter(p -> "BASIC".equalsIgnoreCase(p.getName()))
                     .findFirst()
                     .orElse(null);
+    
             if (basicPackage != null) {
                 newGig.setPrice(basicPackage.getPrice());
                 newGig.setDeliveryTime(basicPackage.getDeliveryDays());
             }
         }
+
         if (request.getRequirements() != null && !request.getRequirements().isEmpty()) {
-            Set<GigRequirement> requirementsToSave = request.getRequirements().stream().map(reqDto -> {
+            for (GigCreateRequestDTO.GigRequirementDTO reqDto : request.getRequirements()) {
                 GigRequirement req = new GigRequirement();
                 req.setQuestion(reqDto.getQuestion());
                 req.setAnswerType(reqDto.getAnswerType() != null ? reqDto.getAnswerType() : "TEXT");
                 req.setIsMandatory(reqDto.getIsMandatory() != null ? reqDto.getIsMandatory() : true);
-                req.setGig(newGig); // Mapping quan hệ 2 chiều
-                return req;
-            }).collect(Collectors.toSet());
-
-            newGig.setRequirements(requirementsToSave);
+                newGig.getRequirements().add(req);
+                req.setGig(newGig);
+            }
         }
-        Gig savedGig = gigRepo.save(newGig);
-        syncGigToElasTic(savedGig);
-        return savedGig.getId();
+        try {
+            System.out.println(">>> 1. CHUẨN BỊ ÉP LƯU XUỐNG DB...");
+            
+            // Dùng saveAndFlush để ép Hibernate thi hành SQL ngay và luôn!
+            Gig savedGig = gigRepo.saveAndFlush(newGig); 
+            
+            System.out.println(">>> 2. LƯU THÀNH CÔNG RỒI NHÉ!");
+            
+            // TẠM THỜI COMMENT DÒNG NÀY LẠI ĐỂ LOẠI TRỪ LỖI TỪ ELASTICSEARCH
+            syncGigToElasTic(savedGig);
+            
+            return savedGig.getId();
+            
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            System.err.println("❌❌❌ LỖI RỒI! DATABASE TỪ CHỐI DỮ LIỆU CỦA BẠN:");
+            System.err.println("Nguyên nhân: " + e.getMostSpecificCause().getMessage());
+            throw new RuntimeException("Lỗi Database: " + e.getMostSpecificCause().getMessage());
+            
+        } catch (Exception e) {
+            System.err.println("❌❌❌ LỖI KHÔNG XÁC ĐỊNH RỒI:");
+            e.printStackTrace();
+            throw new RuntimeException("Lỗi lưu dữ liệu: " + e.getMessage());
+        }
+    }
+
+    @Transactional
+    public Long updateGig(Long gigId, Long userId, GigCreateRequestDTO request) {
+        // 1. Tìm Gig hiện có và xác thực quyền sở hữu
+        Gig existingGig = gigRepo.findById(gigId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy Gig với ID: " + gigId));
+
+        if (!existingGig.getSeller().getUser().getId().equals(userId)) {
+            throw new RuntimeException("Bạn không có quyền chỉnh sửa Gig này!");
+        }
+
+        // 2. Cập nhật các trường thông tin cơ bản
+        Category category = cateRepo.findById(request.getCategoryId())
+                .orElseThrow(() -> new RuntimeException("Danh mục không hợp lệ!"));
+
+        existingGig.setTitle(request.getTitle());
+        existingGig.setDescription(request.getDescription());
+        existingGig.setCategory(category);
+        existingGig.setThumbnailUrl(request.getThumbnailUrl());
+        existingGig.setGalleryUrls(request.getGalleryUrls());
+        existingGig.setUpdatedAt(LocalDateTime.now());
+
+        // Nếu tiêu đề thay đổi, tạo slug mới để tránh trùng lặp
+        if (!existingGig.getTitle().equals(request.getTitle())) {
+            existingGig.setSlug(generateSlug(request.getTitle()));
+        }
+
+        // 3. Cập nhật danh sách các gói (Packages) - Logic phức tạp
+        updatePackages(existingGig, request.getPackages());
+
+        // 4. Cập nhật danh sách các yêu cầu (Requirements)
+        updateRequirements(existingGig, request.getRequirements());
+
+        // 5. Cập nhật lại giá và thời gian giao hàng cơ bản dựa trên gói BASIC
+        GigPackages basicPackage = existingGig.getPackages().stream()
+                .filter(p -> "BASIC".equalsIgnoreCase(p.getName()))
+                .findFirst()
+                .orElse(null);
+        if (basicPackage != null) {
+            existingGig.setPrice(basicPackage.getPrice());
+            existingGig.setDeliveryTime(basicPackage.getDeliveryDays());
+        }
+
+        // 6. Lưu Gig đã cập nhật và đồng bộ sang Elasticsearch
+        Gig updatedGig = gigRepo.save(existingGig);
+        syncGigToElasTic(updatedGig);
+
+        return updatedGig.getId();
+    }
+
+    private void updatePackages(Gig gig, Set<GigCreateRequestDTO.PackageRequestDTO> requestPackages) {
+        Map<Long, GigCreateRequestDTO.PackageRequestDTO> requestPackageMap = requestPackages.stream()
+                .filter(p -> p.getId() != null)
+                .collect(Collectors.toMap(GigCreateRequestDTO.PackageRequestDTO::getId, p -> p));
+
+        // 1. Xóa các package không còn trong request
+        gig.getPackages().removeIf(existingPkg -> !requestPackageMap.containsKey(existingPkg.getId()));
+
+        for (GigCreateRequestDTO.PackageRequestDTO requestPkgDto : requestPackages) {
+            GigPackages packageEntity;
+            if (requestPkgDto.getId() != null) {
+                // Cập nhật package đã có
+                packageEntity = gig.getPackages().stream()
+                        .filter(p -> p.getId().equals(requestPkgDto.getId()))
+                        .findFirst()
+                        .orElseThrow(() -> new RuntimeException("Package with id " + requestPkgDto.getId() + " not found for this gig."));
+            } else {
+                packageEntity = new GigPackages();
+                packageEntity.setGig(gig);
+                gig.getPackages().add(packageEntity);
+            }
+
+            // Map dữ liệu từ DTO sang Entity
+            packageEntity.setName(requestPkgDto.getType());
+            packageEntity.setPrice(requestPkgDto.getPrice());
+            packageEntity.setDescription(requestPkgDto.getShortDescription());
+            packageEntity.setDeliveryDays(requestPkgDto.getDeliveryDays());
+            packageEntity.setRevisions(requestPkgDto.getRevisions());
+
+            // Cập nhật features
+            packageEntity.getFeatures().clear();
+            requestPkgDto.getFeatures().forEach((name, included) -> {
+                PackageFeature feature = new PackageFeature(name, included, packageEntity); // Dòng này giờ đã hợp lệ
+                packageEntity.getFeatures().add(feature);
+            });
+        }
+    }
+
+    private void updateRequirements(Gig gig, Set<GigCreateRequestDTO.GigRequirementDTO> requirementDtos) {
+        if (requirementDtos == null) {
+            gig.getRequirements().clear();
+            return;
+        }
+
+        Map<Long, GigCreateRequestDTO.GigRequirementDTO> requestDtoMap = requirementDtos.stream()
+                .filter(dto -> dto.getId() != null)
+                .collect(Collectors.toMap(GigCreateRequestDTO.GigRequirementDTO::getId, dto -> dto));
+
+        // 1. Xóa các requirement không còn trong request mới
+        gig.getRequirements().removeIf(req -> !requestDtoMap.containsKey(req.getId()));
+
+        // 2. Cập nhật hoặc thêm mới
+        for (GigCreateRequestDTO.GigRequirementDTO dto : requirementDtos) {
+            GigRequirement requirementEntity;
+            if (dto.getId() != null) {
+                // Cập nhật requirement đã có
+                requirementEntity = gig.getRequirements().stream()
+                        .filter(r -> r.getId().equals(dto.getId()))
+                        .findFirst()
+                        .orElseThrow(() -> new RuntimeException("Requirement with id " + dto.getId() + " not found for this gig."));
+            } else {
+                // Thêm requirement mới
+                requirementEntity = new GigRequirement();
+                requirementEntity.setGig(gig);
+                gig.getRequirements().add(requirementEntity);
+            }
+            requirementEntity.setQuestion(dto.getQuestion());
+            requirementEntity.setAnswerType(dto.getAnswerType());
+            requirementEntity.setIsMandatory(dto.getIsMandatory());
+        }
     }
 
     public void deleteGig(Long gigId, Long currentSellerId) {

@@ -2,26 +2,39 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { User, MapPin, Star, ArrowLeft, Mail, Calendar, CheckCircle, GraduationCap, Briefcase, CreditCard } from 'lucide-react';
-import './SellerDetail.css'; 
+import './SellerDetail.css';
 
 const SellerDetail = () => {
-    const { id } = useParams(); 
+    const { id } = useParams();
     const navigate = useNavigate();
     const [seller, setSeller] = useState(null);
     const [loading, setLoading] = useState(true);
+    const formatJoinedDate = (dateString) => {
+        if (!dateString) return "N/A";
+
+        // Nếu dateString là ISO (2026-06-19T15:38:42), hàm Date sẽ tự parse
+        const date = new Date(dateString);
+
+        // Trả về định dạng: "Tháng 06/2026"
+        return date.toLocaleDateString('vi-VN', {
+            month: 'long', // hoặc '2-digit' nếu muốn hiển thị là 06
+            year: 'numeric'
+        });
+    };
+
 
     // 📦 HỆ THỐNG MOCK DATA CHUẨN - PHỤC VỤ CHẾ ĐỘ XEM TRƯỚC VÀ KIỂM THỬ GIAO DIỆN
     const MOCK_SELLERS = [
-        { 
-            id: 1, 
-            fullname: "Phan Trung Kiên", 
-            title: "Fullstack Java Developer", 
-            country: "Vietnam", 
+        {
+            id: 1,
+            fullname: "Phan Trung Kiên",
+            title: "Fullstack Java Developer",
+            country: "Vietnam",
             city: "Hồ Chí Minh",
-            bio: "Chuyên gia xây dựng hệ thống Backend Spring Boot 3x, tối ưu hóa cơ sở dữ liệu MySQL và tích hợp bảo mật JWT/Spring Security. Đã có hơn 5 năm kinh nghiệm làm việc với các hệ thống lớn, chịu tải cao và kiến trúc Microservices.", 
-            rating: 5.0, 
-            skills: ["Java", "Spring Boot", "MySQL", "JWT", "RESTful API"], 
-            email: "kien.phan@example.com", 
+            bio: "Chuyên gia xây dựng hệ thống Backend Spring Boot 3x, tối ưu hóa cơ sở dữ liệu MySQL và tích hợp bảo mật JWT/Spring Security. Đã có hơn 5 năm kinh nghiệm làm việc với các hệ thống lớn, chịu tải cao và kiến trúc Microservices.",
+            rating: 5.0,
+            skills: ["Java", "Spring Boot", "MySQL", "JWT", "RESTful API"],
+            email: "kien.phan@example.com",
             joinedDate: "Tháng 01/2024",
             linkedBank: true, // Đồng bộ trạng thái liên kết ví tài chính thành công
             educations: [
@@ -37,16 +50,16 @@ const SellerDetail = () => {
                 { id: 2, buyerName: "Lê Thị B", rating: 5, date: "28/04/2026", comment: "Chuyên gia tư vấn rất nhiệt tình, tối ưu hóa database MySQL xong hệ thống chạy nhanh hơn hẳn." }
             ]
         },
-        { 
-            id: 2, 
-            fullname: "Alex Johnson", 
-            title: "UI/UX Expert & Frontend Engineer", 
-            country: "United States", 
+        {
+            id: 2,
+            fullname: "Alex Johnson",
+            title: "UI/UX Expert & Frontend Engineer",
+            country: "United States",
             city: "New York",
-            bio: "Thiết kế giao diện người dùng hiện đại với Figma, phát triển ứng dụng SPA chuẩn ReactJS, tối ưu hóa hiệu năng và Responsive.", 
-            rating: 4.9, 
-            skills: ["ReactJS", "Figma", "Tailwind CSS"], 
-            email: "alex.j@example.com", 
+            bio: "Thiết kế giao diện người dùng hiện đại với Figma, phát triển ứng dụng SPA chuẩn ReactJS, tối ưu hóa hiệu năng và Responsive.",
+            rating: 4.9,
+            skills: ["ReactJS", "Figma", "Tailwind CSS"],
+            email: "alex.j@example.com",
             joinedDate: "Tháng 03/2024",
             linkedBank: false, // Chưa liên kết thanh toán
             educations: [
@@ -60,17 +73,35 @@ const SellerDetail = () => {
             ]
         }
     ];
-
     useEffect(() => {
-        const loadMockSellerData = () => {
+        const fetchData = async () => {
             setLoading(true);
-            // Lọc tìm Seller theo ID trên thanh điều hướng URL, mặc định lấy seller đầu tiên nếu không khớp id
-            const found = MOCK_SELLERS.find(s => s.id === parseInt(id));
-            setSeller(found || MOCK_SELLERS[0]);
-            setLoading(false);
+            try {
+                const response = await fetch(`http://localhost:8080/api/v1/sellers/${id}`);
+                if (response.ok) {
+                    const result = await response.json(); // Nhận về cả object API
+                    console.log("👉 Dữ liệu nhận được:", result);
+
+                    // Kiểm tra và lấy đúng dữ liệu seller
+                    if (result && result.data) {
+                        setSeller(result.data); // Gán đúng seller detail vào state
+                    } else {
+                        console.warn("API thành công nhưng không tìm thấy thuộc tính data");
+                        // Fallback về Mock data nếu cần
+                        const found = MOCK_SELLERS.find(s => s.id === parseInt(id));
+                        setSeller(found || MOCK_SELLERS[0]);
+                    }
+                }
+            } catch (error) {
+                console.error("Lỗi kết nối API, dùng dữ liệu mẫu:", error);
+                const found = MOCK_SELLERS.find(s => s.id === parseInt(id));
+                setSeller(found || MOCK_SELLERS[0]);
+            } finally {
+                setLoading(false);
+            }
         };
 
-        loadMockSellerData();
+        fetchData();
     }, [id]);
 
     if (loading) {
@@ -95,7 +126,7 @@ const SellerDetail = () => {
                     <div className="seller-detail-avatar">
                         <User size={40} />
                     </div>
-                    
+
                     <div className="seller-detail-info">
                         <div className="seller-detail-name-wrapper">
                             <h1 className="seller-detail-fullname">{seller.fullname}</h1>
@@ -103,15 +134,15 @@ const SellerDetail = () => {
                                 <CheckCircle size={12} fill="#1dbf73" color="#fff" /> Đã xác minh
                             </span>
                         </div>
-                        
+
                         <p className="seller-detail-title">{seller.title}</p>
-                        
+
                         <div className="seller-detail-meta">
                             <span className="seller-detail-meta-item">
                                 <MapPin size={14} /> {seller.city ? `${seller.city}, ${seller.country}` : seller.country}
                             </span>
                             <span className="seller-detail-meta-item">
-                                <Calendar size={14} /> Đã tham gia: {seller.joinedDate || "Tháng 01/2024"}
+                                <Calendar size={14} /> Đã tham gia: {formatJoinedDate(seller.joinedDate)}
                             </span>
                             {/* Hiển thị huy hiệu trạng thái thanh toán tài chính */}
                             {seller.linkedBank && (
@@ -142,24 +173,11 @@ const SellerDetail = () => {
                         {seller.bio}
                     </p>
                 </div>
-
-                {/* Phần danh sách kỹ năng */}
-                <div className="seller-detail-section">
-                    <h3 className="seller-detail-section-title">Kỹ năng chuyên môn</h3>
-                    <div className="seller-detail-skills-list">
-                        {seller.skills?.map((skill, idx) => (
-                            <span key={idx} className="seller-detail-skill-item">
-                                {skill}
-                            </span>
-                        ))}
-                    </div>
-                </div>
-
                 <hr className="seller-detail-divider" />
 
                 {/* KHỐI HIỂN THỊ ĐỘNG 2 CỘT: HỌC VẤN & KINH NGHIỆM TƯƠNG THÍCH VỚI HỒ SƠ */}
                 <div className="seller-detail-history-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', margin: '24px 0' }}>
-                    
+
                     {/* Khối Học vấn */}
                     <div className="seller-detail-history-section">
                         <h3 className="seller-detail-section-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

@@ -405,8 +405,8 @@ public class OrderService {
         }
 
         // Kiểm tra xem ít nhất một trong hai thông tin bàn giao phải được cung cấp
-        if ((request.getSubmissionLink() == null || request.getSubmissionLink().isBlank()) && 
-            (request.getFile() == null || request.getFile().isEmpty())) {
+        if ((request.getSubmissionLink() == null || request.getSubmissionLink().isBlank()) &&
+                (request.getFile() == null || request.getFile().isEmpty())) {
             throw new RuntimeException("Bạn phải cung cấp ít nhất một tệp tin hoặc đường dẫn sản phẩm.");
         }
 
@@ -487,6 +487,9 @@ public class OrderService {
 
         // 3. Cập nhật trạng thái và lưu đánh giá
         order.setStatus("COMPLETED");
+        Gig gig = order.getGig();
+        gig.setSalesCount(gig.getSalesCount() + 1);
+        gigRepo.save(gig);
         order.setInspectionDeadline(null);
 
         Review review = new Review();
@@ -496,10 +499,9 @@ public class OrderService {
         review.setSeller(targetSeller);
         review.setRating(request.getRating());
         review.setComment(request.getReviewComment());
-        review.setOrder(order); // THIẾU: Thiết lập mối quan hệ với đơn hàng để lưu order_id
+        review.setOrder(order); 
         reviewRepo.save(review);
 
-        Gig gig = order.getGig();
         Long gigId = gig.getId();
 
         Double rawGigAvg = reviewRepo.calculateAverageRatingByGig(gigId);
@@ -556,12 +558,13 @@ public class OrderService {
             try {
                 // Tiến hành chuyển tiền thật qua Stripe
                 paymentService.transferToSeller(
-                        sellerWallet.getStripeAccountId(), 
+                        sellerWallet.getStripeAccountId(),
                         sellerEarnings,
                         sellerWallet.getCurrency(),
                         order.getId());
             } catch (Exception e) {
-                System.err.println("Cảnh báo: Stripe Transfer thất bại (có thể do thiếu số dư tài khoản sàn): " + e.getMessage());
+                System.err.println(
+                        "Cảnh báo: Stripe Transfer thất bại (có thể do thiếu số dư tài khoản sàn): " + e.getMessage());
             }
         } else {
             System.out.println(
@@ -668,10 +671,11 @@ public class OrderService {
         Orders order = orderRepo.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn hàng với ID: " + orderId));
 
-        // 1. Kiểm tra quyền: Cho phép cả Buyer và Seller của đơn hàng này xem thông tin bàn giao
+        // 1. Kiểm tra quyền: Cho phép cả Buyer và Seller của đơn hàng này xem thông tin
+        // bàn giao
         boolean isBuyer = order.getBuyer() != null && order.getBuyer().getId().equals(currentUserId);
-        boolean isSeller = order.getGig() != null && 
-                           order.getGig().getSeller().getUser().getId().equals(currentUserId);
+        boolean isSeller = order.getGig() != null &&
+                order.getGig().getSeller().getUser().getId().equals(currentUserId);
 
         if (!isBuyer && !isSeller) {
             throw new RuntimeException("Từ chối truy cập: Bạn không có quyền xem thông tin bàn giao này.");
@@ -695,7 +699,8 @@ public class OrderService {
     }
 
     /**
-     * Logic tự động hoàn thành đơn hàng khi hết hạn nghiệm thu (Inspection Deadline).
+     * Logic tự động hoàn thành đơn hàng khi hết hạn nghiệm thu (Inspection
+     * Deadline).
      * Phương thức này nên được gọi bởi một @Scheduled task trong Spring Boot.
      */
     @Transactional
@@ -703,21 +708,24 @@ public class OrderService {
         LocalDateTime now = LocalDateTime.now();
         // Tìm các đơn hàng DELIVERED đã quá hạn nghiệm thu
         List<Orders> expiredOrders = orderRepo.findAll().stream()
-            .filter(o -> "DELIVERED".equalsIgnoreCase(o.getStatus()) 
-                    && o.getInspectionDeadline() != null 
-                    && o.getInspectionDeadline().isBefore(now))
-            .collect(Collectors.toList());
+                .filter(o -> "DELIVERED".equalsIgnoreCase(o.getStatus())
+                        && o.getInspectionDeadline() != null
+                        && o.getInspectionDeadline().isBefore(now))
+                .collect(Collectors.toList());
 
         for (Orders order : expiredOrders) {
             try {
                 // Tái sử dụng logic thanh toán và hoàn thành nhưng không cần Review
                 order.setStatus("COMPLETED");
+                Gig gig = order.getGig();
+                gig.setSalesCount(gig.getSalesCount() + 1); // Tăng số lượng bán
+                gigRepo.save(gig); // Lưu lại Gig đã cập nhật
                 order.setInspectionDeadline(null);
-                
+
                 // Logic cộng tiền cho Seller tương tự như hàm completeOrder
                 BigDecimal platformFee = order.getTotalAmount().multiply(new BigDecimal("0.10"));
                 BigDecimal sellerEarnings = order.getTotalAmount().subtract(platformFee);
-                
+
                 Wallet wallet = walletRepo.findByUserId(order.getSeller().getUser().getId()).orElse(null);
                 if (wallet != null && "ACTIVE".equalsIgnoreCase(wallet.getStatus())) {
                     wallet.setBalance(wallet.getBalance().add(sellerEarnings));

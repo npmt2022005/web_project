@@ -80,13 +80,14 @@ const MyProfile = () => {
             });
             
             const result = await response.json();
+            
             console.log(">>> [DEBUG] fetchProfileData Result:", result);
 
             if (response.ok && result.status === 'success') {
+                localStorage.setItem('profileData', JSON.stringify(result));
                 const data = result.data;
                 const info = data.basicInfo || {};
-                console.log(">>> [DEBUG] Education List:", data.education);
-                console.log(">>> [DEBUG] Experience List:", data.experience);
+    
 
                 setBasicInfo({
                     fullName: info.username || '',

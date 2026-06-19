@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -40,7 +41,15 @@ public class GlobalExceptionController {
                 .build();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
-   
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<APIResponse<Void>> handleBadCredentialsException(BadCredentialsException ex) {
+        APIResponse<Void> response = APIResponse.<Void>builder()
+                .status("error")
+                .message("Tên đăng nhập hoặc mật khẩu không chính xác") // Bạn tự định nghĩa cứng câu này ở đây luôn
+                .build();
+  
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response); 
+    }
     @ExceptionHandler(Exception.class)
     public ResponseEntity<APIResponse<Void>> handleGeneralException(Exception ex) {
         ex.printStackTrace(); 

@@ -11,15 +11,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Schema(description = "Thông tin yêu cầu đăng nhập")
 public class LoginRequest {
-    @Schema(description = "Tên đăng nhập (Username, Email hoặc Số điện thoại)", 
-            example = "minhthuc@gmail.com", 
-            requiredMode = Schema.RequiredMode.REQUIRED)
-    @NotBlank(message = "Tên đăng nhập không được để trống")
-    private String identifier;
+        @Schema(description = "Tên đăng nhập (Username, Email hoặc Số điện thoại)", example = "minhthuc@gmail.com", requiredMode = Schema.RequiredMode.REQUIRED)
+        @NotBlank(message = "Tên đăng nhập không được để trống")
+        private String identifier;
 
-    @Schema(description = "Mật khẩu tài khoản", 
-            example = "Password123!", 
-            requiredMode = Schema.RequiredMode.REQUIRED)
-    @NotBlank(message = "Mật khẩu không được để trống")
-    private String password;
+        @Schema(description = "Mật khẩu tài khoản", example = "Password123!", requiredMode = Schema.RequiredMode.REQUIRED)
+        @NotBlank(message = "Mật khẩu không được để trống")
+        private String password;
 }

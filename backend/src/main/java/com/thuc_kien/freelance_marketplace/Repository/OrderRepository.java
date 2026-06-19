@@ -35,4 +35,5 @@ public interface OrderRepository extends JpaRepository<Orders, Long> {
         // // Đếm tổng số lượt đánh giá
         // @Query("SELECT COUNT(o) FROM Orders o WHERE o.gig.id = :gigId AND o.status = 'COMPLETED' AND o.rating IS NOT NULL")
         // Integer countReviews(@Param("gigId") Long gigId);
+        
 }

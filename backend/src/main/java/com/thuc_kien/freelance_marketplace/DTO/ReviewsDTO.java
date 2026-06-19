@@ -4,16 +4,14 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Data
-@Setter
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class EducationRequestDTO {
-    private String school;
-    private String degree;
-    private String duration; // Ví dụ: "2020 - 2024"
-    private String description;
+public class ReviewsDTO {
+    private String buyerName;
+    private Integer rating;
+    private String comment;
+    private String date;
 }
