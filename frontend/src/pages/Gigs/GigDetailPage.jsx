@@ -144,8 +144,8 @@ const GigDetailPage = () => {
       try {
         // Thực hiện gọi API song song từ Backend
         const [detailRes, similarRes] = await Promise.all([
-          axios.get(`http://localhost:8080/api/v1/gigs/${id}`),
-          axios.get(`http://localhost:8080/api/v1/gigs/${id}/similar`)
+          axios.get(`/api/v1/gigs/${id}`),
+          axios.get(`/api/v1/gigs/${id}/similar`)
         ]);
 
         // Nếu API trả dữ liệu thành công -> Cập nhật vào State hệ thống
@@ -210,7 +210,7 @@ const GigDetailPage = () => {
 
     try {
       const response = await axios.post(
-        'http://localhost:8080/api/v1/orders',
+        '/api/v1/orders',
         {
           gigId: id === 'test-local' ? 1 : parseInt(id), 
           packageType: packageType.toUpperCase(),       
@@ -245,7 +245,7 @@ const GigDetailPage = () => {
       return;
     }
     try {
-      const response = await fetch(`http://localhost:8080/api/v1/conversations/initiate/seller/${gig.seller.id}`, {
+      const response = await fetch(`/api/v1/conversations/initiate/seller/${gig.seller.id}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

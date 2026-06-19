@@ -62,7 +62,7 @@ const SellerExploration = () => {
     const fetchSellerList = async () => {
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:8080/api/public/sellers');
+            const response = await fetch('/api/public/sellers');
             if (response.ok) {
                 const data = await response.json();
                 setSellers(data);

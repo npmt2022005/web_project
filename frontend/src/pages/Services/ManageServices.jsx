@@ -2,10 +2,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowUpRight, ShoppingBag, Edit3, Trash2 } from 'lucide-react';
+import apiClient from '../../services/apiClient';
 import './ManageServices.css';
-
-// ĐỊNH NGHĨA URL ĐẦY ĐỦ ĐẾN SPRING BOOT BACKEND
-const BASE_URL = 'http://localhost:8080';
 
 // MOCK DATA PHỤC VỤ FALLBACK KHI BACKEND BỊ LỖI HOẶC KHÔNG KẾT NỐI ĐƯỢC
 const MOCK_GIGS_DATA = [
@@ -72,34 +70,21 @@ const ManageServices = () => {
             const apiPage = currentPage - 1;
             
             // SỬA ĐỔI: Đồng bộ tham số sortDir thành 'DESC' (viết hoa) để tránh lỗi 400 từ bộ lọc JPA Spring
-            const response = await fetch(`${BASE_URL}/api/v1/gigs/me?page=${apiPage}&size=${gigsPerPage}&sortBy=createdAt&sortDir=DESC`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': token ? `Bearer ${token}` : ''
-                }
-            });
+            const response = await apiClient.get(`/v1/gigs/me?page=${apiPage}&size=${gigsPerPage}&sortBy=createdAt&sortDir=DESC`);
 
-            if (response.ok) {
-                const result = await response.json();
-                if (result.status === 'success' && result.data) {
-                    setGigs(result.data.content || []);
-                    setTotalPages(result.data.totalPages || 0);
-                } else {
-                    // Fallback sang Mock Data nếu cấu trúc JSON trả về không thành công
-                    console.warn("API không trả về trạng thái success. Đang kích hoạt dữ liệu Mock Data.");
-                    setGigs(MOCK_GIGS_DATA);
-                    setTotalPages(1);
-                }
+            // Axios automatically throws for non-2xx status codes, so if we reach here it's successful
+            const result = response.data;
+            if (result.status === 'success' && result.data) {
+                setGigs(result.data.content || []);
+                setTotalPages(result.data.totalPages || 0);
             } else {
-                console.error("Lỗi khi lấy danh sách dịch vụ từ server. Đang kích hoạt dữ liệu Mock Data.");
-                // Fallback sang Mock Data khi mã lỗi HTTP khác 2xx (ví dụ 404, 500)
+                // Fallback sang Mock Data nếu cấu trúc JSON trả về không thành công
+                console.warn("API không trả về trạng thái success. Đang kích hoạt dữ liệu Mock Data.");
                 setGigs(MOCK_GIGS_DATA);
                 setTotalPages(1);
             }
         } catch (error) {
-            console.error("Đã xảy ra lỗi kết nối hệ thống. Đang kích hoạt dữ liệu Mock Data:", error);
-            // Fallback sang Mock Data khi mất kết nối mạng hoặc sập server backend
+            console.error("Lỗi khi lấy danh sách gigs:", error);
             setGigs(MOCK_GIGS_DATA);
             setTotalPages(1);
         } finally {
@@ -148,46 +133,23 @@ const ManageServices = () => {
         try {
             const token = localStorage.getItem('token') || localStorage.getItem('JWT_TOKEN');
             
-            // ĐÃ THAY ĐỔI: Gọi chính xác API Contract DELETE bằng cách nối chuỗi BASE_URL
-            const response = await fetch(`${BASE_URL}/api/v1/gigs/delete_gig/${gigId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': token ? `Bearer ${token}` : ''
-                }
-            });
+            const response = await apiClient.delete(`/v1/gigs/delete_gig/${gigId}`);
 
-            // Kiểm tra xem dữ liệu hiện tại có phải là Mock Data hay không (ID từ mock data thường không khớp DB thực tế)
-            const isMockData = MOCK_GIGS_DATA.some(mock => mock.id === gigId);
-
-            if (response.ok) {
-                const result = await response.json();
-                if (result.status === 'success') {
-                    // Đóng modal và tiến hành tải lại danh sách mới từ server để cập nhật UI mượt mà
-                    setDeleteModal({ isOpen: false, gigId: null });
-                    
-                    // Kiểm tra xem trang hiện tại có phải trang cuối cùng và chỉ còn 1 phần tử hay không
-                    if (gigs.length === 1 && currentPage > 1) {
-                        setCurrentPage(prev => prev - 1);
-                    } else {
-                        setRefreshTrigger(prev => prev + 1);
-                    }
-                    return;
-                }
-            }
-            
-            // Hỗ trợ xóa giả lập trên giao diện UI nếu đang test với Mock Data nhằm tránh nghẽn mạch ứng dụng
-            if (isMockData) {
-                console.log(`[Mock Mode] Đang xóa giả lập phần tử Mock có ID: ${gigId}`);
-                setGigs(prev => prev.filter(g => g.id !== gigId));
+            if (response.data && response.data.status === 'success') {
+                // Đóng modal và tiến hành tải lại danh sách mới từ server để cập nhật UI mượt mà
                 setDeleteModal({ isOpen: false, gigId: null });
-                return;
+                
+                // Kiểm tra xem trang hiện tại có phải trang cuối cùng và chỉ còn 1 phần tử hay không
+                if (gigs.length === 1 && currentPage > 1) {
+                    setCurrentPage(prev => prev - 1);
+                } else {
+                    setRefreshTrigger(prev => prev + 1);
+                }
+            } else {
+                const errorResult = response.data || {};
+                alert(errorResult.message || "Xóa dịch vụ thất bại. Vui lòng kiểm tra lại quyền sở hữu!");
+                setDeleteModal({ isOpen: false, gigId: null });
             }
-
-            // Hiển thị thông báo lỗi thực tế từ hệ thống backend nếu gọi thật thất bại
-            const errorResult = await response.json().catch(() => ({}));
-            alert(errorResult.message || "Xóa dịch vụ thất bại. Vui lòng kiểm tra lại quyền sở hữu!");
-            setDeleteModal({ isOpen: false, gigId: null });
-            
         } catch (error) {
             console.error("Lỗi khi kết nối API xóa dịch vụ:", error);
             

@@ -22,7 +22,7 @@ const CheckoutPage = () => {
     useEffect(() => {
         const fetchOrderData = async () => {
             try {
-                const responseSummary = await fetch(`http://localhost:8080/api/v1/orders/${orderId}/summary`, {
+                const responseSummary = await fetch(`/api/v1/orders/${orderId}/summary`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const resultSummary = await responseSummary.json();
@@ -34,7 +34,7 @@ const CheckoutPage = () => {
                 }
 
                 // --- 2. Gọi API 2 mới để lấy mã bảo mật Payment Intent ---
-                const responseIntent = await fetch('http://localhost:8080/api/v1/payments/create-payment-intent', {
+                const responseIntent = await fetch('/api/v1/payments/create-payment-intent', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

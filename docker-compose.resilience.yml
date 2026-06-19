@@ -1,0 +1,173 @@
+version: '3.8'
+
+# Enhanced services with load balancing, resilience, and Cloudflare Tunnel support
+# Use with: docker-compose -f docker-compose.yml -f docker-compose.resilience.yml up -d
+
+services:
+  # ============================================
+  # LOAD BALANCER - Nginx upstream for backends
+  # ============================================
+  nginx-loadbalancer:
+    image: nginx:latest
+    container_name: freelance_marketplace_loadbalancer
+    ports:
+      - "8081:8081"  # Expose for debugging
+    volumes:
+      - ./nginx-lb.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backend
+    networks:
+      - freelance_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8081/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    environment:
+      - BACKEND_SERVERS=backend:8080
+
+  # ============================================
+  # BACKEND - Multiple instances for resilience
+  # ============================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: freelance_marketplace_backend
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/freelance_marketplace?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      DB_USERNAME: freelance_user
+      DB_PASSWORD: freelance_password
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_ELASTICSEARCH_URIS: http://elasticsearch:9200
+      SPRING_MAIL_HOST: smtp.gmail.com
+      SPRING_MAIL_PORT: 587
+      SPRING_MAIL_USERNAME: ${MAIL_USERNAME}
+      SPRING_MAIL_PASSWORD: ${MAIL_PASSWORD}
+      CLOUD_NAME: ${CLOUD_NAME}
+      CLOUD_API_KEY: ${CLOUD_API_KEY}
+      CLOUD_API_SECRET: ${CLOUD_API_SECRET}
+      STRIPE_API_KEY: ${STRIPE_API_KEY}
+      WEB_HOOK_SECRET: ${WEB_HOOK_SECRET}
+      JAVA_OPTS: "-XX:+UseG1GC -XX:MaxRAMPercentage=75.0 -XX:+UseStringDeduplication"
+    expose:
+      - "8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - freelance_network
+    restart: on-failure:5
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health || curl -f http://localhost:8080/ || exit 1"]
+      interval: 30s
+      timeout: 15s
+      retries: 5
+      start_period: 60s
+
+  # Optional: Second backend instance for testing load balancing
+  backend-replica:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: freelance_marketplace_backend_replica
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/freelance_marketplace?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      DB_USERNAME: freelance_user
+      DB_PASSWORD: freelance_password
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_ELASTICSEARCH_URIS: http://elasticsearch:9200
+      SPRING_MAIL_HOST: smtp.gmail.com
+      SPRING_MAIL_PORT: 587
+      SPRING_MAIL_USERNAME: ${MAIL_USERNAME}
+      SPRING_MAIL_PASSWORD: ${MAIL_PASSWORD}
+      CLOUD_NAME: ${CLOUD_NAME}
+      CLOUD_API_KEY: ${CLOUD_API_KEY}
+      CLOUD_API_SECRET: ${CLOUD_API_SECRET}
+      STRIPE_API_KEY: ${STRIPE_API_KEY}
+      WEB_HOOK_SECRET: ${WEB_HOOK_SECRET}
+      JAVA_OPTS: "-XX:+UseG1GC -XX:MaxRAMPercentage=75.0"
+    expose:
+      - "8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - freelance_network
+    restart: on-failure:5
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health || exit 1"]
+      interval: 30s
+      timeout: 15s
+      retries: 5
+      start_period: 60s
+    profiles: ["resilience"]  # Only run with: docker-compose --profile resilience up
+
+  # ============================================
+  # CLOUDFLARE TUNNEL
+  # ============================================
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: freelance_marketplace_cloudflared
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    environment:
+      - CLOUDFLARE_TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+    depends_on:
+      - frontend
+    networks:
+      - freelance_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:7844/ready || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    profiles: ["tunnel"]  # Only run with: docker-compose --profile tunnel up
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ============================================
+  # MONITORING & LOGGING (Optional)
+  # ============================================
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: freelance_marketplace_portainer
+    command: -H unix:///var/run/docker.sock
+    ports:
+      - "9000:9000"
+      - "8000:8000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9000"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+    networks:
+      - freelance_network
+    profiles: ["monitoring"]  # Only run with: docker-compose --profile monitoring up
+
+volumes:
+  portainer_data:
+    driver: local
+
+networks:
+  freelance_network:
+    driver: bridge

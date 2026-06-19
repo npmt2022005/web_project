@@ -61,7 +61,7 @@ const MyOrders = () => {
                 setLoading(true);
                 setIsUsingMock(false);
                 
-                let url = `http://localhost:8080/api/v1/orders?role=BUYER`;
+                let url = `/api/v1/orders?role=BUYER`;
                 if (statusFilter) {
                     url += `&status=${statusFilter}`;
                 }

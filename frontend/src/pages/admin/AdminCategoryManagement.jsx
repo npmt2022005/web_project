@@ -19,7 +19,7 @@ const AdminCategoryManagement = () => {
 
     const fetchCategories = async () => {
         try {
-            const response = await fetch('http://localhost:8080/api/categories');
+            const response = await fetch('/api/categories');
             if (response.ok) {
                 const data = await response.json();
                 setCategories(data);
@@ -61,8 +61,8 @@ const AdminCategoryManagement = () => {
         e.preventDefault();
         const categoryData = { name, description };
         const url = selectedCategory 
-            ? `http://localhost:8080/api/categories/${selectedCategory.id}`
-            : 'http://localhost:8080/api/categories';
+            ? `/api/categories/${selectedCategory.id}`
+            : '/api/categories';
         const method = selectedCategory ? 'PUT' : 'POST';
 
         try {
@@ -86,7 +86,7 @@ const AdminCategoryManagement = () => {
     const handleDelete = async (id) => {
         if (window.confirm("Bạn có chắc chắn muốn xóa danh mục này?")) {
             try {
-                const response = await fetch(`http://localhost:8080/api/categories/${id}`, {
+                const response = await fetch(`/api/categories/${id}`, {
                     method: 'DELETE'
                 });
                 if (response.ok) {

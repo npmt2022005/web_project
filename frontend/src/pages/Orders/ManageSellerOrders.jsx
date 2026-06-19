@@ -139,7 +139,7 @@ const ManageSellerOrders = () => {
                 else if (activeTab === 'cancelled') backendStatusParam = 'CANCELLED';
                 else backendStatusParam = 'ALL'; // Đối với tab 'active', lấy toàn bộ để client hoặc API tự tổng hợp
 
-                let url = `http://localhost:8080/api/v1/orders?role=SELLER`;
+                let url = `/api/v1/orders?role=SELLER`;
                 if (backendStatusParam !== 'ALL') {
                     url += `&status=${backendStatusParam}`;
                 }

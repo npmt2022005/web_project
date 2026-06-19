@@ -114,17 +114,33 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() { 
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // Cho phép Frontend (Vite/React) truy cập
-        configuration.setAllowedOrigins(List.of("http://localhost:5173")); 
+        // Cho phép Frontend từ các nguồn khác nhau:
+        // - http://localhost (Nginx proxy - cổng 80)
+        // - http://127.0.0.1 (localhost alias)
+        // - http://localhost:3000 (Node dev server nếu cần)
+        // - http://localhost:5173 (Vite dev server)
+        configuration.setAllowedOrigins(Arrays.asList(
+            "http://localhost",
+            "http://localhost:80",
+            "http://localhost:3000",
+            "http://localhost:5173",
+            "http://127.0.0.1",
+            "http://127.0.0.1:80",
+            "http://127.0.0.1:3000",
+            "http://127.0.0.1:5173"
+        )); 
         
-        // Cho phép các phương thức HTTP
+        // Cho phép các phương thức HTTP cần thiết
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         
         // Cho phép tất cả các Header (Quan trọng để gửi JWT trong Header)
         configuration.setAllowedHeaders(List.of("*"));
         
-        // Cho phép gửi kèm thông tin xác thực
+        // Cho phép gửi kèm thông tin xác thực (Cookies, Authorization header)
         configuration.setAllowCredentials(true);
+        
+        // Cache preflight response trong 3600 giây (1 giờ)
+        configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

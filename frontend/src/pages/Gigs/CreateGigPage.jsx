@@ -135,7 +135,7 @@ const CreateGigPage = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch('http://localhost:8080/api/v1/categories', {
+        const response = await fetch('/api/v1/categories', {
           method: 'GET'
         });
         const result = await response.json();
@@ -337,7 +337,7 @@ const CreateGigPage = () => {
       formData.append('file', file);
 
       try {
-        const response = await fetch('http://localhost:8080/api/v1/uploads/image', {
+        const response = await fetch('/api/v1/uploads/image', {
           method: 'POST',
           headers: {
             'Authorization': token ? `Bearer ${token}` : ''
@@ -482,8 +482,8 @@ const CreateGigPage = () => {
     const token = localStorage.getItem('token') || localStorage.getItem('JWT_TOKEN');
 
     const apiUrl = isEditMode 
-      ? `http://localhost:8080/api/v1/gigs/update/${editGigId}` 
-      : 'http://localhost:8080/api/v1/gigs/create_gig';
+      ? `/api/v1/gigs/update/${editGigId}` 
+      : '/api/v1/gigs/create_gig';
     
     const apiMethod = isEditMode ? 'PUT' : 'POST';
 
