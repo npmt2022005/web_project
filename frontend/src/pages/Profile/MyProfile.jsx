@@ -1,6 +1,7 @@
 // src/pages/Profile/MyProfile.jsx
 import React, { useState, useEffect } from 'react';
 import { Upload, Trash2, Plus, PenSquare, ArrowUpRight, Check, X, CreditCard, RefreshCw } from 'lucide-react';
+import apiClient from '../../services/apiClient';
 import './MyProfile.css';
 
 const MyProfile = () => {
@@ -73,21 +74,15 @@ const MyProfile = () => {
     // ==========================================
     const fetchProfileData = async () => {
         try {
-            const response = await fetch('http://localhost:8080/api/v1/profile/me', {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
-            });
+            const response = await apiClient.get('/v1/profile/me');
             
-            const result = await response.json();
-            
+            const result = response.data;
             console.log(">>> [DEBUG] fetchProfileData Result:", result);
-
-            if (response.ok && result.status === 'success') {
-                localStorage.setItem('profileData', JSON.stringify(result));
+            if (result.data) {
                 const data = result.data;
                 const info = data.basicInfo || {};
-    
+                console.log(">>> [DEBUG] Education List:", data.education);
+                console.log(">>> [DEBUG] Experience List:", data.experience);
 
                 setBasicInfo({
                     fullName: info.username || '',
@@ -166,21 +161,17 @@ const MyProfile = () => {
         formData.append('file', file);
 
         try {
-            const response = await fetch('http://localhost:8080/api/v1/profile/avatar', {
-                method: 'POST',
+            const response = await apiClient.post('/v1/profile/avatar', formData, {
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-                body: formData
+                    'Content-Type': 'multipart/form-data'
+                }
             });
 
-            const result = await response.json();
-
-            if (response.ok && result.status === 'success') {
-                setAvatarUrl(result.data); 
-                alert(result.message || "Cập nhật ảnh đại diện thành công!");
+            if (response.data.status === 'success') {
+                setAvatarUrl(response.data.data); 
+                alert(response.data.message || "Cập nhật ảnh đại diện thành công!");
             } else {
-                throw new Error(result.message || "Lỗi xử lý tải ảnh lên từ phía máy chủ.");
+                throw new Error(response.data.message || "Lỗi xử lý tải ảnh lên từ phía máy chủ.");
             }
         } catch (error) {
             console.warn("🚩 API Avatar Error - Kích hoạt Mock Data Fallback:", error.message);
@@ -219,26 +210,23 @@ const MyProfile = () => {
         try {
             const method = item.id ? 'PUT' : 'POST';
             const url = item.id 
-                ? `http://localhost:8080/api/v1/profile/education/${item.id}` 
-                : 'http://localhost:8080/api/v1/profile/education';
+                ? `/v1/profile/education/${item.id}` 
+                : '/v1/profile/education';
 
-            const response = await fetch(url, {
+            const response = await apiClient({
                 method: method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-                body: JSON.stringify({
+                url: url,
+                data: {
                     school: item.school,
                     degree: item.degree,
                     duration: item.year, // Sửa từ 'year' thành 'duration' để khớp với Backend
                     description: item.description // Gửi kèm mô tả lên API hệ thống
-                })
+                }
             });
 
-            const result = await response.json(); // Parse response once
-            if (response.ok && result.status === 'success') {
-                console.log(">>> [DEBUG] handleSaveEducationItem Response Body:", result); // This will now contain the full TimelineDTO
+            const result = response.data;
+            if (result.status === 'success') {
+                console.log(">>> [DEBUG] handleSaveEducationItem Response Body:", result);
 
                 const updatedList = [...educations];
                 // Map TimelineDTO fields back to frontend state fields
@@ -279,19 +267,14 @@ const MyProfile = () => {
         if (!window.confirm("Bạn có chắc chắn muốn xóa vĩnh viễn mục học vấn này không?")) return;
 
         try {
-            const response = await fetch(`http://localhost:8080/api/v1/profile/education/${item.id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
-            });
+            const response = await apiClient.delete(`/v1/profile/education/${item.id}`);
 
             if (response.ok) {
                 setEducations(educations.filter((_, idx) => idx !== index));
                 alert("Xóa học vấn thành công!");
             } else {
                 setEducations(educations.filter((_, idx) => idx !== index));
-                alert("Đã xóa mục trên giao diện.");
+                alert("Đãstatus === 200 || response.data?.status === 'success'óa mục trên giao diện.");
             }
         } catch (error) {
             console.error("Lỗi API khi xóa education:", error);
@@ -324,28 +307,24 @@ const MyProfile = () => {
         try {
             const method = item.id ? 'PUT' : 'POST';
             const url = item.id 
-                ? `http://localhost:8080/api/v1/profile/experience/${item.id}` 
-                : 'http://localhost:8080/api/v1/profile/experience';
+                ? `/v1/profile/experience/${item.id}` 
+                : '/v1/profile/experience';
 
-            const response = await fetch(url, {
+            const response = await apiClient({
                 method: method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-                body: JSON.stringify({
+                url: url,
+                data: {
                     company: item.company,
                     role: item.role,
                     duration: item.duration,
                     description: item.description
-                })
+                }
             });
 
-            const result = await response.json();
+            const result = response.data;
             console.log(">>> [DEBUG] handleSaveExperienceItem Result:", result);
 
             if (response.ok && result.status === 'success') {
-                const updatedList = [...experiences];
                 // Map TimelineDTO fields back to frontend state fields
                 updatedList[index] = { 
                     id: result.data.id,
@@ -384,19 +363,14 @@ const MyProfile = () => {
         if (!window.confirm("Bạn có chắc chắn muốn gỡ bỏ mục kinh nghiệm việc làm này?")) return;
 
         try {
-            const response = await fetch(`http://localhost:8080/api/v1/profile/experience/${item.id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
-            });
+            const response = await apiClient.delete(`/v1/profile/experience/${item.id}`);
 
             if (response.ok) {
                 setExperiences(experiences.filter((_, idx) => idx !== index));
                 alert("Đã xóa bản ghi kinh nghiệm làm việc!");
             } else {
                 setExperiences(experiences.filter((_, idx) => idx !== index));
-                alert("Đã gỡ bỏ khỏi giao diện.");
+                alert("Đãstatus === 200 || response.data?.status === 'success'ỡ bỏ khỏi giao diện.");
             }
         } catch (error) {
             console.error("Lỗi API khi xóa experience:", error);
@@ -433,20 +407,13 @@ const MyProfile = () => {
     // ==========================================
     const handleSaveBasicInfo = async () => {
         try {
-            const response = await fetch('http://localhost:8080/api/v1/profile/me', {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-                body: JSON.stringify({
-                    phone: basicInfo.phone,
-                    country: basicInfo.country,
-                    city: basicInfo.city,
-                    description: basicInfo.bio
-                })
+            const response = await apiClient.patch('/v1/profile/me', {
+                phone: basicInfo.phone,
+                country: basicInfo.country,
+                city: basicInfo.city,
+                description: basicInfo.bio
             });
-            if (response.ok) {
+            if (response.data.status === 'success') {
                 alert("Đã lưu thông tin cơ bản thành công!");
                 setIsEditingBasic(false);
             }
@@ -462,12 +429,9 @@ const MyProfile = () => {
         try {
             if (accountStatus.linkedBank) {
                 // TRƯỜNG HỢP 1: Đã liên kết, thực hiện đồng bộ (Verify)
-                const response = await fetch('http://localhost:8080/api/v1/profile/me/verify-bank', {
-                    method: 'GET',
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-                });
-                const result = await response.json();
-                if (response.ok && result.status === 'success') {
+                const response = await apiClient.get('/v1/profile/me/verify-bank');
+                const result = response.data;
+                if (result.status === 'success') {
                     alert("Đồng bộ trạng thái định danh Stripe thành công!");
                     fetchProfileData(); // Gọi lại để cập nhật trạng thái linkedBank và verified
                 } else {
@@ -475,12 +439,9 @@ const MyProfile = () => {
                 }
             } else {
                 // TRƯỜNG HỢP 2: Chưa liên kết, khởi tạo link Onboarding
-                const response = await fetch('http://localhost:8080/api/v1/profile/me/bank-setup', {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-                });
-                const result = await response.json();
-                if (response.ok && result.data?.onboardingUrl) {
+                const response = await apiClient.post('/v1/profile/me/bank-setup');
+                const result = response.data;
+                if (result.data?.onboardingUrl) {
                     window.location.href = result.data.onboardingUrl;
                 } else {
                     alert(result.message || "Lỗi thiết lập ngân hàng");
@@ -518,26 +479,18 @@ const MyProfile = () => {
         }
 
         try {
-            const response = await fetch('http://localhost:8080/api/auth/change-password', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-                body: JSON.stringify({
-                    oldPassword: passwordData.oldPassword,
-                    newPassword: passwordData.newPassword,
-                    confirmNewPassword: passwordData.confirmPassword
-                })
+            const response = await apiClient.post('/auth/change-password', {
+                oldPassword: passwordData.oldPassword,
+                newPassword: passwordData.newPassword,
+                confirmNewPassword: passwordData.confirmPassword
             });
 
-            const result = await response.json();
+            const result = response.data;
 
-            if (response.ok && result.status === 'success') {
+            if (result.status === 'success') {
                 alert(result.message || "Đổi mật khẩu thành công!");
                 setPasswordData({ oldPassword: '', newPassword: '', confirmPassword: '' });
             } else {
-                // Hiển thị thông báo lỗi cụ thể từ Backend (ví dụ: "Mật khẩu cũ không chính xác!")
                 alert(result.message || "Đã có lỗi xảy ra trong quá trình đổi mật khẩu.");
             }
         } catch (error) {

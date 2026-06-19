@@ -1,7 +1,7 @@
 // src/pages/Orders/OrderDetailPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Clock, DollarSign, ArrowLeft, ShieldCheck, User, AlertCircle, Upload, Link as LinkIcon, Star } from 'lucide-react';
+import { Clock, DollarSign, ArrowLeft, ShieldCheck, User, AlertCircle, Upload, Link as LinkIcon, Star, FileText } from 'lucide-react';
 import './Orders.css';
 
 const FALLBACK_MOCK_DETAIL = {
@@ -77,7 +77,7 @@ const OrderDetailPage = () => {
             setIsUsingMock(false);
             setIsExpanded(false);
             
-            const response = await fetch(`http://localhost:8080/api/v1/orders/${orderId}`, {
+            const response = await fetch(`/api/v1/orders/${orderId}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -92,7 +92,7 @@ const OrderDetailPage = () => {
                 
                 // Nếu đơn hàng đã giao, hoàn thành hoặc đang sửa đổi (sau khi đã nộp ít nhất 1 lần)
                 if (['DELIVERED', 'COMPLETED'].includes(resData.data.status) || (resData.data.status === 'IN_PROGRESS' && resData.data.revisionCount > 0)) {
-                    const delResponse = await fetch(`http://localhost:8080/api/v1/orders/${orderId}/delivery-details`, {
+                    const delResponse = await fetch(`/api/v1/orders/${orderId}/delivery-details`, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
                     const delData = await delResponse.json();
@@ -145,7 +145,7 @@ const OrderDetailPage = () => {
         }
 
         try {
-            const response = await fetch(`http://localhost:8080/api/v1/orders/${orderId}/cancel-late`, {
+            const response = await fetch(`/api/v1/orders/${orderId}/cancel-late`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -217,7 +217,7 @@ const OrderDetailPage = () => {
 
         try {
             setActionLoading(true);
-            const response = await fetch(`http://localhost:8080/api/v1/orders/${orderId}/status`, {
+            const response = await fetch(`/api/v1/orders/${orderId}/status`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -275,7 +275,7 @@ const OrderDetailPage = () => {
 
         try {
             setDeliverLoading(true);
-            const response = await fetch(`http://localhost:8080/api/v1/orders/${orderId}/deliver`, {
+            const response = await fetch(`/api/v1/orders/${orderId}/deliver`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -330,7 +330,7 @@ const OrderDetailPage = () => {
 
         try {
             setCompleteLoading(true);
-            const response = await fetch(`http://localhost:8080/api/v1/orders/${orderId}/complete`, {
+            const response = await fetch(`/api/v1/orders/${orderId}/complete`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -399,7 +399,7 @@ const OrderDetailPage = () => {
 
         try {
             setRevisionLoading(true);
-            const response = await fetch(`http://localhost:8080/api/v1/orders/${orderId}/revision`, {
+            const response = await fetch(`/api/v1/orders/${orderId}/revision`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -447,7 +447,7 @@ const OrderDetailPage = () => {
             return;
         }
         try {
-            const response = await fetch(`http://localhost:8080/api/v1/conversations/initiate/order/${orderId}`, {
+            const response = await fetch(`/api/v1/conversations/initiate/order/${orderId}`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,

@@ -28,7 +28,7 @@ const OrderRequirementPage = () => {
       const token = localStorage.getItem('token');
       try {
         setLoadingQuestions(true);
-        const response = await fetch(`http://localhost:8080/api/v1/orders/${orderId}/requirements`, {
+        const response = await fetch(`/api/v1/orders/${orderId}/requirements`, {
           method: 'GET',
           headers: {
             'Authorization': token ? `Bearer ${token}` : ''
@@ -116,7 +116,7 @@ const OrderRequirementPage = () => {
     const token = localStorage.getItem('token');
 
     try {
-      const response = await fetch('http://localhost:8080/api/v1/uploads/file', {
+      const response = await fetch('/api/v1/uploads/file', {
         method: 'POST',
         headers: {
           'Authorization': token ? `Bearer ${token}` : ''
@@ -199,7 +199,7 @@ const OrderRequirementPage = () => {
     const token = localStorage.getItem('token');
 
     try {
-      const response = await fetch(`http://localhost:8080/api/v1/orders/${orderId}/start`, {
+      const response = await fetch(`/api/v1/orders/${orderId}/start`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

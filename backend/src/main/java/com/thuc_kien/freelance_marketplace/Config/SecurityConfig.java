@@ -118,7 +118,16 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         
         // Cho phép Frontend (Vite/React) truy cập
-        configuration.setAllowedOrigins(List.of("http://localhost:5173")); 
+        configuration.setAllowedOrigins(Arrays.asList(
+            "http://localhost",
+            "http://localhost:80",
+            "http://localhost:3000",
+            "http://localhost:5173",
+            "http://127.0.0.1",
+            "http://127.0.0.1:80",
+            "http://127.0.0.1:3000",
+            "http://127.0.0.1:5173"
+        )); 
         
         // Cho phép các phương thức HTTP
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
@@ -128,6 +137,9 @@ public class SecurityConfig {
         
         // Cho phép gửi kèm thông tin xác thực
         configuration.setAllowCredentials(true);
+
+        // Cache preflight response trong 3600 giây (1 giờ)
+        configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

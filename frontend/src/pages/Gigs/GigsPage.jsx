@@ -39,7 +39,7 @@ const GigsPage = () => {
     useEffect(() => {
         const fetchMetaData = async () => {
             try {
-                const response = await axios.get('http://localhost:8080/api/v1/gigs_v1/meta/filters');
+                const response = await axios.get('/api/v1/gigs_v1/meta/filters');
                 const apiData = response.data.data;
                 setMetaData({
                     locations: apiData.locations,
@@ -73,7 +73,7 @@ const GigsPage = () => {
                 if (Array.isArray(params.languages)) {
                     params.languages = params.languages.length > 0 ? params.languages : undefined;
                 }
-                const response = await axios.get('http://localhost:8080/api/v1/gigs_v1/search', {
+                const response = await axios.get('/api/v1/gigs_v1/search', {
                     params,
                     paramsSerializer: (params) => {
                         const sp = new URLSearchParams();
@@ -158,7 +158,7 @@ const GigsPage = () => {
     useEffect(() => {
         const fetchMetadata = async () => {
             try {
-                const response = await axios.get('http://localhost:8080/api/v1/gigs_v1/meta/filters');
+                const response = await axios.get('/api/v1/gigs_v1/meta/filters');
                 const apiData = response.data.data;
                 setPopularCategories(apiData.popularTags);
             } catch (error) {

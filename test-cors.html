@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CORS Test</title>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        .test { margin: 10px 0; padding: 10px; border: 1px solid #ccc; }
+        .pass { background-color: #e8f5e9; }
+        .fail { background-color: #ffebee; }
+        button { padding: 10px 20px; margin-right: 10px; }
+        pre { background: #f5f5f5; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Freelance Marketplace - CORS Test</h1>
+    
+    <button onclick="testPreflight()">Test CORS Preflight</button>
+    <button onclick="testGetCategories()">Test GET /api/v1/categories</button>
+    <button onclick="testProfileApi()">Test GET /api/v1/profile/me</button>
+    <button onclick="clearResults()">Clear Results</button>
+    
+    <div id="results"></div>
+    
+    <script>
+        const API_BASE = 'http://localhost';
+        
+        function log(title, status, data) {
+            const div = document.createElement('div');
+            div.className = 'test ' + (status === 'success' ? 'pass' : 'fail');
+            div.innerHTML = `<strong>${title}</strong> (${status})<br/><pre>${JSON.stringify(data, null, 2)}</pre>`;
+            document.getElementById('results').appendChild(div);
+            console.log(`[${status}] ${title}`, data);
+        }
+        
+        async function testPreflight() {
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/categories`, {
+                    method: 'OPTIONS',
+                    headers: {
+                        'Origin': 'http://localhost',
+                        'Access-Control-Request-Method': 'GET'
+                    }
+                });
+                
+                const headers = {
+                    'Access-Control-Allow-Origin': response.headers.get('Access-Control-Allow-Origin'),
+                    'Access-Control-Allow-Methods': response.headers.get('Access-Control-Allow-Methods'),
+                    'Access-Control-Allow-Headers': response.headers.get('Access-Control-Allow-Headers'),
+                    'Access-Control-Max-Age': response.headers.get('Access-Control-Max-Age')
+                };
+                
+                log('CORS Preflight Test', 'success', { status: response.status, headers });
+            } catch (error) {
+                log('CORS Preflight Test', 'fail', { error: error.message });
+            }
+        }
+        
+        async function testGetCategories() {
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/categories`);
+                const data = await response.json();
+                
+                log('GET /api/v1/categories', response.ok ? 'success' : 'fail', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    dataLength: Array.isArray(data) ? data.length : 'not array',
+                    corsHeader: response.headers.get('Access-Control-Allow-Origin'),
+                    firstItem: data[0] || 'empty'
+                });
+            } catch (error) {
+                log('GET /api/v1/categories', 'fail', { error: error.message });
+            }
+        }
+        
+        async function testProfileApi() {
+            try {
+                const token = localStorage.getItem('token') || 'NO_TOKEN';
+                const response = await fetch(`${API_BASE}/api/v1/profile/me`, {
+                    headers: {
+                        'Authorization': token ? `Bearer ${token}` : undefined
+                    }
+                });
+                
+                const text = await response.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    data = { text: text.substring(0, 100) };
+                }
+                
+                log('GET /api/v1/profile/me', response.ok ? 'success' : 'fail', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    corsHeader: response.headers.get('Access-Control-Allow-Origin'),
+                    token: token.substring(0, 20) + '...',
+                    response: data
+                });
+            } catch (error) {
+                log('GET /api/v1/profile/me', 'fail', { error: error.message });
+            }
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        // Auto-run tests
+        setTimeout(() => {
+            testPreflight();
+            testGetCategories();
+        }, 1000);
+    </script>
+</body>
+</html>

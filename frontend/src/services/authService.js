@@ -1,7 +1,8 @@
 import axios from 'axios';
 
-// URL máy chủ từ file JSON
-const API_BASE = "http://localhost:8080/api/auth";
+// URL máy chủ - dùng relative path để Nginx proxy tới backend
+// Tự động hoạt động cả ở dev (localhost:8080) lẫn Docker (http://backend:8080)
+const API_BASE = "/api/auth";
 
 export const authService = {
   // Đăng ký: yêu cầu fullname, email, phone, password, confirmPassword, username, role

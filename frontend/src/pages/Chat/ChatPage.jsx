@@ -116,7 +116,7 @@ const ChatPage = () => {
   useEffect(() => {
     const fetchConversations = async () => {
       try {
-        const response = await fetch('http://localhost:8080/api/v1/conversations', {
+        const response = await fetch('/api/v1/conversations', {
           method: 'GET',
           headers: {
             'Authorization': token ? `Bearer ${token}` : '',
@@ -153,7 +153,7 @@ const ChatPage = () => {
     const fetchMessages = async () => {
       if (!activeId) return;
       try {
-        const response = await fetch(`http://localhost:8080/api/v1/conversations/${activeId}/messages`, {
+        const response = await fetch(`/api/v1/conversations/${activeId}/messages`, {
           method: 'GET',
           headers: {
             'Authorization': token ? `Bearer ${token}` : '',
@@ -187,7 +187,7 @@ const ChatPage = () => {
   // 1. 🟢 THÊM: Khởi tạo kết nối WebSocket ngay khi vừa vào trang Chat
   useEffect(() => {
     // Kết nối đến endpoint đã định nghĩa trong Spring Boot
-    const socket = new SockJS('http://localhost:8080/ws');
+    const socket = new SockJS('/ws');
     const stompClient = Stomp.over(socket);
     let chatSubscription = null;
     // 🛠️ SỬA LỖI: Gửi Token trong headers khi kết nối để Backend nhận diện Authentication

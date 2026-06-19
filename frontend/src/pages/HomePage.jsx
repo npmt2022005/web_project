@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios'; // --- Thêm Axios để gọi API ---
+import apiClient from '../services/apiClient'; // --- Thêm apiClient thay vì axios trực tiếp ---
 import { 
   Search, Star, Globe, Bell, Mail, 
   User, LayoutGrid, Info, ShieldCheck, ChevronDown,
@@ -39,7 +39,7 @@ const HomePage = () => {
   useEffect(() => {
     const fetchMetadata = async () => {
       try {
-        const response = await axios.get('http://localhost:8080/api/v1/gigs_v1/meta/filters');
+        const response = await apiClient.get('/v1/gigs_v1/meta/filters');
         const apiData = response.data.data;
         setPopularCategories(apiData.popularTags);
       } catch (error) {
@@ -63,7 +63,7 @@ const HomePage = () => {
     const fetchFeaturedGigs = async () => {
       try {
         setLoadingGigs(true);
-        const response = await axios.get('http://localhost:8080/api/v1/gigs/featured?limit=4');
+        const response = await apiClient.get('/v1/gigs/featured?limit=4');
         if (response.data && response.data.status === 'success') {
           setFeaturedGigs(response.data.data); 
         }
@@ -77,7 +77,7 @@ const HomePage = () => {
     // 3. GỌI API LẤY DANH SÁCH CÂY DANH MỤC (/api/v1/categories)
     const fetchCategories = async () => {
       try {
-        const response = await axios.get('http://localhost:8080/api/v1/categories');
+        const response = await apiClient.get('/v1/categories');
         if (response.data && response.data.status === 'success') {
           setCategories(response.data.data); 
         }

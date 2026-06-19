@@ -76,7 +76,7 @@ const CreateGigPage = () => {
   const fetchAvailableFeatures = async (catId) => {
     try {
       // Trong tương lai, bạn có thể truyền categoryId vào đây
-      const response = await fetch(`http://localhost:8080/api/v1/gigs/features?categoryId=${catId}`);
+      const response = await fetch(`/api/v1/gigs/features?categoryId=${catId}`);
       const result = await response.json();
       if (result.status === 'success' && Array.isArray(result.data)) {
         const newFeatures = result.data;
@@ -165,7 +165,7 @@ const CreateGigPage = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch('http://localhost:8080/api/v1/categories', {
+        const response = await fetch('/api/v1/categories', {
           method: 'GET'
         });
         const result = await response.json();
@@ -335,7 +335,7 @@ const CreateGigPage = () => {
       const fetchGigDetailsForEdit = async () => {
         try {
           setLoading(true);
-          const response = await fetch(`http://localhost:8080/api/v1/gigs/${editGigId}`);
+          const response = await fetch(`/api/v1/gigs/${editGigId}`);
           const result = await response.json();
           if (response.ok && result.status === 'success') {
             // Gọi hàm điền form với dữ liệu mới nhất từ API
@@ -448,7 +448,7 @@ const CreateGigPage = () => {
       formData.append('file', file);
 
       try {
-        const response = await fetch('http://localhost:8080/api/v1/uploads/image', {
+        const response = await fetch('/api/v1/uploads/image', {
           method: 'POST',
           headers: {
             'Authorization': token ? `Bearer ${token}` : ''
@@ -598,8 +598,8 @@ const CreateGigPage = () => {
     const token = localStorage.getItem('token') || localStorage.getItem('JWT_TOKEN');
 
     const apiUrl = isEditMode
-      ? `http://localhost:8080/api/v1/gigs/update/${editGigId}`
-      : 'http://localhost:8080/api/v1/gigs/create_gig';
+      ? `/api/v1/gigs/update/${editGigId}`
+      : '/api/v1/gigs/create_gig';
 
     const apiMethod = isEditMode ? 'PUT' : 'POST';
 

@@ -50,7 +50,7 @@ const Header = () => {
         // 2. Gọi API lấy danh sách danh mục
         const fetchCategories = async () => {
             try {
-                const response = await axios.get('http://localhost:8080/api/v1/categories');
+                const response = await axios.get('/api/v1/categories');
                 if (response.data && response.data.status === 'success') {
                     setCategories(response.data.data);
                 }
