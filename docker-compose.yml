@@ -1,0 +1,150 @@
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: freelance_marketplace_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: freelance_marketplace
+      MYSQL_USER: freelance_user
+      MYSQL_PASSWORD: freelance_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backend/src/main/resources/db:/docker-entrypoint-initdb.d
+    networks:
+      - freelance_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+    restart: unless-stopped
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: freelance_marketplace_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - freelance_network
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      timeout: 20s
+      retries: 10
+    restart: unless-stopped
+
+  # Elasticsearch
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.10
+    container_name: freelance_marketplace_elasticsearch
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - freelance_network
+    hostname: elasticsearch
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200 >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+
+  # Backend Service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: freelance_marketplace_backend
+    environment:
+      # Database
+      DB_URL: jdbc:mysql://mysql:3306/freelance_marketplace?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      DB_USERNAME: freelance_user
+      DB_PASSWORD: freelance_password
+      
+      # Redis
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      
+      # Elasticsearch
+      SPRING_ELASTICSEARCH_URIS: http://elasticsearch:9200
+      
+      # Mail (Gmail)
+      SPRING_MAIL_HOST: smtp.gmail.com
+      SPRING_MAIL_PORT: 587
+      SPRING_MAIL_USERNAME: ${MAIL_USERNAME}
+      SPRING_MAIL_PASSWORD: ${MAIL_PASSWORD}
+      
+      # Cloudinary
+      CLOUD_NAME: ${CLOUD_NAME}
+      CLOUD_API_KEY: ${CLOUD_API_KEY}
+      CLOUD_API_SECRET: ${CLOUD_API_SECRET}
+      
+      # Stripe
+      STRIPE_API_KEY: ${STRIPE_API_KEY}
+      WEB_HOOK_SECRET: ${WEB_HOOK_SECRET}
+      
+      # Java options
+      JAVA_OPTS: "-XX:+UseG1GC -XX:MaxRAMPercentage=75.0"
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./.env:/app/.env:ro
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - freelance_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Frontend Service
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: freelance_marketplace_frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - freelance_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
+  elasticsearch_data:
+    driver: local
+
+networks:
+  freelance_network:
+    driver: bridge

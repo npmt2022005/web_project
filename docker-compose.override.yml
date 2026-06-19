@@ -1,0 +1,47 @@
+# Docker Compose Override for Local Development
+# This file is automatically loaded and overrides settings in docker-compose.yml
+
+services:
+  backend:
+    # Enable debug logging and hot reload
+    environment:
+      # More verbose logging
+      LOGGING_LEVEL_ROOT: INFO
+      LOGGING_LEVEL_COM_THUC_KIEN: DEBUG
+      # Development settings
+      SPRING_PROFILES_ACTIVE: dev
+    # Mount source code for hot reload
+    volumes:
+      - ./backend/src:/app/src
+    # Use local built jar instead of always building
+    build:
+      context: ./backend
+      cache_from:
+        - freelance_marketplace_backend:latest
+
+  frontend:
+    # Enable HMR (Hot Module Replacement)
+    environment:
+      VITE_HMR_HOST: localhost
+      VITE_HMR_PROTOCOL: http
+      VITE_HMR_PORT: 80
+    # Mount source code for hot reload
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+
+  mysql:
+    # Persist data on disk
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_LOG_CONSOLE: 'true'
+
+  redis:
+    # Allow more verbose logging
+    command: redis-server --appendonly yes --loglevel verbose
+
+  elasticsearch:
+    # Reduced memory for local development
+    environment:
+      - "ES_JAVA_OPTS=-Xms256m -Xmx256m"
