@@ -63,7 +63,7 @@ const SellerExploration = () => {
         setLoading(true);
         
         try {
-            const response = await fetch('http://localhost:8080/api/v1/sellers');
+            const response = await fetch('/api/v1/sellers');
             const result = await response.json(); // Đổi tên biến thành result cho rõ ràng
 
             console.log("👉 Dữ liệu nhận được từ API:", result);

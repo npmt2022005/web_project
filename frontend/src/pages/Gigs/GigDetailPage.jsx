@@ -294,9 +294,21 @@ const GigDetailPage = () => {
           <div className="top-seller-info-row">
             {gig.seller && (
               <>
-                <img src={gig.seller.avatarUrl} alt={gig.seller.fullName} className="seller-mini-avatar" />
+                <img
+                  src={gig.seller.avatarUrl}
+                  alt={gig.seller.fullName}
+                  className="seller-mini-avatar"
+                  onClick={() => navigate(`/seller/${gig.seller.id}`)}
+                  style={{ cursor: 'pointer' }}
+                />
                 <div className="seller-meta-text">
-                  <span className="seller-name-bold">{gig.seller.fullName}</span>
+                  <span
+                    className="seller-name-bold"
+                    onClick={() => navigate(`/seller/${gig.seller.id}`)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    {gig.seller.fullName}
+                  </span>
                   {gig.seller.isVerified && <span className="verified-text">| Chuyên gia xác thực</span>}
                   <span className="seller-role-badge">{gig.seller.role || "Freelancer"}</span>
                 </div>
@@ -355,9 +367,18 @@ const GigDetailPage = () => {
             <div className="detail-section-card seller-profile-long-card">
               <h3>Thông tin về người bán</h3>
               <div className="seller-profile-flex-box">
-                <img src={gig.seller.avatarUrl} alt={gig.seller.fullName} className="seller-large-avatar" />
+                <img
+                  src={gig.seller.avatarUrl}
+                  alt={gig.seller.fullName}
+                  className="seller-large-avatar"
+                  onClick={() => navigate(`/seller/${gig.seller.id}`)}
+                  style={{ cursor: 'pointer' }}
+                />
                 <div className="seller-profile-right">
-                  <h4>{gig.seller.fullName}</h4>
+                  <h4
+                    onClick={() => navigate(`/seller/${gig.seller.id}`)}
+                    style={{ cursor: 'pointer' }}
+                  >{gig.seller.fullName}</h4>
                   <p className="seller-title-sub">{gig.seller.role || "Professional Freelancer"}</p>
                   <div className="seller-stats-line">
                     <span className="star-span">
@@ -407,7 +428,10 @@ const GigDetailPage = () => {
                       {simGig.seller && (
                         <div className="sim-seller-row">
                           <img src={simGig.seller.avatarUrl} alt={simGig.seller.fullName} className="sim-avatar" />
-                          <span>{simGig.seller.fullName}</span>
+                          <span
+                            onClick={(e) => { e.stopPropagation(); navigate(`/seller/${simGig.seller.id}`); }}
+                            style={{ cursor: 'pointer' }}
+                          >{simGig.seller.fullName}</span>
                         </div>
                       )}
                       <h5 className="sim-title">{simGig.title}</h5>

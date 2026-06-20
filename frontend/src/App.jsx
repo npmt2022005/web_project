@@ -25,6 +25,7 @@ import CheckoutPage from './pages/Orders/CheckoutPage';
 
 // 🌟 TÍCH HỢP IMPORT TRANG QUẢN LÝ DỊCH VỤ CỦA SELLER (MANAGE SERVICES)
 import ManageServices from './pages/Services/ManageServices';
+import BecomeSeller from './pages/Profile/BecomeSeller';
 
 // 🆕 THÊM MỚI: Tích hợp trang quản lý đơn hàng dành riêng cho Seller mới tạo
 import ManageSellerOrders from './pages/Orders/ManageSellerOrders';
@@ -96,7 +97,9 @@ const AppContent = () => {
 
         {/* 🟢 ROUTE DẪN ĐẾN TRANG TẠO BÀI ĐĂNG DỊCH VỤ MỚI */}
         <Route path="/create-gig" element={<CreateGigPage />} />
-        
+
+        <Route path="/profile/become-seller" element={<BecomeSeller />} />
+
         {/* 🌟 ROUTE ĐÃ SỬA: Trả lại đúng trang Quản lý dịch vụ gốc (ManageServices) */}
         <Route path="/manage-services" element={<ManageServices />} />
 

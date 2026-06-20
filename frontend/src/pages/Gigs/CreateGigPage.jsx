@@ -614,19 +614,22 @@ const CreateGigPage = () => {
         body: JSON.stringify(finalPayload)
       });
 
-      if (!response.ok) throw new Error(isEditMode ? 'Yêu cầu cập nhật dịch vụ không thành công' : 'Yêu cầu tạo bài đăng dịch vụ không thành công');
+      const result = await response.json().catch(() => null);
 
-      const result = await response.json();
+      if (!response.ok) {
+        const message = result?.message || result?.error || response.statusText || (isEditMode ? 'Yêu cầu cập nhật dịch vụ không thành công' : 'Yêu cầu tạo bài đăng dịch vụ không thành công');
+        throw new Error(message);
+      }
 
-      if (result.status === "success") {
+      if (result?.status === "success") {
         alert(isEditMode ? "Cập nhật thông tin dịch vụ thành công!" : "Đăng dịch vụ mới thành công!");
         navigate('/manage-services');
       } else {
-        setError(result.message || 'Thao tác lưu thất bại từ hệ thống phản hồi.');
+        setError(result?.message || 'Thao tác lưu thất bại từ hệ thống phản hồi.');
       }
     } catch (err) {
       console.error("Lỗi khi gọi API lưu dữ liệu:", err);
-      setError('Kết nối Backend thất bại. Vui lòng kiểm tra lại cấu hình Server Spring Boot.');
+      setError(err.message || 'Kết nối Backend thất bại. Vui lòng kiểm tra lại cấu hình Server Spring Boot.');
     } finally {
       setLoading(false);
     }

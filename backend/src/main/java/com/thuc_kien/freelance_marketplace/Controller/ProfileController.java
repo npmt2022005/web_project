@@ -3,10 +3,10 @@ package com.thuc_kien.freelance_marketplace.Controller;
 import com.thuc_kien.freelance_marketplace.DTO.APIResponse;
 import com.thuc_kien.freelance_marketplace.DTO.ProfileResponseDTO;
 import com.thuc_kien.freelance_marketplace.DTO.ProfileUpdateRequestDTO;
+import com.thuc_kien.freelance_marketplace.DTO.RoleResponseDTO;
 import com.thuc_kien.freelance_marketplace.DTO.StripeOnboardingResponse;
 import com.thuc_kien.freelance_marketplace.Service.ProfileService;
-import com.thuc_kien.freelance_marketplace.security.CustomUserDetails;
-import lombok.RequiredArgsConstructor;
+import com.thuc_kien.freelance_marketplace.security.CustomUserDetails;import jakarta.servlet.http.HttpServletRequest;import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -38,13 +38,34 @@ public class ProfileController {
 
     @PostMapping("/me/bank-setup")
     public ResponseEntity<APIResponse<StripeOnboardingResponse>> setupBankConnection(
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            HttpServletRequest request) {
         if (userDetails == null) {
             return ResponseEntity.status(401).body(new APIResponse<>("error", "Chưa đăng nhập", null));
         }
         Long currentUserId = userDetails.getUser().getId();
         try {
-            String onboardingUrl = profileService.createStripeConnectAccount(currentUserId);
+            String origin = request.getHeader("Origin");
+            if (origin == null || origin.isBlank()) {
+                String scheme = request.getHeader("X-Forwarded-Proto");
+                if (scheme == null || scheme.isBlank()) {
+                    scheme = request.getScheme();
+                }
+
+                String host = request.getHeader("X-Forwarded-Host");
+                if (host == null || host.isBlank()) {
+                    host = request.getHeader("Host");
+                }
+                if (host == null || host.isBlank()) {
+                    host = request.getServerName();
+                    if ((request.getScheme().equals("http") && request.getServerPort() != 80)
+                            || (request.getScheme().equals("https") && request.getServerPort() != 443)) {
+                        host += ":" + request.getServerPort();
+                    }
+                }
+                origin = scheme + "://" + host;
+            }
+            String onboardingUrl = profileService.createStripeConnectAccount(currentUserId, origin);
 
             return ResponseEntity.ok(new APIResponse<>(
                     "success",
@@ -83,6 +104,25 @@ public class ProfileController {
                 .status("success")
                 .message("Cập nhật hồ sơ thành công")
                 .build());
+    }
+
+    @PostMapping("/me/upgrade")
+    public ResponseEntity<APIResponse<RoleResponseDTO>> upgradeToSeller(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(401).body(new APIResponse<>("error", "Chưa đăng nhập", null));
+        }
+        Long currentUserId = userDetails.getUser().getId();
+        try {
+            Long sellerId = profileService.upgradeToSeller(currentUserId);
+            return ResponseEntity.ok(APIResponse.<RoleResponseDTO>builder()
+                    .status("success")
+                    .message("Tài khoản đã được nâng cấp lên người bán")
+                    .data(new RoleResponseDTO("ROLE_SELLER", sellerId))
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new APIResponse<>("error", e.getMessage(), null));
+        }
     }
 
     

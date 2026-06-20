@@ -3,8 +3,6 @@ package com.thuc_kien.freelance_marketplace.DTO;
 import lombok.*;
 import java.util.List;
 
-import org.springframework.security.authentication.AccountStatusException;
-
 @Data
 @Builder
 @NoArgsConstructor

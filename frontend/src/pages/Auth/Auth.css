@@ -66,6 +66,7 @@
   margin-bottom: 10px;
 }
 
+
 .top-switch-sub {
   font-size: 15px;
   color: #74767e !important;
@@ -212,15 +213,31 @@
   font-weight: 700;
   border: 1px solid #e4e5e7;
   border-radius: 12px;
-  background-color: #f7f7f8;
+  background-color: #f7f7f8 !important; /* Khóa cứng màu nền xám nhạt */
   outline: none;
   transition: all 0.2s ease;
+  color: #222325 !important; /* 🌟 ÉP BUỘC: Số luôn có màu đen, không bị biến thành màu trắng */
+  -webkit-text-fill-color: #222325 !important;
+  caret-color: #222325 !important;
+
+  /* Use a clean UI sans font and enable tabular numbers for consistent digit width */
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  letter-spacing: 0.5px;
 }
 
 .otp-field:focus {
-  background-color: #ffffff;
-  border-color: #1dbf73;
+  background-color: #ffffff !important;
+  border-color: #1dbf73 !important;
+  color: #222325 !important; /* 🌟 ĐẢM BẢO: Khi nhấn chọn vào ô, chữ vẫn giữ màu đen */
   box-shadow: 0 0 0 3px rgba(29, 191, 115, 0.12);
+}
+
+/* Ensure browser autofill doesn't turn text white */
+.otp-field:-webkit-autofill,
+.otp-field:-webkit-autofill:focus {
+  -webkit-text-fill-color: #222325 !important;
 }
 
 /* --- NÚT BẤM CHÍNH (BUTTON AUTH) --- */

@@ -2,7 +2,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Globe, Mail, Bell, User, ChevronDown, ChevronLeft, ChevronRight, LogOut, PlusCircle, ShoppingBag, MessageSquare, ShieldAlert } from 'lucide-react'; 
+import apiClient from '../../services/apiClient';
+import { Globe, Mail, Bell, User, ChevronDown, ChevronLeft, ChevronRight, LogOut, PlusCircle, ShoppingBag, MessageSquare, ShieldAlert } from 'lucide-react';
 import './Header.css'
 
 const Header = () => {
@@ -129,8 +130,8 @@ const Header = () => {
 
                     {/* 👑 NÚT CHUYỂN NHANH QUA TRANG ADMIN TRÊN NAVBAR (DÀNH RIÊNG CHO ADMIN) */}
                     {role && (role.toUpperCase() === 'ROLE_ADMIN' || role.toUpperCase() === 'ADMIN') && (
-                        <span 
-                            className="nav-link admin-nav-shortcut" 
+                        <span
+                            className="nav-link admin-nav-shortcut"
                             onClick={() => navigate('/admin/users')}
                             style={{ color: '#f44336', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
                         >
@@ -139,15 +140,47 @@ const Header = () => {
                     )}
 
                     {/* 🟢 TÍCH HỢP THÊM: Mục "Trở thành người bán" dành riêng cho BUYER */}
-                    {role && (role.toUpperCase() === 'ROLE_BUYER' || role.toUpperCase() === 'BUYER') && (
-                        <span 
-                            className="nav-link become-seller-nav-btn" 
-                            onClick={() => navigate('/profile?mode=upgrade')}
-                            style={{ color: '#1dbf73', fontWeight: '600', cursor: 'pointer' }}
-                        >
-                            Trở thành người bán
-                        </span>
-                    )}
+                    <span
+                        className="nav-link become-seller-nav-btn"
+                        onClick={async () => {
+                            try {
+                                const resp = await apiClient.get('/v1/profile/me');
+                                const result = resp.data;
+                                if (result?.status !== 'success' || !result.data) {
+                                    alert('Bạn chưa cập nhật hồ sơ. Vui lòng hoàn tất thông tin hồ sơ trước khi trở thành người bán.');
+                                    navigate('/profile');
+                                    return;
+                                }
+
+                                const profile = result.data;
+                                const missingFields = [];
+                                const info = profile.basicInfo || {};
+
+                                if (!info.phone || info.phone.trim() === "") missingFields.push('Số điện thoại');
+                                if (!info.city || info.city.trim() === "") missingFields.push('Thành phố');
+                                if (!info.description || info.description.trim() === "") missingFields.push('Giới thiệu bản thân');
+                                if (!profile.education || profile.education.length === 0) missingFields.push('Học vấn');
+                                if (!profile.experience || profile.experience.length === 0) missingFields.push('Kinh nghiệm làm việc');
+
+                                if (missingFields.length > 0) {
+                                    const message = 'Bạn cần hoàn thành các thông tin sau trước khi trở thành người bán:\n- ' + missingFields.join('\n- ');
+                                    alert(message);
+                                    navigate('/profile');
+                                    return;
+                                }
+
+                                // 🌟 ĐÃ SỬA: Đủ thông tin -> chuyển sang khu vực xác nhận Seller riêng,
+                                // KHÔNG dùng chung trang /profile như cũ (vì đó là trang buyer, không đủ ý nghĩa "trở thành seller")
+                                navigate('/profile/become-seller');
+                            } catch (error) {
+                                console.error('Lỗi khi kiểm tra hồ sơ:', error);
+                                alert('Không thể kiểm tra hồ sơ. Vui lòng thử lại sau.');
+                            }
+                        }}
+                        style={{ color: '#1dbf73', fontWeight: '600', cursor: 'pointer' }}
+                    >
+                        Trở thành người bán
+                    </span>
 
                     <span className="nav-link"><Globe size={16} /> Tiếng Việt</span>
 
@@ -155,7 +188,7 @@ const Header = () => {
                         <div className="auth-nav">
                             <Mail size={20} className="nav-icon" style={{ cursor: 'pointer', color: '#74767e' }} onClick={() => navigate('/chat')} />
                             <Bell size={20} className="nav-icon" style={{ cursor: 'pointer', color: '#74767e' }} />
-                            
+
                             {/* KHU VỰC AVATAR ĐỂ THẢ MENU DOWN */}
                             <div style={{ position: 'relative' }}>
                                 <div
@@ -174,7 +207,7 @@ const Header = () => {
                                         boxShadow: '0 4px 12px rgba(0,0,0,0.1)', padding: '6px 0'
                                     }}>
                                         {/* Mục Profile chung cho tất cả user */}
-                                        <div 
+                                        <div
                                             className="avatar-dropdown-item"
                                             onClick={() => { navigate('/profile'); setShowUserDropdown(false); }}
                                             style={{ padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: '#333', fontSize: '14px' }}
@@ -183,7 +216,7 @@ const Header = () => {
                                         </div>
 
                                         {/* 💬 MỤC TIN NHẮN CHUNG CHO CẢ BUYER VÀ SELLER */}
-                                        <div 
+                                        <div
                                             className="avatar-dropdown-item"
                                             onClick={() => { navigate('/chat'); setShowUserDropdown(false); }}
                                             style={{ padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: '#333', fontSize: '14px', borderTop: '1px solid #f1f1f1' }}
@@ -193,7 +226,7 @@ const Header = () => {
 
                                         {/* Hiển thị Đơn hàng của tôi dành riêng cho tài khoản BUYER */}
                                         {role && (role.toUpperCase() === 'ROLE_BUYER' || role.toUpperCase() === 'BUYER') && (
-                                            <div 
+                                            <div
                                                 className="avatar-dropdown-item"
                                                 onClick={() => { navigate('/my-orders'); setShowUserDropdown(false); }}
                                                 style={{ padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: '#1dbf73', fontSize: '14px', fontWeight: '500', borderTop: '1px solid #f1f1f1' }}
@@ -206,7 +239,7 @@ const Header = () => {
                                         {role && (role.toUpperCase() === 'ROLE_SELLER' || role.toLowerCase() === 'seller') && (
                                             <>
                                                 {/* ➕ BỔ SUNG: Cho phép Seller quản lý và theo dõi các đơn dịch vụ mà chính mình đi đặt mua */}
-                                                <div 
+                                                <div
                                                     className="avatar-dropdown-item"
                                                     onClick={() => { navigate('/my-orders'); setShowUserDropdown(false); }}
                                                     style={{ padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: '#1dbf73', fontSize: '14px', fontWeight: '500', borderTop: '1px solid #f1f1f1' }}
@@ -214,15 +247,15 @@ const Header = () => {
                                                     <ShoppingBag size={14} /> Đơn mua của tôi
                                                 </div>
 
-                                                <div 
+                                                <div
                                                     className="avatar-dropdown-item"
                                                     onClick={() => { navigate('/manage-services'); setShowUserDropdown(false); }}
                                                     style={{ padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: '#1dbf73', fontSize: '14px', fontWeight: '500', borderTop: '1px solid #f1f1f1' }}
                                                 >
                                                     <PlusCircle size={14} /> Quản lý dịch vụ
                                                 </div>
-                                                
-                                                <div 
+
+                                                <div
                                                     className="avatar-dropdown-item"
                                                     onClick={() => { navigate('/manage-orders'); setShowUserDropdown(false); }}
                                                     style={{ padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: '#1dbf73', fontSize: '14px', fontWeight: '500', borderTop: '1px solid #f1f1f1' }}
@@ -234,7 +267,7 @@ const Header = () => {
 
                                         {/* 👑 LỰA CHỌN TRANG ADMIN TRONG AVATAR DROPDOWN (DÀNH RIÊNG CHO ADMIN) */}
                                         {role && (role.toUpperCase() === 'ROLE_ADMIN' || role.toUpperCase() === 'ADMIN') && (
-                                            <div 
+                                            <div
                                                 className="avatar-dropdown-item admin-action"
                                                 onClick={() => { navigate('/admin/users'); setShowUserDropdown(false); }}
                                                 style={{ padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: '#f44336', fontSize: '14px', fontWeight: '600', borderTop: '1px solid #f1f1f1' }}
@@ -243,7 +276,7 @@ const Header = () => {
                                             </div>
                                         )}
 
-                                        <div 
+                                        <div
                                             className="avatar-dropdown-item logout-action"
                                             onClick={handleLogout}
                                             style={{ padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: '#f44336', fontSize: '14px', borderTop: '1px solid #f1f1f1' }}
@@ -292,7 +325,7 @@ const Header = () => {
                                                 }}
                                             >
                                                 {child.name}
-                                            </li> 
+                                            </li>
                                         ))}
                                     </ul>
                                 )}

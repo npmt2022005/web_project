@@ -12,6 +12,7 @@ import com.stripe.param.AccountLinkCreateParams;
 import com.thuc_kien.freelance_marketplace.DTO.ProfileResponseDTO;
 import com.thuc_kien.freelance_marketplace.DTO.ProfileUpdateRequestDTO;
 import com.thuc_kien.freelance_marketplace.Entity.Seller;
+import com.thuc_kien.freelance_marketplace.Entity.UserRole;
 import com.thuc_kien.freelance_marketplace.Entity.User;
 import com.thuc_kien.freelance_marketplace.Entity.Wallet;
 import com.thuc_kien.freelance_marketplace.Repository.SellerRepository;
@@ -98,7 +99,7 @@ public class ProfileService {
                 .build();
     }
 
-    public String createStripeConnectAccount(Long userId) throws Exception {
+    public String createStripeConnectAccount(Long userId, String frontendOrigin) throws Exception {
         Stripe.apiKey = stripeSecretkey;
         Wallet wallet = walletRepo.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Chưa có ví"));
@@ -113,11 +114,15 @@ public class ProfileService {
             walletRepo.save(wallet);
         }
 
+        if (frontendOrigin == null || frontendOrigin.isBlank()) {
+            frontendOrigin = "http://localhost:5173";
+        }
+
         // 2. Tạo link onboarding
         AccountLinkCreateParams linkParams = AccountLinkCreateParams.builder()
                 .setAccount(wallet.getStripeAccountId())
-                .setRefreshUrl("http://localhost:5173/profile") 
-                .setReturnUrl("http://localhost:5173/profile") 
+                .setRefreshUrl(frontendOrigin + "/profile")
+                .setReturnUrl(frontendOrigin + "/profile")
                 .setType(AccountLinkCreateParams.Type.ACCOUNT_ONBOARDING)
                 .build();
 
@@ -183,5 +188,41 @@ public class ProfileService {
         userRepo.save(user);
 
         return imageUrl; 
+    }
+
+    @Transactional
+    public Long upgradeToSeller(Long userId) {
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User không tồn tại"));
+
+        // Nếu đã là seller thì không làm gì
+        if (user.getCurrentRole() == UserRole.ROLE_SELLER) {
+            throw new RuntimeException("Người dùng đã là người bán");
+        }
+
+        // Kiểm tra profile cơ bản bắt buộc trước khi nâng cấp
+        if (user.getFullname() == null || user.getFullname().isBlank()
+                || user.getPhone() == null || user.getPhone().isBlank()
+                || user.getCountry() == null || user.getCountry().isBlank()) {
+            throw new RuntimeException("Vui lòng hoàn thiện hồ sơ: tên đầy đủ, số điện thoại và quốc gia");
+        }
+
+        // Tạo thực thể Seller liên kết với user
+        Seller seller = new Seller();
+        seller.setUser(user);
+        seller.setBio("Người bán mới - chưa cập nhật giới thiệu");
+        seller.setLanguages(new java.util.ArrayList<>());
+        seller.setGigs(new java.util.ArrayList<>());
+        seller.setExperiences(new java.util.ArrayList<>());
+        seller.setEducations(new java.util.ArrayList<>());
+
+        Seller saved = sellerRepo.save(seller);
+
+        // Cập nhật vai trò người dùng
+        user.getRoles().add(UserRole.ROLE_SELLER);
+        user.setCurrentRole(UserRole.ROLE_SELLER);
+        userRepo.save(user);
+
+        return saved.getId();
     }
 }

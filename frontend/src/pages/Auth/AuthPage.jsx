@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, ArrowLeft, Phone, CheckCircle2, AtSign, Eye, EyeOff } from 'lucide-react'; // 🌟 ĐÃ SỬA: Giữ nguyên Import Eye và EyeOff để làm con mắt ẩn/hiện mật khẩu
 import { authService } from '../../services/authService';
@@ -18,6 +18,10 @@ const AuthPage = ({ isLoginDefault = true }) => {
     fullname: '', username: '', email: '', phone: '',
     password: '', confirmPassword: '', identifier: '', otp: '', role: 'ROLE_BUYER'
   });
+
+  // OTP inputs state and refs (for Forgot Password flow)
+  const [otp, setOtp] = useState(new Array(6).fill(''));
+  const otpRefs = useRef([]);
 
   const [message, setMessage] = useState({ text: '', type: '' });
 
@@ -178,7 +182,7 @@ const AuthPage = ({ isLoginDefault = true }) => {
       setLoading(false);
     }
   };
-
+  
   const handleForgotPassword = async () => {
     setMessage({ text: '', type: '' });
     setLoading(true);
@@ -188,6 +192,132 @@ const AuthPage = ({ isLoginDefault = true }) => {
     } catch (err) {
       const serverRes = err.response?.data;
       let errorMsg = serverRes?.data?.identifier || (serverRes?.message || "Không thể gửi mã OTP");
+      setMessage({ text: errorMsg, type: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // OTP helpers: change, keydown (backspace), paste handling
+  const handleOtpChange = (index, e) => {
+    const raw = e.target.value || '';
+    const digitsOnly = raw.replace(/\D/g, ''); // only digits
+
+    setOtp((prev) => {
+      const next = [...prev];
+      next[index] = digitsOnly ? digitsOnly.slice(-1) : '';
+      // update combined otp in formData synchronously from next
+      setFormData((fd) => ({ ...fd, otp: next.join('') }));
+      return next;
+    });
+
+    // move focus to next field only when a digit was entered
+    if (digitsOnly) {
+      const nextIndex = index + 1;
+      if (nextIndex < otpRefs.current.length) {
+        // focus after state update/render
+        setTimeout(() => otpRefs.current[nextIndex]?.focus(), 0);
+      }
+    }
+  };
+
+  const handleOtpKeyDown = (index, e) => {
+    if (e.key === 'Backspace') {
+      if (otp[index]) {
+        // clear this one
+        setOtp((prev) => {
+          const next = [...prev];
+          next[index] = '';
+          return next;
+        });
+        setFormData((fd) => ({ ...fd, otp: otpRefs.current.map((r, i) => (i === index ? '' : (fd.otp?.[i] || otp[i]))).join('') }));
+      } else {
+        // move focus to previous field
+        const prevIndex = index - 1;
+        if (prevIndex >= 0) {
+          otpRefs.current[prevIndex]?.focus();
+        }
+      }
+    }
+  };
+
+  const handleOtpPaste = (e) => {
+    e.preventDefault();
+    const paste = (e.clipboardData || window.clipboardData).getData('text') || '';
+    const digits = paste.replace(/\D/g, '').split('').slice(0, otp.length);
+    if (digits.length === 0) return;
+    setOtp((prev) => {
+      const next = [...prev];
+      for (let i = 0; i < digits.length; i++) next[i] = digits[i];
+      return next;
+    });
+    // update combined otp in formData
+    setFormData((fd) => ({ ...fd, otp: digits.join('') }));
+    // focus the first empty or last digit
+    const firstEmpty = digits.length >= otp.length ? otp.length - 1 : digits.length;
+    otpRefs.current[firstEmpty]?.focus();
+  };
+
+  // Gọi API verify OTP
+  const handleVerifyOtp = async () => {
+    setMessage({ text: '', type: '' });
+    const combined = otp.join('');
+    if (!formData.identifier) {
+      return setMessage({ text: 'Vui lòng nhập email hoặc số điện thoại trước khi nhận OTP', type: 'error' });
+    }
+    if (combined.length < otp.length) {
+      return setMessage({ text: 'Vui lòng nhập đầy đủ mã OTP', type: 'error' });
+    }
+
+    setLoading(true);
+    try {
+      const res = await authService.verifyOtp({ identifier: formData.identifier, otp: combined });
+      setMessage({ text: res.data.message || 'Mã OTP hợp lệ. Vui lòng đặt mật khẩu mới.', type: 'success' });
+      // chuyển sang chế độ đổi mật khẩu, giữ lại otp trong state để gửi cùng reset request
+      setAuthMode('reset');
+    } catch (err) {
+      const serverRes = err.response?.data;
+      let errorMsg = serverRes?.message || 'Xác thực OTP thất bại';
+      if (serverRes?.data) {
+        errorMsg = Object.values(serverRes.data)[0] || errorMsg;
+      }
+      setMessage({ text: errorMsg, type: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Xử lý reset mật khẩu sau khi mã OTP hợp lệ
+  const handleResetPassword = async () => {
+    setMessage({ text: '', type: '' });
+    const combined = otp.join('');
+    if (!formData.identifier) return setMessage({ text: 'Vui lòng nhập email hoặc số điện thoại', type: 'error' });
+    if (!combined || combined.length < otp.length) return setMessage({ text: 'Mã OTP không hợp lệ', type: 'error' });
+    if (!formData.password || !formData.confirmPassword) return setMessage({ text: 'Vui lòng nhập mật khẩu mới và xác nhận', type: 'error' });
+    if (formData.password.length < 8) return setMessage({ text: 'Mật khẩu phải có ít nhất 8 ký tự', type: 'error' });
+    if (formData.password !== formData.confirmPassword) return setMessage({ text: 'Mật khẩu xác nhận không trùng khớp', type: 'error' });
+
+    setLoading(true);
+    try {
+      const payload = {
+        identifier: formData.identifier,
+        otp: combined,
+        newPassword: formData.password,
+        confirmPassword: formData.confirmPassword
+      };
+      const res = await authService.resetPassword(payload);
+      setMessage({ text: res.data.message || 'Mật khẩu đã được cập nhật', type: 'success' });
+      // Sau khi đổi mật khẩu thành công, quay về màn hình đăng nhập
+      setTimeout(() => {
+        setAuthMode('login');
+        setFormData((fd) => ({ ...fd, password: '', confirmPassword: '', otp: '' }));
+        setOtp(new Array(otp.length).fill(''));
+        setMessage({ text: '', type: '' });
+      }, 1500);
+    } catch (err) {
+      const serverRes = err.response?.data;
+      let errorMsg = serverRes?.message || 'Đổi mật khẩu thất bại';
+      if (serverRes?.data) errorMsg = Object.values(serverRes.data)[0] || errorMsg;
       setMessage({ text: errorMsg, type: 'error' });
     } finally {
       setLoading(false);
@@ -359,11 +489,27 @@ const AuthPage = ({ isLoginDefault = true }) => {
               </div>
               <button className="btn-auth" onClick={handleForgotPassword} disabled={loading}>{loading ? "Đang gửi..." : "Gửi mã OTP"}</button>
               <div className="otp-container">
-                <div className="otp-inputs">
-                  {[...Array(6)].map((_, i) => (<input key={i} type="text" maxLength="1" className="otp-field" />))}
+                <div className="otp-inputs" onPaste={handleOtpPaste}>
+                  {[...Array(6)].map((_, i) => (
+                    <input
+                      key={i}
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength="1"
+                      className="otp-field"
+                      value={otp[i]}
+                      onChange={(e) => handleOtpChange(i, e)}
+                      onInput={(e) => handleOtpChange(i, e)}
+                      onKeyDown={(e) => handleOtpKeyDown(i, e)}
+                      ref={(el) => (otpRefs.current[i] = el)}
+                      aria-label={`OTP digit ${i + 1}`}
+                      autoComplete="one-time-code"
+                    />
+                  ))}
                 </div>
               </div>
-              <button className="btn-auth" style={{marginTop: '20px'}} disabled={loading}>Xác thực mã OTP</button>
+              <button type="button" className="btn-auth" style={{marginTop: '20px'}} onClick={handleVerifyOtp} disabled={loading}>{loading ? 'Đang xử lý...' : 'Xác thực mã OTP'}</button>
               <StatusMessage />
             </>
           )}

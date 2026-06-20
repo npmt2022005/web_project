@@ -77,7 +77,7 @@ const SellerDetail = () => {
         const fetchData = async () => {
             setLoading(true);
             try {
-                const response = await fetch(`http://localhost:8080/api/v1/sellers/${id}`);
+                const response = await fetch(`/api/v1/sellers/${id}`);
                 if (response.ok) {
                     const result = await response.json(); // Nhận về cả object API
                     console.log("👉 Dữ liệu nhận được:", result);
