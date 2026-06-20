@@ -146,12 +146,6 @@ const ManageServices = () => {
         }
     };
 
-
-
-
-
-    };
-
     const handleEditGig = (gig) => {
         // Truyền dữ liệu thật qua state để component đích nhận diện chế độ Edit
         navigate('/create-gig', { state: { editGigData: gig } });

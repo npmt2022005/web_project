@@ -58,5 +58,5 @@ public interface GigRepository extends JpaRepository<Gig, Long> {
 
         org.springframework.data.domain.Page<Gig> findBySellerId(Long sellerId, Pageable pageable);
 
-        
+        boolean existsByCategoryId(Long categoryId);
 }       

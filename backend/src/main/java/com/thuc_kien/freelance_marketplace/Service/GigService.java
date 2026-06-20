@@ -24,6 +24,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.deser.std.NumberDeserializers.BigDecimalDeserializer;
+import com.thuc_kien.freelance_marketplace.DTO.CategoryDTO;
 import com.thuc_kien.freelance_marketplace.DTO.GigCardDTO;
 import com.thuc_kien.freelance_marketplace.DTO.GigCreateRequestDTO;
 import com.thuc_kien.freelance_marketplace.DTO.GigDetailResponseDTO;

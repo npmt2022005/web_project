@@ -11,41 +11,47 @@ const AdminCategoryManagement = () => {
     
     // Form States
     const [name, setName] = useState('');
-    const [description, setDescription] = useState('');
+    const [imgUrl, setImgUrl] = useState('');
+    const [parentId, setParentId] = useState('');
 
     useEffect(() => {
         fetchCategories();
     }, []);
 
+    // ĐÃ SỬA: Bóc tách dữ liệu theo cấu trúc bọc APIResponse (response.data.data)
     const fetchCategories = async () => {
         try {
-            const response = await fetch('/api/categories');
-            if (response.ok) {
-                const data = await response.json();
-                setCategories(data);
+            const response = await fetch('/api/categories/all'); 
+            const result = await response.json();
+            
+            if (response.ok && result.status === 'success') {
+                setCategories(result.data || []);
             } else {
-                console.error("Không thể tải danh sách danh mục");
+                console.error("Không thể tải danh sách danh mục:", result.message);
             }
         } catch (error) {
             console.error("Lỗi kết nối Server backend:", error);
         }
     };
 
-    // Tìm kiếm danh mục cục bộ theo text nhập vào ô Search giống trang User
+    // ĐÃ SỬA: Tìm kiếm cục bộ theo trường 'name' hoặc 'slug' thực tế của Entity
     const filteredCategories = categories.filter(cat => 
         cat.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        (cat.description && cat.description.toLowerCase().includes(searchTerm.toLowerCase()))
+        (cat.slug && cat.slug.toLowerCase().includes(searchTerm.toLowerCase()))
     );
 
+    // ĐÃ SỬA: Đồng bộ hóa state form theo các thuộc tính mới của Entity
     const openModal = (category = null) => {
         if (category) {
             setSelectedCategory(category);
             setName(category.name);
-            setDescription(category.description || '');
+            setImgUrl(category.imgUrl || '');
+            setParentId(category.parentId || '');
         } else {
             setSelectedCategory(null);
             setName('');
-            setDescription('');
+            setImgUrl('');
+            setParentId('');
         }
         setIsModalOpen(true);
     };
@@ -54,12 +60,21 @@ const AdminCategoryManagement = () => {
         setIsModalOpen(false);
         setSelectedCategory(null);
         setName('');
-        setDescription('');
+        setImgUrl('');
+        setParentId('');
     };
 
+    // ĐÃ SỬA: Xử lý hiển thị thông báo chi tiết trả về từ Custom RuntimeException
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const categoryData = { name, description };
+        
+        // Khớp payload với CategoryDTO phía Backend
+        const categoryData = { 
+            name, 
+            imgUrl: imgUrl.trim() === '' ? null : imgUrl, 
+            parentId: parentId === '' ? null : parseInt(parentId) 
+        };
+        
         const url = selectedCategory 
             ? `/api/categories/${selectedCategory.id}`
             : '/api/categories';
@@ -72,27 +87,34 @@ const AdminCategoryManagement = () => {
                 body: JSON.stringify(categoryData)
             });
 
-            if (response.ok) {
+            const result = await response.json();
+
+            if (response.ok && result.status === 'success') {
                 fetchCategories();
                 closeModal();
             } else {
-                alert("Có lỗi xảy ra khi lưu dữ liệu!");
+                // Hiển thị trực tiếp thông điệp lỗi nghiệp vụ từ Backend (ví dụ: trùng tên, trùng slug)
+                alert(result.message || "Có lỗi xảy ra khi lưu dữ liệu!");
             }
         } catch (error) {
             console.error("Lỗi gửi request:", error);
         }
     };
 
+    // ĐÃ SỬA: Bắt lỗi chặn xóa do ràng buộc Gigs hoạt động hoặc chứa danh mục con
     const handleDelete = async (id) => {
         if (window.confirm("Bạn có chắc chắn muốn xóa danh mục này?")) {
             try {
                 const response = await fetch(`/api/categories/${id}`, {
                     method: 'DELETE'
                 });
+                
+                // Vì DELETE trả về 200 OK kèm APIResponse trống hoặc 204
                 if (response.ok) {
                     fetchCategories();
                 } else {
-                    alert("Không thể xóa danh mục này!");
+                    const result = await response.json();
+                    alert(result.message || "Không thể xóa danh mục này!");
                 }
             } catch (error) {
                 console.error("Lỗi khi xóa:", error);
@@ -100,8 +122,15 @@ const AdminCategoryManagement = () => {
         }
     };
 
+    // Hàm tiện ích hiển thị tên danh mục cha trên bảng
+    const getParentName = (pId) => {
+        if (!pId) return '—';
+        const parentNode = categories.find(c => c.id === pId);
+        return parentNode ? parentNode.name : `#${pId}`;
+    };
+
     return (
-        <div className="user-management-container"> {/* Sử dụng chung lớp bọc ngoài để đồng bộ layout */}
+        <div className="user-management-container">
             <div className="page-header-actions" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h3>Quản lý danh mục ({filteredCategories.length})</h3>
                 <button 
@@ -113,27 +142,26 @@ const AdminCategoryManagement = () => {
                 </button>
             </div>
 
-            {/* Thanh tìm kiếm đồng bộ thiết kế 100% với trang AdminUserManagement */}
             <div className="admin-filter-bar">
                 <div className="search-box-wrapper" style={{ flex: 1 }}>
                     <Search size={16} className="search-icon" />
                     <input 
                         type="text" 
-                        placeholder="Tìm kiếm danh mục theo tên, từ khóa mô tả..." 
+                        placeholder="Tìm kiếm danh mục theo tên, đường dẫn slug..." 
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
             </div>
 
-            {/* Bảng hiển thị dữ liệu đồng bộ cấu trúc CSS chung của phần Admin */}
             <div className="table-responsive">
                 <table className="admin-data-table">
                     <thead>
                         <tr>
                             <th>ID</th>
                             <th>Tên Danh Mục</th>
-                            <th>Mô Tả Chi Tiết</th>
+                            <th>Đường dẫn (Slug)</th>
+                            <th>Danh Mục Cha</th>
                             <th style={{ textAlign: 'center' }}>Hành Động</th>
                         </tr>
                     </thead>
@@ -143,10 +171,16 @@ const AdminCategoryManagement = () => {
                                 <tr key={cat.id}>
                                     <td>#{cat.id}</td>
                                     <td>
-                                        <span className="user-fullname" style={{ fontWeight: '600', color: '#1a1b1e' }}>{cat.name}</span>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            {cat.imgUrl && <img src={cat.imgUrl} alt="" style={{ width: '28px', height: '28px', borderRadius: '4px', objectFit: 'cover' }} />}
+                                            <span className="user-fullname" style={{ fontWeight: '600', color: '#1a1b1e' }}>{cat.name}</span>
+                                        </div>
                                     </td>
-                                    <td style={{ color: cat.description ? '#62646a' : '#b5b6ba', fontStyle: cat.description ? 'normal' : 'italic' }}>
-                                        {cat.description || 'Không có mô tả cho danh mục này'}
+                                    <td style={{ color: '#62646a', fontFamily: 'monospace' }}>
+                                        {cat.slug}
+                                    </td>
+                                    <td style={{ fontWeight: cat.parentId ? '500' : 'normal', color: cat.parentId ? '#2e7d32' : '#95979d' }}>
+                                        {getParentName(cat.parentId)}
                                     </td>
                                     <td>
                                         <div className="action-buttons-group">
@@ -162,14 +196,13 @@ const AdminCategoryManagement = () => {
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="4" className="no-data-cell">Không tìm thấy danh mục hệ thống nào phù hợp.</td>
+                                <td colSpan="5" className="no-data-cell">Không tìm thấy danh mục hệ thống nào phù hợp.</td>
                             </tr>
                         )}
                     </tbody>
                 </table>
             </div>
 
-            {/* Modal Popup Thêm / Sửa đồng bộ giao diện overlay */}
             {isModalOpen && (
                 <div className="category-modal-overlay">
                     <div className="category-modal-box">
@@ -184,20 +217,38 @@ const AdminCategoryManagement = () => {
                                     type="text" 
                                     value={name} 
                                     onChange={(e) => setName(e.target.value)} 
-                                    placeholder="Ví dụ: Graphics & Design, Biên tập Video..." 
+                                    placeholder="Ví dụ: Graphics & Design, Backend Development..." 
                                     required 
                                 />
                             </div>
+                            
                             <div className="form-group">
-                                <label>Mô tả ngắn</label>
-                                <textarea 
-                                    value={description} 
-                                    onChange={(e) => setDescription(e.target.value)} 
-                                    placeholder="Nhập thông tin mô tả định hướng dịch vụ..."
-                                    rows="4"
-                                    style={{ width: '100%', padding: '10px 12px', border: '1px solid #b5b6ba', borderRadius: '4px', resize: 'vertical', outline: 'none' }}
+                                <label>Đường dẫn hình ảnh (Ảnh đại diện danh mục)</label>
+                                <input 
+                                    type="text" 
+                                    value={imgUrl} 
+                                    onChange={(e) => setImgUrl(e.target.value)} 
+                                    placeholder="Đường dẫn URL ảnh (https://...)" 
                                 />
                             </div>
+
+                            <div className="form-group">
+                                <label>Chọn cấp độ danh mục (Thuộc danh mục cha nào?)</label>
+                                <select 
+                                    value={parentId} 
+                                    onChange={(e) => setParentId(e.target.value)}
+                                    style={{ width: '100%', padding: '10px 12px', border: '1px solid #b5b6ba', borderRadius: '4px', outline: 'none', backgroundColor: '#fff' }}
+                                >
+                                    <option value="">— Đặt làm Danh mục Gốc (Cấp cao nhất) —</option>
+                                    {categories
+                                        .filter(c => !selectedCategory || c.id !== selectedCategory.id) // Không cho phép chọn chính mình làm cha
+                                        .map(c => (
+                                            <option key={c.id} value={c.id}>{c.name}</option>
+                                        ))
+                                    }
+                                </select>
+                            </div>
+
                             <div className="form-modal-actions">
                                 <button type="button" className="btn-modal-cancel" onClick={closeModal}>
                                     Hủy bỏ

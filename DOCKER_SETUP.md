@@ -51,13 +51,6 @@ cd d:\project_ltweb\freelance_marketplace
 # Copy the example environment file
 cp .env.example .env
 
-# Edit the .env file with your actual credentials
-# You need to fill in:
-# - Gmail credentials for email service
-# - Cloudinary credentials for image upload
-# - Stripe API keys for payment processing
-```
-
 **Example `.env` file:**
 ```env
 MAIL_USERNAME=your_gmail@gmail.com

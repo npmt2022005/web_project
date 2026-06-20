@@ -12,7 +12,7 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./backend/src/main/resources/db:/docker-entrypoint-initdb.d
+      - ./backend/src/main/resources/db/freelance_db_v3.sql:/docker-entrypoint-initdb.d/freelance_db_v3.sql:ro
     networks:
       - freelance_network
     healthcheck:
