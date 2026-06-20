@@ -38,6 +38,13 @@ apiClient.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[apiClient] request', {
+        method: config.method,
+        url: `${config.baseURL}${config.url}`,
+        auth: Boolean(token),
+      });
+    }
     return config;
   },
   (error) => Promise.reject(error)
@@ -45,8 +52,25 @@ apiClient.interceptors.request.use(
 
 // Interceptor để xử lý lỗi response
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[apiClient] response', {
+        url: `${response.config.baseURL}${response.config.url}`,
+        status: response.status,
+        data: response.data,
+      });
+    }
+    return response;
+  },
   (error) => {
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('[apiClient] response error', {
+        url: error.config?.url,
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message,
+      });
+    }
     // Xử lý lỗi 401 - token hết hạn
     if (error.response?.status === 401) {
       // Xóa token cũ

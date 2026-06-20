@@ -31,6 +31,8 @@ import com.thuc_kien.freelance_marketplace.DTO.GigFeaturedResponseDTO;
 import com.thuc_kien.freelance_marketplace.DTO.SellerGigResponse;
 import com.thuc_kien.freelance_marketplace.Service.GigService;
 import com.thuc_kien.freelance_marketplace.Repository.PackageFeatureRepository;
+import com.thuc_kien.freelance_marketplace.Repository.SellerRepository;
+import com.thuc_kien.freelance_marketplace.Entity.Seller;
 import com.thuc_kien.freelance_marketplace.security.CustomUserDetails;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -44,6 +46,7 @@ public class GigController {
 
     private final GigService gigService;
     private final PackageFeatureRepository packageFeatureRepository;
+    private final SellerRepository sellerRepository;
 
     @Operation(summary = "Lấy danh sách dịch vụ nổi bật (Featured Gigs)", description = "API này mở công khai để lấy các dịch vụ có rating và lượt review cao nhất hiển thị lên trang chủ.")
 
@@ -141,10 +144,15 @@ public class GigController {
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir) {
         try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-            Long currentSellerId = userDetails.getUser().getId();
+                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+                CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+                Long currentUserId = userDetails.getUser().getId();
 
+                // Tìm Seller tương ứng với user hiện tại rồi lấy sellerId
+                Seller seller = sellerRepository.findByUserId(currentUserId)
+                    .orElseThrow(() -> new RuntimeException("Tài khoản chưa được đăng ký thành người bán (Seller)"));
+                Long currentSellerId = seller.getId();
+            
             Sort sort = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name())
                     ? Sort.by(sortBy).ascending()
                     : Sort.by(sortBy).descending();

@@ -63,7 +63,7 @@ const SellerExploration = () => {
         setLoading(true);
         
         try {
-            const response = await fetch('/api/v1/sellers');
+            const response = await fetch('http://localhost:8080/api/v1/sellers');
             const result = await response.json(); // Đổi tên biến thành result cho rõ ràng
 
             console.log("👉 Dữ liệu nhận được từ API:", result);
@@ -113,6 +113,34 @@ const SellerExploration = () => {
 
     // Tính toán tổng số trang dựa trên dữ liệu sau khi đã lọc
     const totalPages = Math.ceil(sortedAndFilteredSellers.length / itemsPerPage);
+
+    // ⚙️ Hàm tạo danh sách số trang có chứa dấu "..." rút gọn
+    const getPaginationRange = () => {
+        const delta = 1; // Số lượng trang hiển thị ở mỗi bên của trang hiện tại (Ví dụ: bấm trang 3 hiển thị 2, 3, 4)
+        const range = [];
+        const rangeWithDots = [];
+        let l;
+
+        for (let i = 1; i <= totalPages; i++) {
+            if (i === 1 || i === totalPages || (i >= currentPage - delta && i <= currentPage + delta)) {
+                range.push(i);
+            }
+        }
+
+        for (let i of range) {
+            if (l) {
+                if (i - l === 2) {
+                    rangeWithDots.push(l + 1);
+                } else if (i - l > 2) {
+                    rangeWithDots.push('...');
+                }
+            }
+            rangeWithDots.push(i);
+            l = i;
+        }
+
+        return rangeWithDots;
+    };
 
     return (
         <div style={{ maxWidth: '1100px', margin: '40px auto', padding: '0 20px', fontFamily: "'Inter', sans-serif" }}>
@@ -263,7 +291,7 @@ const SellerExploration = () => {
                         ))}
                     </div>
 
-                    {/* THANH ĐIỀU HƯỚNG PHÂN TRANG (PAGINATION) */}
+                    {/* THANH ĐIỀU HƯỚNG PHÂN TRANG (PAGINATION) ĐÃ ĐƯỢC TỐI ƯU HÓA */}
                     {totalPages > 1 && (
                         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginTop: '40px' }}>
                             <button
@@ -279,11 +307,21 @@ const SellerExploration = () => {
                                 <ChevronLeft size={16} />
                             </button>
 
-                            {Array.from({ length: totalPages }, (_, index) => {
-                                const pageNumber = index + 1;
+                            {getPaginationRange().map((pageNumber, index) => {
+                                if (pageNumber === '...') {
+                                    return (
+                                        <span 
+                                            key={`dots-${index}`} 
+                                            style={{ padding: '8px 12px', color: '#999', fontSize: '13px', userSelect: 'none' }}
+                                        >
+                                            ...
+                                        </span>
+                                    );
+                                }
+
                                 return (
                                     <button
-                                        key={pageNumber}
+                                        key={`page-${pageNumber}`}
                                         onClick={() => setCurrentPage(pageNumber)}
                                         style={{
                                             padding: '8px 14px', borderRadius: '6px',

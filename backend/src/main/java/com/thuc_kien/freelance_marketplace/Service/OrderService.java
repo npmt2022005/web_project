@@ -362,10 +362,11 @@ public class OrderService {
         // 1. Tìm đơn hàng
         Orders order = orderRepo.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn hàng với ID: " + orderId));
-
+        
         // 2. Bảo mật: Kiểm tra xem User hiện tại có phải là Seller của đơn hàng này
-        // không
-        if (!order.getGig().getSeller().getId().equals(currentUserId)) {
+        // không (so sánh với User ID của Seller, không phải Seller entity ID)
+        if (order.getGig() == null || order.getGig().getSeller() == null || order.getGig().getSeller().getUser() == null ||
+                !order.getGig().getSeller().getUser().getId().equals(currentUserId)) {
             throw new RuntimeException("Bạn không có quyền xử lý đơn hàng này!");
         }
 
@@ -396,7 +397,8 @@ public class OrderService {
         Orders order = orderRepo.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn hàng với ID: " + orderId));
 
-        if (!order.getGig().getSeller().getId().equals(currentUserId)) {
+        if (order.getGig() == null || order.getGig().getSeller() == null || order.getGig().getSeller().getUser() == null ||
+                !order.getGig().getSeller().getUser().getId().equals(currentUserId)) {
             throw new RuntimeException("Bạn không có quyền giao sản phẩm cho đơn hàng này!");
         }
 

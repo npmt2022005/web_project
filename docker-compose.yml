@@ -113,15 +113,14 @@ services:
         condition: service_healthy
     networks:
       - freelance_network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/v1/categories >/dev/null 2>&1 || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
     restart: unless-stopped
-    # Healthcheck disabled - Spring Security returns 403 on / endpoint
-    # Will verify via manual testing or custom endpoint
-    # healthcheck:
-    #   test: ["CMD", "sh", "-c", "curl -f http://localhost:8080/ || exit 1"]
-    #   interval: 30s
-    #   timeout: 15s
-    #   retries: 5
-    #   start_period: 60s
+    # Healthcheck uses a public endpoint so frontend can wait for backend readiness.
 
   # Frontend Service (Nginx Reverse Proxy + React)
   frontend:
@@ -133,7 +132,8 @@ services:
       - "80:80"
       - "443:443"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     networks:
       - freelance_network
     restart: unless-stopped

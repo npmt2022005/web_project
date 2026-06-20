@@ -71,6 +71,7 @@ public class SecurityConfig {
                     "/swagger-ui.html",         
                     "/swagger-resources/**",
                     "/webjars/**",
+                    "/ws",
                     "/ws/**" // Endpoint WebSocket
                 ).permitAll()
                 // Các API công khai cho khách xem (chỉ GET requests)

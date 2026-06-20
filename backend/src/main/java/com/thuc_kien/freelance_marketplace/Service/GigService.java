@@ -497,10 +497,15 @@ public class GigService {
             Gig savedGig = gigRepo.saveAndFlush(newGig); 
             
             System.out.println(">>> 2. LƯU THÀNH CÔNG RỒI NHÉ!");
-            
-            // TẠM THỜI COMMENT DÒNG NÀY LẠI ĐỂ LOẠI TRỪ LỖI TỪ ELASTICSEARCH
-            syncGigToElasTic(savedGig);
-            
+
+            // Đồng bộ tới Elasticsearch nhưng KHÔNG được phép phá vỡ transaction chính.
+            // Nếu sync lỗi thì chỉ ghi log và tiếp tục trả về ID đã lưu.
+            try {
+                syncGigToElasTic(savedGig);
+            } catch (Exception ex) {
+                log.error("Failed to sync Gig to Elasticsearch (non-fatal). Gig id={}", savedGig.getId(), ex);
+            }
+
             return savedGig.getId();
             
         } catch (org.springframework.dao.DataIntegrityViolationException e) {

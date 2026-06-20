@@ -71,7 +71,7 @@ const ManageServices = () => {
             
             // SỬA ĐỔI: Đồng bộ tham số sortDir thành 'DESC' (viết hoa) để tránh lỗi 400 từ bộ lọc JPA Spring
             const response = await apiClient.get(`/v1/gigs/me?page=${apiPage}&size=${gigsPerPage}&sortBy=createdAt&sortDir=DESC`);
-
+            
             // Axios automatically throws for non-2xx status codes, so if we reach here it's successful
             const result = response.data;
             if (result.status === 'success' && result.data) {
