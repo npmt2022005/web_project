@@ -519,7 +519,7 @@ const GigDetailPage = () => {
                   className="contact-seller-btn-sidebar" 
                   onClick={handleContactSeller}
                   disabled={isSellerOfThisGig}
-                  style={isSellerOfThisGig ? { opacity: 0.5, cursor: 'not-allowed', width: '100%', marginTop: '12px', padding: '12px', border: '1px solid #222', background: '#fff', fontWeight: '600', borderRadius: '4px' } : { width: '100%', marginTop: '12px', padding: '12px', border: '1px solid #222', background: '#fff', fontWeight: '600', borderRadius: '4px', cursor: 'pointer' }}
+                  style={isSellerOfThisGig ? { opacity: 0.5, cursor: 'not-allowed', width: '100%', marginTop: '12px', padding: '12px', border: '1px solid #222', background: '#fff', color: '#222325', fontWeight: '600', borderRadius: '4px' } : { width: '100%', marginTop: '12px', padding: '12px', border: '1px solid #222', background: '#fff', color: '#222325', fontWeight: '600', borderRadius: '4px', cursor: 'pointer' }}
                 >
                   Liên hệ người bán
                 </button>

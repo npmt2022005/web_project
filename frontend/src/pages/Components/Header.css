@@ -76,6 +76,7 @@
 }
 
 .btn-signin {
+    color: #62646a; /* 🌟 FIX LỖI: Cấu hình màu xám tối mặc định giúp chữ Đăng nhập luôn hiển thị rõ ràng */
     font-weight: 600;
     cursor: pointer;
     transition: color 0.2s ease;
@@ -449,8 +450,8 @@
     }
 
     /* 👑 ĐÃ TỐI ƯU RESPONSIVE CHO ADMIN:
-       Ẩn chữ "Quản trị Admin" dài trên thanh Navbar điện thoại để tránh đẩy lệch/vỡ các nút Icon và Avatar,
-       chỉ giữ lại để người dùng nhấn vào thông qua menu Dropdown của Avatar một cách gọn gàng. */
+        Ẩn chữ "Quản trị Admin" dài trên thanh Navbar điện thoại để tránh đẩy lệch/vỡ các nút Icon và Avatar,
+        chỉ giữ lại để người dùng nhấn vào thông qua menu Dropdown của Avatar một cách gọn gàng. */
     .admin-nav-shortcut {
         display: none !important;
     }
