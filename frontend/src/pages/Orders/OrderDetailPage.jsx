@@ -790,7 +790,7 @@ const OrderDetailPage = () => {
                         <button 
                             className="contact-partner-btn" 
                             onClick={handleContactPartner}
-                            style={{ width: '100%', marginTop: '10px', padding: '8px', border: '1px solid #e4e5e7', borderRadius: '4px', backgroundColor: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}
+                            style={{ width: '100%', marginTop: '10px', padding: '8px', border: '1px solid #e4e5e7', borderRadius: '4px', backgroundColor: '#fff', color: '#222325', fontSize: '13px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}
                         >
                             Nhắn tin với {order.partnerName}
                         </button>

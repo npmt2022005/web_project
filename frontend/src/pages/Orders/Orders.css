@@ -4,6 +4,7 @@
     margin: 40px auto;
     padding: 0 20px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #222325; /* 🌟 BỔ SUNG: Đảm bảo toàn bộ chữ trong trang có màu tối mặc định */
 }
 
 /* Hỗ trợ flexbox cho tiêu đề trang có chứa nhãn thông báo Mock Data */
@@ -51,7 +52,16 @@
 /* Detail Workspace Layout */
 .back-to-list-btn { background: none; border: none; color: #62646a; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; margin-bottom: 20px; padding: 0; }
 .order-workspace-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 30px; }
-.workspace-main-card, .sidebar-widget { background: #fff; border: 1px solid #e4e5e7; border-radius: 8px; padding: 24px; }
+
+/* 🌟 BỔ SUNG: Áp đặt color tối rõ ràng cho các thẻ Card lớn tránh kế thừa chữ trắng */
+.workspace-main-card, .sidebar-widget { 
+    background: #fff; 
+    border: 1px solid #e4e5e7; 
+    border-radius: 8px; 
+    padding: 24px;
+    color: #222325 !important;
+}
+
 .order-main-header h1 { font-size: 24px; color: #222325; margin: 12px 0 8px 0; }
 .gig-desc-preview { color: #62646a; line-height: 1.5; font-size: 14px; white-space: pre-wrap; }
 .order-id-label { font-size: 13px; color: #95979d; margin-top: 5px; }
@@ -71,15 +81,59 @@
 .partner-profile-mini img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
 .avatar-placeholder { width: 40px; height: 40px; border-radius: 50%; background: #e4e5e7; display: flex; align-items: center; justify-content: center; color: #74767e; }
 .partner-role-title { font-size: 12px; color: #74767e; margin: 0; }
-.info-row-item { display: flex; justify-content: space-between; font-size: 13px; margin: 10px 0; color: #62646a; }
-.total-price-box { display: flex; justify-content: space-between; align-items: center; font-weight: 700; margin-top: 15px; border-top: 1px solid #efeff0; padding-top: 15px; }
+
+/* 🌟 BỔ SUNG: Bảo vệ màu text dòng thông tin sidebar luôn hiển thị */
+.info-row-item { display: flex; justify-content: space-between; font-size: 13px; margin: 10px 0; color: #62646a !important; }
+.info-row-item span { color: #222325 !important; font-weight: 500; }
+
+.total-price-box { display: flex; justify-content: space-between; align-items: center; font-weight: 700; margin-top: 15px; border-top: 1px solid #efeff0; padding-top: 15px; color: #222325; }
 .price-text { color: #1dbf73; font-size: 20px; display: flex; align-items: center; }
 
 /* Khung chat thảo luận hệ thống */
 .workspace-chat-mock { margin-top: 25px; }
 .workspace-chat-mock h3 { font-size: 16px; color: #222325; margin-bottom: 12px; }
-.mock-chat-box { border: 1px dashed #e4e5e7; border-radius: 6px; padding: 20px; background-color: #fbfbfb; text-align: center; }
-.chat-system-text { color: #95979d; font-size: 13px; font-style: italic; margin: 0; }
+
+/* 🌟 FIX LỖI CHỮ TRẮNG: Ép toàn bộ chữ, nhãn, nội dung tin nhắn chat có màu tối mặc định */
+.mock-chat-box { 
+    border: 1px solid #e4e5e7; 
+    border-radius: 6px; 
+    padding: 20px; 
+    background-color: #fbfbfb; 
+    text-align: left;
+    color: #222325 !important;
+}
+.mock-chat-box div, 
+.mock-chat-box p, 
+.mock-chat-box span, 
+.mock-chat-box strong {
+    color: #222325 !important;
+}
+.chat-system-text { color: #95979d !important; font-size: 13px; font-style: italic; margin: 0; }
+
+/* 🌟 FIX TRIỆT ĐỂ: Đồng bộ màu nền trắng và màu chữ đen tối cho tất cả ô nhập tin nhắn và ô chat trong workspace */
+.workspace-chat-mock textarea,
+.workspace-chat-mock input[type="text"],
+.mock-chat-box textarea,
+.mock-chat-box input[type="text"] {
+    background-color: #ffffff !important;
+    color: #222325 !important;
+    border: 1px solid #b5b6ba !important;
+    border-radius: 4px !important;
+    padding: 10px !important;
+    font-size: 14px !important;
+}
+
+.workspace-chat-mock textarea::placeholder,
+.workspace-chat-mock input::placeholder {
+    color: #95979d !important;
+}
+
+.workspace-chat-mock textarea:focus,
+.workspace-chat-mock input[type="text"]:focus {
+    outline: none !important;
+    border-color: #1dbf73 !important;
+    box-shadow: 0 0 4px rgba(29, 191, 115, 0.2) !important;
+}
 
 /* Trạng thái lỗi và trống trải */
 .order-loading, .order-error-card { text-align: center; padding: 100px; font-size: 15px; color: #62646a; }
@@ -92,7 +146,7 @@
     .page-header-flex { flex-direction: column; align-items: flex-start; gap: 10px; }
 }
 
-/* 🆕 SỬA ĐỔI: Tinh chỉnh màu ô nhập thông tin cho sáng sủa và dễ nhìn hơn */
+/* 🆕 SỬA ĐIỂU CHỈNH: Tinh chỉnh màu ô nhập thông tin cho sáng sủa và dễ nhìn hơn */
 .deliver-embedded-form label {
     color: #222325;
     margin-bottom: 6px;
@@ -145,6 +199,7 @@
 .review-modal-card {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     animation: fadeInModal 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    color: #222325 !important; /* 🌟 FIX LỖI CHỮ TRẮNG: Đảm bảo văn bản tiêu đề Modal luôn rõ ràng */
 }
 
 /* Thêm hiệu ứng phóng to nhẹ khi di chuột vào các ngôi sao chọn đánh giá */
@@ -190,6 +245,18 @@
    ========================================================================== */
 
 /* Thừa kế cấu trúc sáng sủa cho ô nhập đính kèm file và ghi chú sửa đổi */
+.buyer-action-widget {
+    color: #222325 !important; /* 🌟 FIX LỖI CHỮ TRẮNG: Ép chữ trong Widget hành động luôn có màu tối */
+}
+
+.buyer-action-widget h3, 
+.buyer-action-widget h4, 
+.buyer-action-widget p,
+.buyer-action-widget label,
+.buyer-action-widget div {
+    color: #222325 !important; /* Ép toàn bộ thẻ văn bản sâu bên trong hiện rõ */
+}
+
 .buyer-action-widget form textarea,
 .buyer-action-widget form input[type="file"] {
     background-color: #ffffff !important;
@@ -203,6 +270,7 @@
     border: 1px dashed #b5b6ba !important;
     padding: 6px;
     cursor: pointer;
+    color: #404145 !important;
 }
 
 .buyer-action-widget form textarea:focus {

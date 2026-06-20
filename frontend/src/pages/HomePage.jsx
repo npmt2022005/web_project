@@ -192,29 +192,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* 2. CATEGORY CAROUSEL TỰ ĐỘNG THEO BACKEND */}
-      <section className="category-carousel">
-        <div className="container">
-          <h2>Các dịch vụ chuyên nghiệp nổi bật</h2>
-          <div className="carousel-grid">
-            {categories.slice(0, 5).map((cat) => (
-              <div 
-                key={cat.id} 
-                className="carousel-card" 
-                onClick={() => navigate(`/categories/${cat.slug}`)} 
-                style={{ cursor: 'pointer' }}
-              >
-                <img 
-                  src={cat.imgUrl && cat.imgUrl !== "đường link" ? cat.imgUrl : getCategoryImage(cat.slug)} 
-                  alt={cat.name} 
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 3. FEATURED GIGS LIÊN KẾT DATABASE THẬT */}
+      {/* 2. FEATURED GIGS LIÊN KẾT DATABASE THẬT */}
       <section className="featured-section">
         <div className="container">
           <h2 className="section-title">Những sản phẩm đầy cảm hứng được thực hiện trên nền tảng</h2>
@@ -272,7 +250,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* 4. VALUE PROPOSITION */}
+      {/* 3. VALUE PROPOSITION */}
       <section className="value-prop">
         <div className="container prop-grid">
           <div className="prop-content">
@@ -313,7 +291,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* 5. SOCIAL PROOF & TESTIMONIALS */}
+      {/* 4. SOCIAL PROOF (Chỉ giữ lại danh sách các logo đối tác) */}
       <section className="social-proof-section">
         <div className="partner-logos-wrapper">
           <div className="container partner-flex">
@@ -327,52 +305,9 @@ const HomePage = () => {
             </div>
           </div>
         </div>
-
-        <div className="testimonials-wrapper">
-          <div className="container">
-            <h2 className="section-title-center">Khách hàng nói gì về chúng tôi</h2>
-            <div className="testimonials-grid">
-              <div className="testimonial-card">
-                <div className="client-info">
-                  <div className="client-avatar">KT</div>
-                  <div>
-                    <h5>Kiến Thức</h5>
-                    <p className="client-role">Sáng lập viên tại TechStart</p>
-                  </div>
-                </div>
-                <p className="client-comment">"Tìm kiếm các nhà phát triển web trên nền tảng này vô cùng nhanh chóng. Giao diện trực quan và tính năng bảo vệ thanh toán Ký quỹ giúp tôi hoàn toàn an tâm đối với các dự án lớn."</p>
-                <div className="client-stars">⭐⭐⭐⭐⭐</div>
-              </div>
-
-              <div className="testimonial-card">
-                <div className="client-info">
-                  <div className="client-avatar">MD</div>
-                  <div>
-                    <h5>Minh Đức</h5>
-                    <p className="client-role">Quản lý Marketing</p>
-                  </div>
-                </div>
-                <p className="client-comment">"Đội ngũ hỗ trợ 24/7 xử lý mọi việc rất công bằng và nhanh chóng. Các cây viết SEO ở đây làm việc vô cùng chuyên nghiệp và đem lại những nội dung xuất sắc giúp thúc đẩy hiệu quả kinh doanh."</p>
-                <div className="client-stars">⭐⭐⭐⭐⭐</div>
-              </div>
-
-              <div className="testimonial-card">
-                <div className="client-info">
-                  <div className="client-avatar">AH</div>
-                  <div>
-                    <h5>An Hoàng</h5>
-                    <p className="client-role">Nhà thiết kế sản phẩm</p>
-                  </div>
-                </div>
-                <p className="client-comment">"Tôi đã thuê một nhà thiết kế logo tại đây. Bạn freelancer làm việc rất tận tâm và bàn giao các bản sửa đổi đúng tiến độ. Quy trình phê duyệt sản phẩm chuyên nghiệp không thua kém gì các nền tảng toàn cầu."</p>
-                <div className="client-stars">⭐⭐⭐⭐⭐</div>
-              </div>
-            </div>
-          </div>
-        </div>
       </section>
 
-      {/* 7. FOOTER */}
+      {/* 5. FOOTER */}
       <footer className="footer-section">
         <div className="container footer-top">
           <div className="footer-col">
