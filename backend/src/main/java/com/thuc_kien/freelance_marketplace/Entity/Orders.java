@@ -2,10 +2,13 @@ package com.thuc_kien.freelance_marketplace.Entity;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.hibernate.annotations.CreationTimestamp;
 
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -34,7 +37,10 @@ public class Orders {
     private Long packageId;
 
     @Column(name = "status", nullable = false, length = 50)
-    private String status; // Ví dụ: PENDING, PAID, CANCELED, COMPLETED
+    private String status; // Ví dụ: PAID, PENDING, ACCEPTED, REJECTED, DELIVERED, COMPLETED, REFUNDED
+
+    @Column(name = "stripe_payment_intent_id", length = 100)
+    private String stripePaymentIntentId;
 
     @Column(name = "total_amount", precision = 10, scale = 2)
     private BigDecimal totalAmount;
@@ -48,8 +54,7 @@ public class Orders {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "buyer_id", nullable = false)
-    private User buyer; // Giả sử bảng User chứa thông tin người mua
-
+    private User buyer; 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "gig_id", nullable = false)
     private Gig gig;
@@ -60,8 +65,46 @@ public class Orders {
     @Column(name="serviceFee")
     private BigDecimal serviceFee;
 
-    // Tự động lấy giờ hệ thống lúc đơn hàng được tạo (Insert)
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "requirement_text", columnDefinition = "TEXT")
+    private String requirementText;
+    
+    @Column(name = "submission_link", columnDefinition = "TEXT")
+    private String submissionLink;
+
+    @Column(name = "submission_note", columnDefinition = "TEXT")
+    private String submissionNote;
+
+    @Column(name = "submission_file_url")
+    private String submissionFileUrl;
+
+    @Column(name = "actual_delivery_date")
+    private LocalDateTime actualDeliveryDate;
+
+    @Column(name = "revision_count")
+    private Integer revisionCount;
+
+    @ElementCollection
+    @CollectionTable(
+        name = "order_attachments", // 
+        joinColumns = @JoinColumn(name = "order_id") 
+    )
+    @Column(name = "file_url", columnDefinition = "TEXT")
+    private List<String> attachedFiles = new java.util.ArrayList<>();
+
+
+    @Column(name = "inspection_deadline")
+    private LocalDateTime inspectionDeadline; 
+
+    
+    @Column(name = "revision_note", columnDefinition = "TEXT")
+    private String revisionNote; 
+
+    @Column(name = "revision_file_url")
+    private String revisionFileUrl; 
+    
+    
 }

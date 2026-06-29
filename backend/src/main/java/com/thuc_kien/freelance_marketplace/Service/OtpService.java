@@ -12,7 +12,8 @@ public class OtpService {
 
     @Autowired
     private StringRedisTemplate redisTemplate;
-    // Thời gian sống của OTP (ví dụ 5 phút)
+    
+    
     private final long OTP_VALID_DURATION = 5;
 
 

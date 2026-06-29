@@ -14,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.http.HttpMethod;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
@@ -65,15 +66,37 @@ public class SecurityConfig {
                 // Cho phép tất cả các API liên quan đến Auth và Quên mật khẩu
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers(
-                "/v3/api-docs/**",        
-                "/swagger-ui/**",          
-                "/swagger-ui.html",         
-                "/swagger-resources/**",
-                "/webjars/**",
-                "/api/v1/**"
-            ).permitAll()
-                .requestMatchers("/api//admin/**").hasRole("ADMIN")   // Chỉ ADMIN mới vào được các link này
+                    "/v3/api-docs/**",        
+                    "/swagger-ui/**",          
+                    "/swagger-ui.html",         
+                    "/swagger-resources/**",
+                    "/webjars/**",
+                    "/ws",
+                    "/ws/**" // Endpoint WebSocket
+                ).permitAll()
+                // Các API công khai cho khách xem (chỉ GET requests)
+                .requestMatchers(HttpMethod.GET, "/api/v1/gigs/featured").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/gigs_v1/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/categories/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/gigs/{id}").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/gigs/{id}/similar").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/sellers/{id}").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/sellers/**").permitAll()
+
+                // Các API cho Seller (tạo, cập nhật, xóa gig, upload ảnh)
+                // Admin cũng có thể thực hiện các hành động này nếu cần, nên dùng hasAnyRole
+                .requestMatchers(HttpMethod.POST, "/api/v1/gigs/create_gig").hasAnyRole("SELLER", "ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/v1/gigs/update/**").hasAnyRole("SELLER", "ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/v1/gigs/delete/**").hasAnyRole("SELLER", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/v1/uploads/image").hasAnyRole("SELLER", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/v1/gigs/features/**").hasAnyRole("SELLER", "ADMIN")
+
+                // Các API liên quan đến Order (yêu cầu xác thực, logic chi tiết trong service)
+                .requestMatchers("/api/v1/orders/**").authenticated()
                 
+                // Các API quản trị
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
                 // Các API khác yêu cầu phải đăng nhập mới được dùng
                 .anyRequest().authenticated()
             )
@@ -96,16 +119,28 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         
         // Cho phép Frontend (Vite/React) truy cập
-        configuration.setAllowedOrigins(List.of("http://localhost:5173")); 
+        configuration.setAllowedOrigins(Arrays.asList(
+            "http://localhost",
+            "http://localhost:80",
+            "http://localhost:3000",
+            "http://localhost:5173",
+            "http://127.0.0.1",
+            "http://127.0.0.1:80",
+            "http://127.0.0.1:3000",
+            "http://127.0.0.1:5173"
+        )); 
         
         // Cho phép các phương thức HTTP
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         
         // Cho phép tất cả các Header (Quan trọng để gửi JWT trong Header)
         configuration.setAllowedHeaders(List.of("*"));
         
         // Cho phép gửi kèm thông tin xác thực
         configuration.setAllowCredentials(true);
+
+        // Cache preflight response trong 3600 giây (1 giờ)
+        configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

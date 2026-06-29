@@ -22,6 +22,14 @@ public interface CategoryRepository extends JpaRepository<Category, Long>{
     @Query("SELECT c.slug FROM Category c WHERE c.parent.slug = :parentSlug")
     List<String> findChildSlugsByParentSlug(String parentSlug);
 
+    boolean existsByName(String name);
+    
+    // Kiểm tra tên danh mục tồn tại nhưng loại trừ ID hiện tại (dùng khi cập nhật)
+    boolean existsByNameAndIdNot(String name, Long id);
 
+    boolean existsBySlug(String slug);
+    boolean existsBySlugAndIdNot(String slug, Long id);
+    boolean existsByParentId(Long parentId);
+    
     
 }

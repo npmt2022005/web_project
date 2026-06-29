@@ -1,0 +1,421 @@
+/* ============================================================
+   FREELANCER PROFILE DETAILS — VANCE DESIGN
+   ============================================================ */
+
+.seller-detail-loading,
+.seller-detail-error {
+    text-align: center;
+    padding: 100px;
+    color: var(--text-secondary);
+    font-family: var(--font-body);
+    font-size: 14px;
+}
+
+.seller-detail-container {
+    max-width: 900px;
+    margin: 32px auto 80px auto;
+    padding: 0 24px;
+    font-family: var(--font-body);
+}
+
+/* Nút quay lại */
+.seller-detail-back-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: none;
+    background-color: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 13.5px;
+    font-weight: 600;
+    margin-bottom: 24px;
+    padding: 0;
+    transition: var(--transition-fast);
+}
+
+.seller-detail-back-btn:hover {
+    color: var(--primary);
+}
+
+/* Khung thông tin chính */
+.seller-detail-card {
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 32px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
+
+/* Phần Header Profile */
+.seller-detail-header {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+}
+
+.seller-detail-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-light), var(--secondary-light));
+    border: 3px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+    font-weight: 700;
+    font-size: 24px;
+}
+
+.seller-detail-info {
+    flex: 1;
+}
+
+.seller-detail-name-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.seller-detail-fullname {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--text-primary);
+}
+
+.seller-detail-badge {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background-color: var(--primary-light);
+    color: var(--primary);
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: var(--radius-full);
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.seller-detail-title {
+    margin: 6px 0 12px 0;
+    font-size: 15px;
+    color: var(--primary);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.seller-detail-meta {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.seller-detail-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.seller-stripe-badge {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+/* Điểm đánh giá */
+.seller-detail-rating-box {
+    background-color: var(--bg-app);
+    border: 1px solid var(--border);
+    padding: 12px 20px;
+    border-radius: var(--radius-md);
+    text-align: center;
+}
+
+.seller-detail-rating-score {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    color: var(--accent-orange);
+    font-weight: 800;
+    font-size: 18px;
+}
+
+.seller-detail-rating-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+/* Đường gạch ngang dòng phân chia */
+.seller-detail-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 0;
+}
+
+/* Các khối nội dung lớn */
+.seller-detail-section-title {
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+}
+
+/* Tiêu đề Học vấn và Kinh nghiệm */
+.seller-detail-history-section .seller-detail-section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.seller-detail-bio {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0;
+    white-space: pre-line;
+}
+
+.seller-detail-skills-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.seller-detail-skill-item {
+    background-color: var(--bg-app);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: var(--radius-full);
+    font-weight: 500;
+}
+
+/* GRID 2 CỘT CHO HỌC VẤN & KINH NGHIỆM */
+.seller-detail-history-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin: 24px 0;
+}
+
+.seller-detail-history-list {
+    margin-top: 12px;
+}
+
+.seller-detail-history-list p.no-data {
+    color: var(--text-muted);
+    font-size: 13.5px;
+    font-style: italic;
+    margin: 0;
+}
+
+.seller-detail-history-item {
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed var(--border);
+}
+
+.seller-detail-history-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: 0;
+}
+
+.seller-detail-history-item h4 {
+    margin: 0 0 4px 0;
+    font-size: 14px;
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+.seller-detail-history-item .history-sub {
+    margin: 0 0 4px 0;
+    font-size: 13px;
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.seller-detail-history-item .history-desc {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+/* PHẦN REVIEWS & COMMENTS CỦA BUYER */
+.seller-reviews-container {
+    margin: 24px 0;
+}
+
+.seller-reviews-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.seller-reviews-stack p.no-reviews {
+    color: var(--text-muted);
+    font-size: 13.5px;
+    font-style: italic;
+    margin: 0;
+}
+
+.review-comment-card {
+    padding: 16px;
+    background-color: var(--bg-app);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+}
+
+.review-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.review-user-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.review-avatar-placeholder {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    font-weight: 700;
+}
+
+.review-buyer-name {
+    font-weight: 700;
+    font-size: 13.5px;
+    color: var(--text-primary);
+}
+
+.review-meta-data {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12.5px;
+    color: var(--text-secondary);
+}
+
+.review-stars {
+    display: flex;
+    color: var(--accent-orange);
+}
+
+.review-text {
+    margin: 0;
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+/* Khối liên hệ nhanh dưới cùng */
+.seller-detail-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    border-top: 1px solid var(--border);
+    padding-top: 24px;
+}
+
+.seller-detail-contact-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    display: block;
+    margin-bottom: 2px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.seller-detail-contact-value {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.seller-detail-contact-btn {
+    padding: 10px 24px;
+    background-color: var(--primary);
+    color: var(--text-light);
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.seller-detail-contact-btn:hover {
+    background-color: var(--primary-hover);
+    box-shadow: var(--shadow-glow);
+    transform: translateY(-1px);
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    .seller-detail-history-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .seller-detail-header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .seller-detail-name-wrapper {
+        justify-content: center;
+    }
+
+    .seller-detail-meta {
+        justify-content: center;
+    }
+
+    .seller-detail-rating-box {
+        width: 100%;
+    }
+
+    .review-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+
+    .seller-detail-footer {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .seller-detail-contact-btn {
+        width: 100%;
+    }
+}

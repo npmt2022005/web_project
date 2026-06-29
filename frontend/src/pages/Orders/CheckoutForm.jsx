@@ -1,5 +1,7 @@
 // src/pages/Orders/CheckoutForm.jsx
 import React, { useState } from 'react';
+// Tích hợp import useNavigate để phục vụ việc chuyển hướng trang
+import { useNavigate } from 'react-router-dom';
 // Thay đổi import: Dùng các sub-element tách rời thay cho CardElement cũ
 import { 
     useStripe, 
@@ -10,9 +12,11 @@ import {
 } from '@stripe/react-stripe-js';
 import { CreditCard, ShieldCheck, Loader2 } from 'lucide-react';
 
-const CheckoutForm = ({ summary, clientSecret }) => {
+// Bổ sung nhận prop orderId từ component cha CheckoutPage truyền xuống
+const CheckoutForm = ({ summary, clientSecret, orderId }) => {
     const stripe = useStripe();
     const elements = useElements();
+    const navigate = useNavigate(); // Khởi tạo hook điều hướng hệ thống
     const [isProcessing, setIsProcessing] = useState(false);
     
     // STATE MỚI: Quản lý tên chủ thẻ độc lập
@@ -39,6 +43,8 @@ const CheckoutForm = ({ summary, clientSecret }) => {
             setTimeout(() => {
                 alert(`🎉 [Chế độ thử nghiệm] Giả lập thanh toán thành công!\nChủ thẻ: ${cardholderName}`);
                 setIsProcessing(false);
+                // Điều hướng sang trang nhập yêu cầu đề bài sau khi giả lập thành công
+                navigate(`/orders/${orderId}/requirements`);
             }, 1500);
             return;
         }
@@ -65,6 +71,8 @@ const CheckoutForm = ({ summary, clientSecret }) => {
                 if (result.paymentIntent.status === 'succeeded') {
                     alert("🎉 Thanh toán đơn hàng thành công trực tiếp qua hệ thống Stripe!");
                     setIsProcessing(false);
+                    // Điều hướng sang trang nhập yêu cầu đề bài sau khi cổng Stripe báo thành công
+                    navigate(`/orders/${orderId}/requirements`);
                 }
             }
         } catch (err) {

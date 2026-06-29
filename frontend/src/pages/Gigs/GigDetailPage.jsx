@@ -28,6 +28,7 @@ const MOCK_GIG_DETAILS = {
     "seller": {
       "id": 88,
       "fullName": "Kianna Ble",
+      "username": "kianna_ble",
       "avatarUrl": "https://i.pravatar.cc/150?img=32",
       "isVerified": true,
       "role": "Supporter",
@@ -91,6 +92,36 @@ const GigDetailPage = () => {
   const [currentImage, setCurrentImage] = useState('');
   const [loading, setLoading] = useState(true);
 
+  // === ĐOẠN ĐƯỢC CHỈNH SỬA ĐỂ PHÙ HỢP VỚI LOCALSTORAGE CỦA BẠN ===
+  const token = localStorage.getItem('token');
+  const loggedInUsername = localStorage.getItem('username'); // Đọc trực tiếp chuỗi kien_phan
+  let currentUserId = null;
+
+  // Tự động giải mã token JWT để lấy ID số phòng trường hợp Backend so sánh qua ID
+  if (token) {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        window.atob(base64)
+          .split('')
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+      const decoded = JSON.parse(jsonPayload);
+      currentUserId = decoded.id || decoded.userId || decoded.sub; 
+    } catch (e) {
+      console.warn("Không thể giải mã dữ liệu token để lấy mã ID khách hàng");
+    }
+  }
+
+  // Logic kiểm tra trùng khớp: Trùng khớp về Username HOẶC trùng khớp về mã ID số
+  const isSellerOfThisGig = gig && gig.seller && (
+    (loggedInUsername && gig.seller.username && String(loggedInUsername).toLowerCase() === String(gig.seller.username).toLowerCase()) ||
+    (currentUserId && gig.seller.id && String(currentUserId) === String(gig.seller.id))
+  );
+  // =============================================================
+
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
@@ -113,8 +144,8 @@ const GigDetailPage = () => {
       try {
         // Thực hiện gọi API song song từ Backend
         const [detailRes, similarRes] = await Promise.all([
-          axios.get(`http://localhost:8080/api/v1/gigs/${id}`),
-          axios.get(`http://localhost:8080/api/v1/gigs/${id}/similar`)
+          axios.get(`/api/v1/gigs/${id}`),
+          axios.get(`/api/v1/gigs/${id}/similar`)
         ]);
 
         // Nếu API trả dữ liệu thành công -> Cập nhật vào State hệ thống
@@ -135,7 +166,15 @@ const GigDetailPage = () => {
         }
 
       } catch (error) {
-        console.warn("⚠️ Cảnh báo: Không thể kết nối API Backend. Tự động chuyển sang Mock Data mẫu.", error.message);
+        if (error.response) {
+          // Server đã phản hồi nhưng trả về mã lỗi (4xx, 5xx)
+          console.error("❌ API Error:", error.response.status, error.response.data);
+        } else if (error.request) {
+          // Yêu cầu đã gửi nhưng không nhận được phản hồi (Backend chưa bật)
+          console.error("🌐 Network Error: Không thể kết nối tới Server. Hãy kiểm tra Backend Spring Boot.");
+        } else {
+          console.error("⚙️ App Error:", error.message);
+        }
         
         const currentId = MOCK_GIG_DETAILS[id] ? id : "1";
         const targetGig = MOCK_GIG_DETAILS[currentId];
@@ -157,16 +196,21 @@ const GigDetailPage = () => {
 
   // Hàm xử lý gọi API khởi tạo đơn hàng nháp khi chọn gói dịch vụ
   const handleContinueOrder = async (packageType) => {
-    const token = localStorage.getItem('token');
     if (!token) {
       alert("Vui lòng đăng nhập hệ thống để thực hiện đặt đơn hàng!");
       navigate('/login');
       return;
     }
 
+    // Phòng ngừa nhấn nút bằng phím hoặc công cụ dev: chặn hành vi nếu là Seller chính mình
+    if (isSellerOfThisGig) {
+      alert("Bạn không thể đặt đơn hàng cho dịch vụ của chính mình!");
+      return;
+    }
+
     try {
       const response = await axios.post(
-        'http://localhost:8080/api/v1/orders',
+        '/api/v1/orders',
         {
           gigId: id === 'test-local' ? 1 : parseInt(id), 
           packageType: packageType.toUpperCase(),       
@@ -189,10 +233,33 @@ const GigDetailPage = () => {
       console.warn("⚠️ Lỗi hệ thống hoặc lỗi kết nối Server API đơn hàng. Tự động chuyển sang Mock Đơn Hàng để test UI.");
       console.log("🚨 Chi tiết lỗi API:", error.response ? error.response.data : error.message);
   
-      console.warn("⚠️ Lỗi hệ thống hoặc lỗi kết nối Server API đơn hàng. Tự động chuyển sang Mock Đơn Hàng để test UI.");
-      // ... phần điều hướng mock data tiếp theo ..
       const fallbackId = `mock-${id === 'test-local' ? '1' : id}-${packageType.toLowerCase()}`;
       navigate(`/checkout/${fallbackId}`);
+    }
+  };
+
+  const handleContactSeller = async () => {
+    if (!token) {
+      alert("Vui lòng đăng nhập hệ thống để liên hệ trao đổi!");
+      navigate('/login');
+      return;
+    }
+    try {
+      const response = await fetch(`/api/v1/conversations/initiate/seller/${gig.seller.id}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      const result = await response.json();
+      if (response.ok && result.status === 'success') {
+        navigate(`/chat/${result.data}`);
+      } else {
+        alert(result.message || "Không thể khởi tạo phòng chat với người bán.");
+      }
+    } catch (error) {
+      console.error("Lỗi kết nối khởi tạo phòng chat:", error);
     }
   };
 
@@ -227,9 +294,21 @@ const GigDetailPage = () => {
           <div className="top-seller-info-row">
             {gig.seller && (
               <>
-                <img src={gig.seller.avatarUrl} alt={gig.seller.fullName} className="seller-mini-avatar" />
+                <img
+                  src={gig.seller.avatarUrl}
+                  alt={gig.seller.fullName}
+                  className="seller-mini-avatar"
+                  onClick={() => navigate(`/seller/${gig.seller.id}`)}
+                  style={{ cursor: 'pointer' }}
+                />
                 <div className="seller-meta-text">
-                  <span className="seller-name-bold">{gig.seller.fullName}</span>
+                  <span
+                    className="seller-name-bold"
+                    onClick={() => navigate(`/seller/${gig.seller.id}`)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    {gig.seller.fullName}
+                  </span>
                   {gig.seller.isVerified && <span className="verified-text">| Chuyên gia xác thực</span>}
                   <span className="seller-role-badge">{gig.seller.role || "Freelancer"}</span>
                 </div>
@@ -288,16 +367,32 @@ const GigDetailPage = () => {
             <div className="detail-section-card seller-profile-long-card">
               <h3>Thông tin về người bán</h3>
               <div className="seller-profile-flex-box">
-                <img src={gig.seller.avatarUrl} alt={gig.seller.fullName} className="seller-large-avatar" />
+                <img
+                  src={gig.seller.avatarUrl}
+                  alt={gig.seller.fullName}
+                  className="seller-large-avatar"
+                  onClick={() => navigate(`/seller/${gig.seller.id}`)}
+                  style={{ cursor: 'pointer' }}
+                />
                 <div className="seller-profile-right">
-                  <h4>{gig.seller.fullName}</h4>
+                  <h4
+                    onClick={() => navigate(`/seller/${gig.seller.id}`)}
+                    style={{ cursor: 'pointer' }}
+                  >{gig.seller.fullName}</h4>
                   <p className="seller-title-sub">{gig.seller.role || "Professional Freelancer"}</p>
                   <div className="seller-stats-line">
                     <span className="star-span">
                       <Star size={14} fill="#ffb33e" stroke="#ffb33e" /> {(gig.seller.rating ?? 0).toFixed(1)} ({gig.seller.reviewCount ?? 0} đánh giá)
                     </span>
                   </div>
-                  <button className="contact-seller-btn-outline" onClick={() => alert('Chức năng liên hệ chat sẽ kết nối ở bước sau!')}>Liên hệ tôi</button>
+                <button 
+                  className="contact-seller-btn-outline" 
+                  onClick={handleContactSeller}
+                  disabled={isSellerOfThisGig}
+                  style={isSellerOfThisGig ? { opacity: 0.5, cursor: 'not-allowed' } : { cursor: 'pointer' }}
+                >
+                  Liên hệ tôi
+                </button>
                 </div>
               </div>
 
@@ -333,7 +428,10 @@ const GigDetailPage = () => {
                       {simGig.seller && (
                         <div className="sim-seller-row">
                           <img src={simGig.seller.avatarUrl} alt={simGig.seller.fullName} className="sim-avatar" />
-                          <span>{simGig.seller.fullName}</span>
+                          <span
+                            onClick={(e) => { e.stopPropagation(); navigate(`/seller/${simGig.seller.id}`); }}
+                            style={{ cursor: 'pointer' }}
+                          >{simGig.seller.fullName}</span>
                         </div>
                       )}
                       <h5 className="sim-title">{simGig.title}</h5>
@@ -401,11 +499,29 @@ const GigDetailPage = () => {
                   </div>
                 )}
 
+                {/* THAY ĐỔI LOGIC: Vô hiệu hóa nút bấm và thêm hiệu ứng mờ nếu người dùng chính là Seller tạo bài đăng này */}
                 <button 
                   className="continue-order-submit-btn" 
                   onClick={() => handleContinueOrder(selectedPackage.type)}
+                  disabled={isSellerOfThisGig}
+                  style={isSellerOfThisGig ? {
+                    backgroundColor: '#b5b6ba',
+                    color: '#fff',
+                    cursor: 'not-allowed',
+                    opacity: 0.6,
+                    boxShadow: 'none'
+                  } : {}}
                 >
-                  Tiếp tục với ({selectedPackage.price}$)
+                  {isSellerOfThisGig ? 'Bạn không thể mua dịch vụ của mình' : `Tiếp tục với (${selectedPackage.price}$)`}
+                </button>
+
+                <button 
+                  className="contact-seller-btn-sidebar" 
+                  onClick={handleContactSeller}
+                  disabled={isSellerOfThisGig}
+                  style={isSellerOfThisGig ? { opacity: 0.5, cursor: 'not-allowed', width: '100%', marginTop: '12px', padding: '12px', border: '1px solid #222', background: '#fff', color: '#222325', fontWeight: '600', borderRadius: '4px' } : { width: '100%', marginTop: '12px', padding: '12px', border: '1px solid #222', background: '#fff', color: '#222325', fontWeight: '600', borderRadius: '4px', cursor: 'pointer' }}
+                >
+                  Liên hệ người bán
                 </button>
               </div>
             )}

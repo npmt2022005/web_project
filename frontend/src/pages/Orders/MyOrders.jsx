@@ -34,13 +34,14 @@ const FALLBACK_MOCK_ORDERS = [
     }
 ];
 
-// Hàm bổ trợ hiển thị tên Trạng thái Tiếng Việt trên giao diện
+// Hàm bổ trợ hiển thị tên Trạng thái Tiếng Việt trên giao diện (Đồng bộ chuẩn hóa theo OrderDetailPage)
 const translateStatus = (status) => {
     switch (status ? status.toUpperCase() : '') {
         case 'PENDING': return 'CHỜ XỬ LÝ';
         case 'IN_PROGRESS': return 'ĐANG THỰC HIỆN';
-        case 'DELIVERED': return 'ĐÃ GIAO';
+        case 'DELIVERED': return 'ĐÃ BÀN GIAO'; // Chỉnh từ ĐÃ GIAO thành ĐÃ BÀN GIAO để đồng bộ hệ thống
         case 'COMPLETED': return 'HOÀN THÀNH';
+        case 'CANCELLED': return 'ĐÃ HỦY ĐƠN'; // Đồng bộ hiển thị chữ in hoa ĐÃ HỦY ĐƠN
         default: return status || 'CHỜ XỬ LÝ';
     }
 };
@@ -60,7 +61,7 @@ const MyOrders = () => {
                 setLoading(true);
                 setIsUsingMock(false);
                 
-                let url = `http://localhost:8080/api/v1/orders?role=BUYER`;
+                let url = `/api/v1/orders?role=BUYER`;
                 if (statusFilter) {
                     url += `&status=${statusFilter}`;
                 }
@@ -75,15 +76,18 @@ const MyOrders = () => {
 
                 const resData = await response.json();
                 
+                // KIỂM TRA PHẢN HỒI: Chấp nhận cả trường hợp API trả về mảng trống [] khi chưa có đơn hàng
                 if (response.ok && Array.isArray(resData)) {
                     setOrders(resData);
-                } else if (response.ok && resData.data) {
+                } else if (response.ok && resData.data && Array.isArray(resData.data)) {
+                    setOrders(resData.data);
+                } else if (response.ok && resData.status === 'success' && Array.isArray(resData.data)) {
                     setOrders(resData.data);
                 } else {
-                    throw new Error("Lỗi phản hồi từ hệ thống");
+                    throw new Error("Lỗi cấu trúc phản hồi từ hệ thống endpoint");
                 }
             } catch (error) {
-                console.warn("[API] Lỗi lấy danh sách đơn mua hoặc lỗi hệ thống. Tự động chuyển sang Mock Data.");
+                console.warn("[API] Lỗi kết nối API hoặc Server gặp sự cố. Tự động kích hoạt Mock Data.");
                 if (statusFilter === '') {
                     setOrders(FALLBACK_MOCK_ORDERS);
                 } else {
@@ -98,6 +102,7 @@ const MyOrders = () => {
         if (token) {
             fetchBuyerOrders();
         } else {
+            // Trường hợp khách chưa đăng nhập (Không có token)
             if (statusFilter === '') {
                 setOrders(FALLBACK_MOCK_ORDERS);
             } else {
@@ -112,7 +117,6 @@ const MyOrders = () => {
         <div className="my-orders-container">
             <div className="page-header-flex" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                    {/* ĐÃ SỬA: Chuyển sang Tiếng Việt */}
                     <h1>Đơn hàng của tôi</h1>
                     <p>Theo dõi và quản lý toàn bộ dịch vụ bạn đã đặt mua.</p>
                 </div>
@@ -124,6 +128,7 @@ const MyOrders = () => {
                 <button className={statusFilter === 'IN_PROGRESS' ? 'tab-btn active' : 'tab-btn'} onClick={() => setStatusFilter('IN_PROGRESS')}>Đang thực hiện</button>
                 <button className={statusFilter === 'DELIVERED' ? 'tab-btn active' : 'tab-btn'} onClick={() => setStatusFilter('DELIVERED')}>Đã giao</button>
                 <button className={statusFilter === 'COMPLETED' ? 'tab-btn active' : 'tab-btn'} onClick={() => setStatusFilter('COMPLETED')}>Hoàn thành</button>
+                <button className={statusFilter === 'CANCELLED' ? 'tab-btn active' : 'tab-btn'} onClick={() => setStatusFilter('CANCELLED')}>Đã hủy</button>
             </div>
 
             {loading ? (
@@ -163,7 +168,6 @@ const MyOrders = () => {
                                     <td><strong>${order.totalAmount}</strong></td>
                                     <td>
                                         <span className={`status-pill pill-${order.status ? order.status.toLowerCase() : 'pending'}`}>
-                                            {/* ĐÃ SỬA: Hiển thị tên Tiếng Việt */}
                                             {translateStatus(order.status)}
                                         </span>
                                     </td>

@@ -91,6 +91,7 @@ CREATE TABLE `gigpackages` (
   `description` text,
   `price` decimal(15,2) NOT NULL,
   `delivery_days` int DEFAULT NULL,
+  `revisions` int DEFAULT '0',
   PRIMARY KEY (`id`),
   KEY `gig_id` (`gig_id`),
   CONSTRAINT `gigpackages_ibfk_1` FOREIGN KEY (`gig_id`) REFERENCES `gigs` (`id`) ON DELETE CASCADE

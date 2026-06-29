@@ -1,0 +1,315 @@
+/* ============================================================
+   SELLER DIRECTORY EXPLORATION — VANCE DESIGN
+   ============================================================ */
+
+.seller-explore-container {
+  max-width: var(--max-width);
+  margin: 32px auto 80px auto;
+  padding: 0 24px;
+  font-family: var(--font-body);
+  color: var(--text-primary);
+}
+
+.explore-header-section {
+  margin-bottom: 28px;
+}
+
+.explore-header-section h1 {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.explore-header-section p {
+  color: var(--text-secondary);
+  font-size: 13.5px;
+}
+
+/* ============================================================
+   FILTER ACTION BAR
+   ============================================================ */
+.filter-action-bar {
+  display: flex;
+  gap: 16px;
+  background-color: var(--surface);
+  padding: 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* Search input */
+.search-input-wrapper {
+  flex: 1;
+  min-width: 240px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-input-icon {
+  position: absolute;
+  left: 14px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.search-input-field {
+  width: 100%;
+  padding: 10px 12px 10px 38px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  font-size: 13.5px;
+  outline: none;
+  box-sizing: border-box;
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  transition: var(--transition-fast);
+}
+
+.search-input-field:focus {
+  border-color: var(--primary);
+  background-color: var(--surface);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+/* Advanced filters */
+.filter-select-wrapper,
+.country-filter-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.filter-select-field,
+.country-filter-select {
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background-color: var(--surface) !important;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary) !important;
+  outline: none;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.filter-select-field:hover,
+.filter-select-field:focus,
+.country-filter-select:hover,
+.country-filter-select:focus {
+  border-color: var(--primary);
+  color: var(--text-primary) !important;
+}
+
+.country-filter-icon {
+  color: var(--text-secondary);
+}
+
+.filter-select-field option,
+.country-filter-select option {
+  color: var(--text-primary) !important;
+  background-color: var(--surface) !important;
+}
+
+/* ============================================================
+   SELLER CARDS GRID
+   ============================================================ */
+.seller-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
+}
+
+.seller-profile-card {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-normal);
+}
+
+.seller-profile-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary);
+}
+
+.seller-card-top-meta {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.seller-avatar-placeholder {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--secondary-light), var(--primary-light));
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.seller-identity-info h3 {
+  margin: 0 0 2px 0;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.seller-location-tag {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.seller-rating-badge {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent-orange);
+}
+
+.seller-professional-title {
+  margin: 0 0 10px 0;
+  font-size: 13px;
+  color: var(--primary);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.seller-biography-text {
+  margin: 0 0 16px 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Skills list */
+.seller-skills-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.seller-skill-item {
+  background-color: var(--bg-app);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-weight: 500;
+}
+
+.btn-view-seller-profile {
+  width: 100%;
+  padding: 10px;
+  background-color: var(--text-primary);
+  color: var(--text-light);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: var(--transition-fast);
+}
+
+.btn-view-seller-profile:hover {
+  background-color: var(--primary);
+  box-shadow: var(--shadow-glow);
+}
+
+/* ============================================================
+   PAGINATION NAVIGATION
+   ============================================================ */
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 36px;
+}
+
+.pagination-btn {
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background-color: var(--surface);
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 12.5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-fast);
+}
+
+.pagination-btn:hover:not(:disabled) {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.pagination-btn.active {
+  background-color: var(--primary);
+  border-color: var(--primary);
+  color: var(--text-light);
+  box-shadow: var(--shadow-glow);
+}
+
+.pagination-btn:disabled {
+  cursor: not-allowed;
+  color: var(--text-muted);
+  border-color: var(--border);
+  background-color: var(--bg-app);
+  opacity: 0.6;
+}
+
+/* States */
+.explore-status-message {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.explore-empty-state {
+  text-align: center;
+  padding: 48px;
+  color: var(--text-secondary);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  font-size: 14px;
+}

@@ -53,7 +53,7 @@ public class GigPackages {
     private Integer revisions; // Số lần chỉnh sửa
 
     @OneToMany(mappedBy = "gigPackage", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default // Giúp Lombok Builder không ghi đè giá trị khởi tạo này
+    @Builder.Default 
     private Set<PackageFeature> features = new HashSet<>();
 
 
