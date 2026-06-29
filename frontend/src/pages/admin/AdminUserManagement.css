@@ -1,50 +1,218 @@
-/* src/pages/admin/AdminUserManagement.css */
-.user-management-container { background: #fff; padding: 24px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
-.page-header-actions h3 { font-size: 18px; color: #1a1b1e; margin-bottom: 20px; font-weight: 600; }
+/* ============================================================
+   ADMIN USER MANAGEMENT SCREEN — VANCE DESIGN
+   ============================================================ */
 
-.admin-filter-bar { display: flex; gap: 16px; margin-bottom: 24px; }
-.search-box-wrapper { position: relative; flex: 1; }
-.search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #74767e; }
+.user-management-container { 
+  background: var(--surface); 
+  padding: 24px; 
+  border-radius: var(--radius-md); 
+  box-shadow: var(--shadow-sm); 
+  border: 1px solid var(--border);
+}
+
+.page-header-actions h3 { 
+  font-family: var(--font-display);
+  font-size: 18px; 
+  color: var(--text-primary); 
+  margin-bottom: 20px; 
+  font-weight: 700; 
+}
+
+.admin-filter-bar { 
+  display: flex; 
+  gap: 16px; 
+  margin-bottom: 24px; 
+}
+
+.search-box-wrapper { 
+  position: relative; 
+  flex: 1; 
+}
+
+.search-icon { 
+  position: absolute; 
+  left: 12px; 
+  top: 50%; 
+  transform: translateY(-50%); 
+  color: var(--text-muted); 
+}
+
 .search-box-wrapper input {
-  width: 100%; padding: 10px 10px 10px 38px; border: 1px solid #e8e9eb; border-radius: 6px; font-size: 14px; outline: none;
+  width: 100%; 
+  padding: 10px 10px 10px 38px; 
+  border: 1px solid var(--border); 
+  border-radius: var(--radius-md); 
+  font-size: 13.5px; 
+  outline: none;
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  transition: var(--transition-fast);
 }
-.filter-dropdown-wrapper { position: relative; width: 220px; }
-.filter-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #74767e; pointer-events: none; }
 
-/* 🌟 ĐÃ CHỈNH SỬA: Sửa lỗi mất chữ ô Bộ lọc và đẩy chữ sang bên phải để không đè icon */
+.search-box-wrapper input:focus {
+  border-color: var(--primary);
+  background-color: var(--surface);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+.filter-dropdown-wrapper { 
+  position: relative; 
+  width: 220px; 
+}
+
+.filter-icon { 
+  position: absolute; 
+  left: 12px; 
+  top: 50%; 
+  transform: translateY(-50%); 
+  color: var(--text-muted); 
+  pointer-events: none; 
+}
+
 .filter-dropdown-wrapper select {
-  width: 100%; padding: 10px 12px 10px 36px; border: 1px solid #e8e9eb; border-radius: 6px; font-size: 14px; outline: none; appearance: none; background: #fff;
-  color: #404145 !important;
+  width: 100%; 
+  padding: 10px 12px 10px 36px; 
+  border: 1px solid var(--border); 
+  border-radius: var(--radius-md); 
+  font-size: 13.5px; 
+  outline: none; 
+  appearance: none; 
+  background: var(--surface);
+  color: var(--text-primary) !important;
+  transition: var(--transition-fast);
+  cursor: pointer;
 }
 
-.admin-data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
-.admin-data-table th { padding: 14px; border-bottom: 2px solid #e8e9eb; color: #404145; font-weight: 600; background-color: #f8f9fa; }
-.admin-data-table td { padding: 14px; border-bottom: 1px solid #e8e9eb; vertical-align: middle; color: #404145; }
+.filter-dropdown-wrapper select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
 
-.user-info-cell { display: flex; align-items: center; gap: 12px; }
-.user-avatar { width: 32px; height: 32px; background: #e6f9f0; color: #1dbf73; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; }
-.user-fullname { font-weight: 500; color: #1a1b1e; }
+/* Data Table */
+.admin-data-table { 
+  width: 100%; 
+  border-collapse: collapse; 
+  text-align: left; 
+  font-size: 13.5px; 
+}
 
-/* Các biến thể Badge màu sắc tương ứng yêu cầu */
-.badge { padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; display: inline-block; }
-.badge-admin { background-color: #fed7d7; color: #c53030; }
-.badge-seller { background-color: #c6f6d5; color: #22543d; }
-.badge-buyer { background-color: #bee3f8; color: #2b6cb0; }
+.admin-data-table th { 
+  padding: 14px; 
+  border-bottom: 2px solid var(--border); 
+  color: var(--text-primary); 
+  font-weight: 700; 
+  background-color: var(--bg-app); 
+}
 
-.status-text.active { color: #2f855a; font-size: 13px; font-weight: 500; }
-.status-text.locked { color: #a0aec0; font-size: 13px; }
-.row-locked { background-color: #fafafa; opacity: 0.75; }
+.admin-data-table td { 
+  padding: 14px; 
+  border-bottom: 1px solid var(--border); 
+  vertical-align: middle; 
+  color: var(--text-secondary); 
+}
 
-.action-buttons-group { display: flex; gap: 8px; justify-content: center; }
+.user-info-cell { 
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+}
 
-/* 🌟 ĐÃ CHỈNH SỬA: Sửa lỗi mất chữ nút hành động Sửa thông tin */
+.user-avatar { 
+  width: 32px; 
+  height: 32px; 
+  background: var(--primary-light); 
+  color: var(--primary); 
+  border-radius: 50%; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  font-weight: 700; 
+  font-size: 12px; 
+  border: 1px solid rgba(16, 185, 129, 0.1);
+}
+
+.user-fullname { 
+  font-weight: 600; 
+  color: var(--text-primary); 
+}
+
+/* Badges */
+.badge { 
+  padding: 3px 10px; 
+  border-radius: var(--radius-full); 
+  font-size: 11px; 
+  font-weight: 700; 
+  display: inline-block; 
+  text-transform: uppercase;
+}
+
+.badge-admin { background-color: rgba(239, 68, 68, 0.05); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.15); }
+.badge-seller { background-color: var(--primary-light); color: var(--primary); border: 1px solid rgba(16, 185, 129, 0.15); }
+.badge-buyer { background-color: var(--secondary-light); color: var(--secondary); border: 1px solid rgba(99, 102, 241, 0.15); }
+
+.status-text.active { 
+  color: var(--primary); 
+  font-size: 13px; 
+  font-weight: 600; 
+}
+
+.status-text.locked { 
+  color: var(--text-muted); 
+  font-size: 13px; 
+}
+
+.row-locked { 
+  background-color: var(--bg-app); 
+  opacity: 0.75; 
+}
+
+.action-buttons-group { 
+  display: flex; 
+  gap: 8px; 
+  justify-content: flex-start; 
+}
+
 .btn-action {
-  display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; border: 1px solid #e8e9eb; background: #fff; border-radius: 4px; font-size: 13px; cursor: pointer; transition: all 0.2s;
-  color: #404145;
+  display: inline-flex; 
+  align-items: center; 
+  gap: 4px; 
+  padding: 6px 12px; 
+  border: 1px solid var(--border); 
+  background: var(--surface); 
+  border-radius: var(--radius-sm); 
+  font-size: 12.5px; 
+  cursor: pointer; 
+  transition: var(--transition-fast);
+  color: var(--text-secondary);
+  font-weight: 600;
 }
-.btn-action.edit:hover { background-color: #f1f2f4; color: #1a1b1e; }
-.btn-action.lock { color: #e53e3e; }
-.btn-action.lock:hover { background-color: #fff5f5; }
-.btn-action.unlock { color: #2b6cb0; }
-.btn-action.unlock:hover { background-color: #ebf8ff; }
-.no-data-cell { text-align: center; padding: 32px !important; color: #74767e; }
+
+.btn-action.edit:hover { 
+  border-color: var(--primary); 
+  color: var(--primary); 
+  background-color: var(--primary-light);
+}
+
+.btn-action.lock { 
+  color: #ef4444; 
+}
+
+.btn-action.lock:hover { 
+  background-color: rgba(239, 68, 68, 0.05); 
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.btn-action.unlock { 
+  color: var(--secondary); 
+}
+
+.btn-action.unlock:hover { 
+  background-color: var(--secondary-light); 
+  border-color: rgba(99, 102, 241, 0.2);
+}
+
+.no-data-cell { 
+  text-align: center; 
+  padding: 32px !important; 
+  color: var(--text-muted); 
+}

@@ -1,11 +1,11 @@
 /* ============================================================
-   ADMIN CATEGORY MANAGEMENT — Giao diện quản lý danh mục
+   ADMIN CATEGORY MANAGEMENT — VANCE DESIGN
    ============================================================ */
 
 .category-management-container {
     padding: 24px;
-    background-color: #f8f9fa;
-    min-height: calc(100vh - 80px);
+    background-color: var(--bg-app);
+    min-height: calc(100vh - 64px); /* Matches AdminLayout top header */
     box-sizing: border-box;
 }
 
@@ -17,34 +17,37 @@
 }
 
 .category-management-header h2 {
+    font-family: var(--font-display);
     font-size: 22px;
-    color: #1a1b1e;
-    font-weight: 700;
+    color: var(--text-primary);
+    font-weight: 800;
     margin: 0;
 }
 
 .btn-add-category {
-    background-color: #1dbf73;
-    color: #fff;
+    background-color: var(--primary);
+    color: var(--text-light);
     border: none;
     padding: 10px 20px;
-    font-size: 14px;
-    font-weight: 600;
-    border-radius: 6px;
+    font-size: 13.5px;
+    font-weight: 700;
+    border-radius: var(--radius-md);
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: var(--transition-fast);
 }
 
 .btn-add-category:hover {
-    background-color: #19a463;
+    background-color: var(--primary-hover);
+    box-shadow: var(--shadow-glow);
+    transform: translateY(-1px);
 }
 
 /* --- Table Styles --- */
 .category-table-wrapper {
-    background: #fff;
-    border: 1px solid #e4e5e7;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
     overflow: hidden;
 }
 
@@ -52,36 +55,36 @@
     width: 100%;
     border-collapse: collapse;
     text-align: left;
-    font-size: 14px;
+    font-size: 13.5px;
 }
 
 .category-table th {
-    background-color: #f5f5f5;
-    color: #62646a;
-    font-weight: 600;
+    background-color: var(--bg-app);
+    color: var(--text-primary);
+    font-weight: 700;
     padding: 14px 18px;
-    border-bottom: 1px solid #e4e5e7;
+    border-bottom: 2px solid var(--border);
 }
 
 .category-table td {
     padding: 14px 18px;
-    color: #404145;
-    border-bottom: 1px solid #efeff0;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border);
 }
 
 .category-name-cell {
     font-weight: 600;
-    color: #1a1b1e;
+    color: var(--text-primary);
 }
 
 .no-desc {
-    color: #b5b6ba;
+    color: var(--text-muted);
     font-style: italic;
 }
 
 .no-data {
     padding: 40px !important;
-    color: #74767e;
+    color: var(--text-secondary);
 }
 
 .text-center {
@@ -90,38 +93,40 @@
 
 /* --- Action Buttons --- */
 .btn-action-edit {
-    background: #fff;
-    border: 1px solid #ffc107;
-    color: #ff9800;
+    background: var(--surface);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    color: var(--accent-orange);
     padding: 6px 12px;
-    font-size: 13px;
+    font-size: 12.5px;
     font-weight: 600;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     cursor: pointer;
     margin-right: 8px;
-    transition: all 0.2s ease;
+    transition: var(--transition-fast);
 }
 
 .btn-action-edit:hover {
-    background: #ffc107;
-    color: #fff;
+    background: var(--accent-orange);
+    border-color: var(--accent-orange);
+    color: var(--text-light);
 }
 
 .btn-action-delete {
-    background: #fff;
-    border: 1px solid #dc3545;
-    color: #dc3545;
+    background: var(--surface);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    color: #ef4444;
     padding: 6px 12px;
-    font-size: 13px;
+    font-size: 12.5px;
     font-weight: 600;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: var(--transition-fast);
 }
 
 .btn-action-delete:hover {
-    background: #dc3545;
-    color: #fff;
+    background: #ef4444;
+    border-color: #ef4444;
+    color: var(--text-light);
 }
 
 /* ============================================================
@@ -134,28 +139,32 @@
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(11, 15, 25, 0.5);
+    backdrop-filter: blur(4px);
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 20000; /* Nổi lên trên toàn bộ layout trang */
+    z-index: 20000;
 }
 
 .category-modal-box {
-    background: #fff;
+    background: var(--surface);
     width: 100%;
-    max-width: 460px;
+    max-width: 440px;
     padding: 24px;
-    border-radius: 8px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-    animation: modalFadeIn 0.2s ease-out forwards;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-xl);
+    animation: modalFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .category-modal-box h3 {
     margin-top: 0;
     margin-bottom: 20px;
+    font-family: var(--font-display);
     font-size: 18px;
-    color: #1a1b1e;
+    font-weight: 700;
+    color: var(--text-primary);
 }
 
 .form-group {
@@ -166,30 +175,33 @@
     display: block;
     font-size: 13px;
     font-weight: 600;
-    color: #404145;
+    color: var(--text-secondary);
     margin-bottom: 6px;
 }
 
 .form-group label .required {
-    color: #dc3545;
+    color: #ef4444;
 }
 
 .form-group input,
 .form-group textarea {
     width: 100%;
     padding: 10px 12px;
-    font-size: 14px;
-    border: 1px solid #b5b6ba;
-    border-radius: 4px;
+    font-size: 13.5px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
     box-sizing: border-box;
-    color: #333;
+    color: var(--text-primary);
+    background-color: var(--bg-app);
     outline: none;
-    transition: border-color 0.2s ease;
+    transition: var(--transition-fast);
 }
 
 .form-group input:focus,
 .form-group textarea:focus {
-    border-color: #1dbf73;
+    border-color: var(--primary);
+    background-color: var(--surface);
+    box-shadow: 0 0 0 3px var(--primary-glow);
 }
 
 .form-modal-actions {
@@ -200,41 +212,44 @@
 }
 
 .btn-modal-cancel {
-    background: #f5f5f5;
-    color: #62646a;
-    border: 1px solid #e4e5e7;
+    background: var(--bg-app);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
     padding: 10px 16px;
-    font-size: 14px;
+    font-size: 13.5px;
     font-weight: 600;
-    border-radius: 4px;
+    border-radius: var(--radius-md);
     cursor: pointer;
+    transition: var(--transition-fast);
 }
 
 .btn-modal-cancel:hover {
-    background: #e4e5e7;
+    background: var(--border);
+    color: var(--text-primary);
 }
 
 .btn-modal-submit {
-    background: #1dbf73;
-    color: #fff;
+    background: var(--primary);
+    color: var(--text-light);
     border: none;
     padding: 10px 18px;
-    font-size: 14px;
-    font-weight: 600;
-    border-radius: 4px;
+    font-size: 13.5px;
+    font-weight: 700;
+    border-radius: var(--radius-md);
     cursor: pointer;
+    transition: var(--transition-fast);
 }
 
 .btn-modal-submit:hover {
-    background: #19a463;
+    background: var(--primary-hover);
+    box-shadow: var(--shadow-glow);
 }
 
 @keyframes modalFadeIn {
-    from { opacity: 0; transform: translateY(-15px); }
+    from { opacity: 0; transform: translateY(-12px); }
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* Responsive di động */
 @media (max-width: 576px) {
     .category-modal-box {
         width: 90%;

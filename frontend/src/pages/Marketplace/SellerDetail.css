@@ -1,18 +1,21 @@
-/* src/pages/Marketplace/SellerDetail.css */
+/* ============================================================
+   FREELANCER PROFILE DETAILS — VANCE DESIGN
+   ============================================================ */
 
 .seller-detail-loading,
 .seller-detail-error {
     text-align: center;
     padding: 100px;
-    color: #666;
-    font-family: 'Inter', sans-serif;
+    color: var(--text-secondary);
+    font-family: var(--font-body);
+    font-size: 14px;
 }
 
 .seller-detail-container {
     max-width: 900px;
-    margin: 40px auto;
-    padding: 0 20px;
-    font-family: 'Inter', sans-serif;
+    margin: 32px auto 80px auto;
+    padding: 0 24px;
+    font-family: var(--font-body);
 }
 
 /* Nút quay lại */
@@ -22,28 +25,29 @@
     gap: 6px;
     border: none;
     background-color: transparent;
-    color: #666;
+    color: var(--text-secondary);
     cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
-    margin-bottom: 25px;
+    font-size: 13.5px;
+    font-weight: 600;
+    margin-bottom: 24px;
     padding: 0;
+    transition: var(--transition-fast);
 }
 
 .seller-detail-back-btn:hover {
-    color: #222;
+    color: var(--primary);
 }
 
 /* Khung thông tin chính */
 .seller-detail-card {
-    background-color: #fff;
-    border: 1px solid #eae9e6;
-    border-radius: 12px;
-    padding: 30px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 32px;
+    box-shadow: var(--shadow-sm);
     display: flex;
     flex-direction: column;
-    gap: 25px;
+    gap: 28px;
 }
 
 /* Phần Header Profile */
@@ -58,11 +62,14 @@
     width: 80px;
     height: 80px;
     border-radius: 50%;
-    background-color: #f0f0f0;
+    background: linear-gradient(135deg, var(--primary-light), var(--secondary-light));
+    border: 3px solid var(--border);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #555;
+    color: var(--primary);
+    font-weight: 700;
+    font-size: 24px;
 }
 
 .seller-detail-info {
@@ -78,36 +85,40 @@
 
 .seller-detail-fullname {
     margin: 0;
+    font-family: var(--font-display);
     font-size: 24px;
-    font-weight: 700;
-    color: #222;
+    font-weight: 800;
+    color: var(--text-primary);
 }
 
 .seller-detail-badge {
     display: flex;
     align-items: center;
     gap: 4px;
-    background-color: #e8f7f0;
-    color: #1dbf73;
-    font-size: 12px;
-    padding: 4px 8px;
-    border-radius: 20px;
-    font-weight: 600;
+    background-color: var(--primary-light);
+    color: var(--primary);
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: var(--radius-full);
+    font-weight: 700;
+    text-transform: uppercase;
 }
 
 .seller-detail-title {
     margin: 6px 0 12px 0;
-    font-size: 16px;
-    color: #1dbf73;
-    font-weight: 600;
+    font-size: 15px;
+    color: var(--primary);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .seller-detail-meta {
     display: flex;
-    gap: 15px;
+    gap: 16px;
     flex-wrap: wrap;
     font-size: 13px;
-    color: #666;
+    color: var(--text-secondary);
 }
 
 .seller-detail-meta-item {
@@ -116,18 +127,17 @@
     gap: 4px;
 }
 
-/* Huy hiệu liên kết cổng tài chính Stripe mới thêm */
 .seller-stripe-badge {
-    color: #1dbf73;
-    font-weight: 500;
+    color: var(--primary);
+    font-weight: 600;
 }
 
 /* Điểm đánh giá */
 .seller-detail-rating-box {
-    background-color: #fafafa;
-    border: 1px solid #eae9e6;
+    background-color: var(--bg-app);
+    border: 1px solid var(--border);
     padding: 12px 20px;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     text-align: center;
 }
 
@@ -136,32 +146,34 @@
     align-items: center;
     justify-content: center;
     gap: 4px;
-    color: #ffb33e;
-    font-weight: 700;
+    color: var(--accent-orange);
+    font-weight: 800;
     font-size: 18px;
 }
 
 .seller-detail-rating-label {
-    font-size: 12px;
-    color: #888;
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 600;
 }
 
 /* Đường gạch ngang dòng phân chia */
 .seller-detail-divider {
     border: none;
-    border-top: 1px solid #eae9e6;
+    border-top: 1px solid var(--border);
     margin: 0;
 }
 
 /* Các khối nội dung lớn */
 .seller-detail-section-title {
+    font-family: var(--font-display);
     font-size: 16px;
     font-weight: 700;
-    color: #222;
-    margin-bottom: 10px;
+    color: var(--text-primary);
+    margin-bottom: 12px;
 }
 
-/* Tiêu đề Học vấn và Kinh nghiệm có icon đi kèm */
+/* Tiêu đề Học vấn và Kinh nghiệm */
 .seller-detail-history-section .seller-detail-section-title {
     display: flex;
     align-items: center;
@@ -170,7 +182,7 @@
 
 .seller-detail-bio {
     font-size: 14px;
-    color: #444;
+    color: var(--text-secondary);
     line-height: 1.6;
     margin: 0;
     white-space: pre-line;
@@ -183,15 +195,16 @@
 }
 
 .seller-detail-skill-item {
-    background-color: #f5f5f5;
-    color: #333;
-    font-size: 13px;
+    background-color: var(--bg-app);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 12px;
     padding: 6px 12px;
-    border-radius: 6px;
+    border-radius: var(--radius-full);
     font-weight: 500;
 }
 
-/* 🆕 KHỐI CSS MỚI: GRID 2 CỘT CHO HỌC VẤN & KINH NGHIỆM */
+/* GRID 2 CỘT CHO HỌC VẤN & KINH NGHIỆM */
 .seller-detail-history-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -204,16 +217,16 @@
 }
 
 .seller-detail-history-list p.no-data {
-    color: #74767e;
-    font-size: 14px;
+    color: var(--text-muted);
+    font-size: 13.5px;
+    font-style: italic;
     margin: 0;
 }
 
-/* Các item nhỏ bên trong học vấn / kinh nghiệm */
 .seller-detail-history-item {
     margin-bottom: 16px;
     padding-bottom: 12px;
-    border-bottom: 1px solid #f4f5f7;
+    border-bottom: 1px dashed var(--border);
 }
 
 .seller-detail-history-item:last-child {
@@ -224,36 +237,28 @@
 
 .seller-detail-history-item h4 {
     margin: 0 0 4px 0;
-    font-size: 15px;
-    color: #222325;
-    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-primary);
+    font-weight: 700;
 }
 
 .seller-detail-history-item .history-sub {
     margin: 0 0 4px 0;
     font-size: 13px;
-    color: #62646a;
-    font-weight: 500;
+    color: var(--primary);
+    font-weight: 600;
 }
 
 .seller-detail-history-item .history-desc {
     margin: 0;
     font-size: 13px;
-    color: #74767e;
-    line-height: 1.4;
+    color: var(--text-secondary);
+    line-height: 1.5;
 }
 
-.seller-detail-history-item .history-desc.italic {
-    font-style: italic;
-}
-
-/* 🆕 KHỐI CSS MỚI: PHẦN REVIEWS & COMMENTS CỦA BUYER */
+/* PHẦN REVIEWS & COMMENTS CỦA BUYER */
 .seller-reviews-container {
     margin: 24px 0;
-}
-
-.seller-reviews-container .seller-detail-section-title {
-    margin-bottom: 16px;
 }
 
 .seller-reviews-stack {
@@ -263,18 +268,17 @@
 }
 
 .seller-reviews-stack p.no-reviews {
-    color: #74767e;
-    font-size: 14px;
+    color: var(--text-muted);
+    font-size: 13.5px;
     font-style: italic;
     margin: 0;
 }
 
-/* Thẻ card bao quanh mỗi bình luận đánh giá */
 .review-comment-card {
     padding: 16px;
-    background-color: #fafafa;
-    border: 1px solid #e4e5e7;
-    border-radius: 8px;
+    background-color: var(--bg-app);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
 }
 
 .review-card-header {
@@ -294,35 +298,37 @@
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background-color: #e4e5e7;
+    background-color: var(--border);
     display: flex;
     align-items: center;
     justify-content: center;
+    color: var(--text-secondary);
+    font-weight: 700;
 }
 
 .review-buyer-name {
     font-weight: 700;
-    font-size: 14px;
-    color: #222325;
+    font-size: 13.5px;
+    color: var(--text-primary);
 }
 
 .review-meta-data {
     display: flex;
     align-items: center;
     gap: 4px;
-    font-size: 13px;
-    color: #74767e;
+    font-size: 12.5px;
+    color: var(--text-secondary);
 }
 
 .review-stars {
     display: flex;
-    color: #ffb33e;
+    color: var(--accent-orange);
 }
 
 .review-text {
     margin: 0;
-    font-size: 14px;
-    color: #404145;
+    font-size: 13.5px;
+    color: var(--text-secondary);
     line-height: 1.5;
 }
 
@@ -332,45 +338,51 @@
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: 15px;
+    gap: 16px;
+    border-top: 1px solid var(--border);
+    padding-top: 24px;
 }
 
 .seller-detail-contact-label {
-    font-size: 12px;
-    color: #888;
+    font-size: 11px;
+    color: var(--text-muted);
     display: block;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
+    font-weight: 600;
+    text-transform: uppercase;
 }
 
 .seller-detail-contact-value {
     font-size: 14px;
-    font-weight: 600;
-    color: #222;
+    font-weight: 700;
+    color: var(--text-primary);
     display: flex;
     align-items: center;
     gap: 6px;
 }
 
 .seller-detail-contact-btn {
-    padding: 12px 24px;
-    background-color: #222;
-    color: #fff;
+    padding: 10px 24px;
+    background-color: var(--primary);
+    color: var(--text-light);
     border: none;
-    border-radius: 6px;
+    border-radius: var(--radius-md);
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: var(--transition-fast);
 }
 
 .seller-detail-contact-btn:hover {
-    background-color: #444;
+    background-color: var(--primary-hover);
+    box-shadow: var(--shadow-glow);
+    transform: translateY(-1px);
 }
 
-/* 📱 RESPONSIVE MEDIA QUERIES - TỐI ƯU TRÊN THIẾT BỊ DI ĐỘNG */
+/* RESPONSIVE */
 @media (max-width: 768px) {
     .seller-detail-history-grid {
-        grid-template-columns: 1fr; /* Chuyển grid 2 cột thành 1 cột đứng */
+        grid-template-columns: 1fr;
         gap: 20px;
     }
     
@@ -390,7 +402,6 @@
 
     .seller-detail-rating-box {
         width: 100%;
-        box-sizing: border-box;
     }
 
     .review-card-header {

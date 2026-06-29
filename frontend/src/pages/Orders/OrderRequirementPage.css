@@ -1,40 +1,42 @@
-/* src/pages/Orders/OrderRequirementPage.css */
+/* ============================================================
+   ORDER REQUIREMENTS SUBMISSION PAGE — VANCE DESIGN
+   ============================================================ */
 
-/* Toàn bộ container trang */
 .order-requirement-page-container {
   max-width: 800px;
-  margin: 40px auto;
-  padding: 0 20px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  color: #333333;
-  background-color: #f7f7f7;
+  margin: 32px auto 80px auto;
+  padding: 0 24px;
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  background-color: var(--bg-app);
 }
 
 /* Card tiêu đề đầu trang */
 .order-req-header-card {
-  background-color: #ffffff;
-  border: 1px solid #e4e5e7;
-  border-radius: 8px;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
   padding: 24px;
   margin-bottom: 24px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  box-shadow: var(--shadow-sm);
 }
 
 .order-req-header-card h2 {
+  font-family: var(--font-display);
   margin: 0 0 8px 0;
   font-size: 24px;
-  color: #222325;
-  font-weight: 700;
+  color: var(--text-primary);
+  font-weight: 800;
 }
 
 .order-id-sub {
   margin: 0 0 16px 0;
-  font-size: 14px;
-  color: #74767e;
+  font-size: 13.5px;
+  color: var(--text-secondary);
 }
 
 .order-id-sub strong {
-  color: #1dbf73;
+  color: var(--primary);
 }
 
 /* Banner cảnh báo/hướng dẫn */
@@ -42,33 +44,33 @@
   display: flex;
   gap: 12px;
   align-items: flex-start;
-  background-color: #fff9e6;
-  border: 1px solid #ffeaba;
-  border-radius: 6px;
+  background-color: rgba(245, 158, 11, 0.05);
+  border: 1px solid rgba(245, 158, 11, 0.15);
+  border-radius: var(--radius-md);
   padding: 12px 16px;
-  color: #8a6d3b;
-  font-size: 13.5px;
+  color: var(--text-secondary);
+  font-size: 13px;
   line-height: 1.5;
 }
 
 .warning-banner svg {
   flex-shrink: 0;
   margin-top: 2px;
-  color: #ffb300;
+  color: var(--accent-orange);
 }
 
 /* Thông báo lỗi */
 .order-req-error-alert {
-  background-color: #ffebe9;
-  border: 1px solid #ffc1bd;
-  color: #ff4d4f;
-  border-radius: 6px;
+  background-color: rgba(239, 68, 68, 0.05);
+  border: 1px solid rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border-radius: var(--radius-md);
   padding: 12px 16px;
   margin-bottom: 24px;
-  font-size: 14px;
+  font-size: 13.5px;
   display: flex;
   align-items: center;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 /* Luồng form chứa các câu hỏi */
@@ -80,22 +82,22 @@
 
 /* Card trống khi không có câu hỏi */
 .no-questions-card {
-  background-color: #ffffff;
-  border: 1px solid #e4e5e7;
-  border-radius: 8px;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
   padding: 32px;
   text-align: center;
-  color: #62646a;
-  font-size: 15px;
+  color: var(--text-secondary);
+  font-size: 14px;
 }
 
 /* Card bọc từng câu hỏi */
 .requirement-question-card {
-  background-color: #ffffff;
-  border: 1px solid #e4e5e7;
-  border-radius: 8px;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
   padding: 24px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  box-shadow: var(--shadow-sm);
 }
 
 .question-header {
@@ -106,28 +108,30 @@
 }
 
 .question-number {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #95979d;
+  color: var(--text-muted);
 }
 
 .mandatory-badge {
-  font-size: 12px;
-  font-weight: 600;
-  color: #ff4d4f;
-  background-color: #fff1f0;
+  font-size: 11px;
+  font-weight: 700;
+  color: #ef4444;
+  background-color: rgba(239, 68, 68, 0.05);
   padding: 2px 8px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
 }
 
 .question-text-title {
+  font-family: var(--font-display);
   font-size: 16px;
-  font-weight: 600;
-  color: #222325;
+  font-weight: 700;
+  color: var(--text-primary);
   margin: 0 0 16px 0;
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
 /* Vùng nhập câu trả lời */
@@ -135,25 +139,25 @@
   width: 100%;
 }
 
-/* Textarea ô nhập văn bản - Đã sửa lỗi hiển thị màu chữ và nền tương phản */
 .answer-textarea {
   width: 100%;
   padding: 12px 16px;
-  border: 1px solid #b5b6ba;
-  border-radius: 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
   font-size: 14px;
   line-height: 1.5;
-  color: #222325 !important;
-  background-color: #ffffff !important;
+  color: var(--text-primary) !important;
+  background-color: var(--bg-app) !important;
   resize: vertical;
   outline: none;
   box-sizing: border-box;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: var(--transition-fast);
 }
 
 .answer-textarea:focus {
-  border-color: #1dbf73;
-  box-shadow: 0 0 0 3px rgba(29, 191, 115, 0.15);
+  border-color: var(--primary);
+  background-color: var(--surface) !important;
+  box-shadow: 0 0 0 3px var(--primary-glow);
 }
 
 /* Vùng Upload tài liệu đính kèm */
@@ -165,18 +169,18 @@
 
 .file-upload-box-trigger {
   display: block;
-  border: 2px dashed #c4c5c8;
-  border-radius: 8px;
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-md);
   padding: 24px;
   text-align: center;
   cursor: pointer;
-  background-color: #fafafa;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
+  background-color: var(--bg-app);
+  transition: var(--transition-fast);
 }
 
 .file-upload-box-trigger:hover {
-  background-color: #f4fbf7;
-  border-color: #1dbf73;
+  background-color: var(--primary-light);
+  border-color: var(--primary);
 }
 
 .upload-trigger-content {
@@ -185,40 +189,41 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  font-size: 14px;
-  color: #62646a;
-  font-weight: 500;
-}
-
-.upload-success-text {
-  color: #1dbf73;
+  font-size: 13.5px;
+  color: var(--text-secondary);
   font-weight: 600;
 }
 
-/* Đường dẫn hiển thị file preview phía dưới nút upload */
+.upload-success-text {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+/* Đường dẫn hiển thị file preview */
 .file-path-preview {
   display: flex;
   align-items: center;
   gap: 6px;
-  background-color: #f4f5f7;
+  background-color: var(--bg-app);
   padding: 8px 12px;
-  border-radius: 4px;
-  border: 1px solid #e4e5e7;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
 }
 
 .file-path-preview svg {
-  color: #62646a;
+  color: var(--text-secondary);
   flex-shrink: 0;
 }
 
 .truncated-url {
   font-size: 13px;
-  color: #0066cc;
+  color: var(--secondary);
   text-decoration: none;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   display: block;
+  font-weight: 600;
 }
 
 .truncated-url:hover {
@@ -238,36 +243,42 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background-color: #1dbf73;
-  color: #ffffff;
+  background-color: var(--primary);
+  color: var(--text-light);
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   padding: 14px 28px;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
   cursor: pointer;
-  transition: background-color 0.2s ease, opacity 0.2s ease;
+  transition: var(--transition-fast);
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-submit-start-order:hover {
-  background-color: #19a463;
+  background-color: var(--primary-hover);
+  box-shadow: var(--shadow-glow);
+  transform: translateY(-1px);
 }
 
 .btn-submit-start-order:disabled {
-  background-color: #a6a7ad;
+  background-color: var(--border);
+  color: var(--text-muted);
   cursor: not-allowed;
   opacity: 0.8;
+  box-shadow: none;
+  transform: none;
 }
 
-/* Màn hình loading toàn bộ trang ban đầu */
+/* Màn hình loading */
 .order-req-loading-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   min-height: 350px;
-  color: #62646a;
-  font-size: 15px;
+  color: var(--text-secondary);
+  font-size: 14px;
   gap: 12px;
 }
 
@@ -276,19 +287,15 @@
 }
 
 .text-green {
-  color: #1dbf73;
+  color: var(--primary);
 }
 
 @keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
-/* Tối ưu hóa hiển thị Responsive trên thiết bị di động */
+/* Responsive */
 @media (max-width: 600px) {
   .order-requirement-page-container {
     margin: 16px auto;

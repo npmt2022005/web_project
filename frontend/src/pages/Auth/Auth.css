@@ -1,148 +1,181 @@
-/* --- RESET CƠ BẢN --- */
+/* ============================================================
+   AUTH PAGES — MODERN SPLIT-SCREEN LAYOUT
+   ============================================================ */
+
 .auth-container {
   display: flex;
   height: 100vh;
   width: 100%;
-  background-color: #ffffff;
+  background-color: var(--bg-app);
   overflow: hidden;
 }
 
-/* --- BANNER TRÁI --- */
+/* --- BANNER TRÁI (Premium visuals) --- */
 .auth-banner {
   flex: 1.4;
-  background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('../../assets/images/freelancer.jpeg');
+  background: linear-gradient(135deg, rgba(11, 15, 25, 0.8), rgba(99, 102, 241, 0.4)), 
+              url('../../assets/images/freelancer.jpeg');
   background-size: cover;
   background-position: center;
   padding: 60px;
   display: flex;
+  flex-direction: column;
   justify-content: flex-end;
+  position: relative;
+}
+
+.auth-banner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 10% 90%, rgba(16, 185, 129, 0.15) 0%, transparent 60%);
+  pointer-events: none;
 }
 
 .banner-content { 
   text-align: right; 
-  color: white; 
+  color: var(--text-light);
+  z-index: 10;
+  max-width: 600px;
+  margin-left: auto;
 }
 
 .banner-content h1 { 
-  font-size: 3rem; 
+  font-family: var(--font-display);
+  font-size: 2.8rem; 
+  font-weight: 800;
   margin-bottom: 20px; 
-  color: white !important; 
+  color: var(--text-light) !important;
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.banner-features {
+  list-style: none;
 }
 
 .banner-features li { 
   display: flex; 
   align-items: center; 
   justify-content: flex-end; 
-  gap: 10px; 
-  margin-bottom: 10px; 
-  color: white !important; 
-  font-size: 18px;
+  gap: 12px; 
+  margin-bottom: 12px; 
+  color: rgba(255, 255, 255, 0.85) !important; 
+  font-size: 16px;
+  font-weight: 500;
 }
 
-/* --- FORM PHẢI --- */
+/* --- FORM PHẢI (Clean white/gray card) --- */
 .auth-form-side {
   flex: 1;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
-  padding: 60px;
+  padding: 40px;
   overflow-y: auto;
   height: 100%;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
 }
 
-/* Khung nội dung form chính - Hiện đại hơn với bo góc mềm mại và bóng đổ mờ */
+/* Khung nội dung form chính */
 .form-box {
   width: 100%;
-  max-width: 440px;
-  background: #ffffff;
-  padding: 20px 10px;
-  transition: all 0.3s ease;
+  max-width: 400px;
+  padding: 10px 0;
+  transition: var(--transition-normal);
+  animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .auth-form-side h2 {
-  font-size: 28px;
+  font-family: var(--font-display);
+  font-size: 26px;
   font-weight: 800;
-  color: #222325 !important;
-  margin-bottom: 10px;
+  color: var(--text-primary) !important;
+  margin-bottom: 8px;
 }
 
-
 .top-switch-sub {
-  font-size: 15px;
-  color: #74767e !important;
-  margin-bottom: 30px;
+  font-size: 14px;
+  color: var(--text-secondary) !important;
+  margin-bottom: 24px;
 }
 
 .top-switch-sub span {
-  color: #1dbf73;
+  color: var(--primary);
   font-weight: 600;
   cursor: pointer;
-  margin-left: 5px;
+  margin-left: 4px;
+  transition: var(--transition-fast);
 }
 
-/* --- CỤM ĐIỀU HƯỚNG PHƯƠNG THỨC (EMAIL, PHONE, USERNAME) --- */
+.top-switch-sub span:hover {
+  color: var(--primary-hover);
+  text-decoration: underline;
+}
+
+/* --- CỤM ĐIỀU HƯỚNG PHƯƠNG THỨC --- */
 .method-selector {
   display: flex;
-  background-color: #f4f5f7;
-  border-radius: 30px;
+  background-color: var(--bg-app);
+  border-radius: var(--radius-full);
   padding: 4px;
-  margin-bottom: 25px;
-  border: none;
+  margin-bottom: 24px;
+  border: 1px solid var(--border);
 }
 
 .method-btn {
   flex: 1;
-  padding: 10px 0;
-  font-size: 14px;
+  padding: 8px 0;
+  font-size: 13px;
   font-weight: 600;
-  color: #74767e;
+  color: var(--text-secondary);
   background: transparent;
   border: none;
-  border-radius: 25px;
+  border-radius: var(--radius-full);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  transition: all 0.2s ease;
+  transition: var(--transition-fast);
 }
 
 .method-btn.active {
-  background-color: #ffffff;
-  color: #1dbf73;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  background-color: var(--surface);
+  color: var(--primary);
+  box-shadow: var(--shadow-sm);
 }
 
-/* --- KHUNG NHẬP LIỆU (INPUT GROUPS) --- */
+/* --- KHUNG NHẬP LIỆU --- */
 .input-group {
-  margin-bottom: 20px;
+  margin-bottom: 18px;
   display: flex;
   flex-direction: column;
 }
 
 .input-group label {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  color: #404145 !important;
-  margin-bottom: 8px;
+  color: var(--text-secondary) !important;
+  margin-bottom: 6px;
   text-align: left;
 }
 
-/* Khung bao bọc Input bo tròn cao cấp */
+/* Khung bao bọc Input */
 .input-wrapper {
   display: flex;
   align-items: center;
-  background-color: #f7f7f8;
-  border: 1px solid transparent;
-  border-radius: 30px;
-  padding: 0 18px;
-  height: 50px;
-  transition: all 0.2s ease;
-  position: relative; /* 🌟 ĐÃ THÊM: Để định vị icon con mắt absolute chính xác bên trong */
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0 16px;
+  height: 46px;
+  transition: var(--transition-fast);
+  position: relative;
 }
 
 .input-wrapper svg {
-  color: #b5b6ba;
+  color: var(--text-muted);
   margin-right: 12px;
   flex-shrink: 0;
 }
@@ -154,226 +187,224 @@
   outline: none;
   font-size: 14px;
   font-weight: 500;
-  color: #222325;
+  color: var(--text-primary);
   width: 100%;
+  padding: 0;
 }
 
 .input-wrapper input::placeholder {
-  color: #b5b6ba;
+  color: var(--text-muted);
 }
 
-/* Hiệu ứng viền phát sáng nhẹ khi click chọn ô nhập */
 .input-wrapper:focus-within {
-  background-color: #ffffff;
-  border-color: #1dbf73;
-  box-shadow: 0 0 0 3px rgba(29, 191, 115, 0.12);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
 }
 
-/* 🌟 ĐÃ THÊM: Định vị hình con mắt nằm gọn bên góc phải của ô nhập mật khẩu */
+/* Password Toggle Icon */
 .password-toggle-icon {
   position: absolute;
-  right: 18px;
+  right: 16px;
   cursor: pointer;
-  color: #b5b6ba;
+  color: var(--text-muted);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.2s ease;
+  transition: var(--transition-fast);
   user-select: none;
 }
 
 .password-toggle-icon:hover {
-  color: #1dbf73; /* Con mắt đổi màu xanh khi di chuột vào */
+  color: var(--primary);
 }
 
-/* 🌟 ĐÃ THÊM: Đẩy khoảng trống bên phải input để văn bản không đè lên con mắt */
 .input-wrapper input[name="password"],
 .input-wrapper input[name="confirmPassword"] {
-  padding-right: 30px;
+  padding-right: 32px;
 }
 
-/* Ô nhập mã OTP dạng mảng */
+/* OTP Code Box */
 .otp-container {
   display: flex;
   justify-content: center;
-  margin: 20px 0;
+  margin: 18px 0;
 }
 
 .otp-inputs {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   justify-content: center;
 }
 
 .otp-field {
-  width: 45px;
-  height: 50px;
+  width: 44px;
+  height: 48px;
   text-align: center;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
-  border: 1px solid #e4e5e7;
-  border-radius: 12px;
-  background-color: #f7f7f8 !important; /* Khóa cứng màu nền xám nhạt */
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-app) !important;
   outline: none;
-  transition: all 0.2s ease;
-  color: #222325 !important; /* 🌟 ÉP BUỘC: Số luôn có màu đen, không bị biến thành màu trắng */
-  -webkit-text-fill-color: #222325 !important;
-  caret-color: #222325 !important;
-
-  /* Use a clean UI sans font and enable tabular numbers for consistent digit width */
-  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  transition: var(--transition-fast);
+  color: var(--text-primary) !important;
+  font-family: var(--font-body);
   font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1;
-  letter-spacing: 0.5px;
 }
 
 .otp-field:focus {
-  background-color: #ffffff !important;
-  border-color: #1dbf73 !important;
-  color: #222325 !important; /* 🌟 ĐẢM BẢO: Khi nhấn chọn vào ô, chữ vẫn giữ màu đen */
-  box-shadow: 0 0 0 3px rgba(29, 191, 115, 0.12);
+  background-color: var(--surface) !important;
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px var(--primary-glow);
 }
 
-/* Ensure browser autofill doesn't turn text white */
-.otp-field:-webkit-autofill,
-.otp-field:-webkit-autofill:focus {
-  -webkit-text-fill-color: #222325 !important;
-}
-
-/* --- NÚT BẤM CHÍNH (BUTTON AUTH) --- */
+/* --- BUTTONS --- */
 .btn-auth {
   width: 100%;
-  height: 50px;
-  background-color: #1dbf73;
-  color: white;
+  height: 46px;
+  background-color: var(--primary);
+  color: var(--text-light);
   border: none;
-  border-radius: 30px;
-  font-size: 15px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s ease;
-  margin-top: 10px;
+  transition: var(--transition-fast);
+  margin-top: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .btn-auth:hover {
-  background-color: #19a463;
+  background-color: var(--primary-hover);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(29, 191, 115, 0.2);
+  box-shadow: var(--shadow-glow);
 }
 
 .btn-auth:disabled {
-  background-color: #a6ebd0;
+  background-color: var(--border);
+  color: var(--text-muted);
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
 }
 
-/* --- TÙY CHỌN PHỤ (GHI NHỚ, QUÊN MẬT KHẨU) --- */
+/* --- ADDITIONAL OPTIONS --- */
 .form-options {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 25px;
-  font-size: 14px;
-  color: #62646a;
+  margin-bottom: 20px;
+  font-size: 13px;
+  color: var(--text-secondary);
 }
 
-/* 🌟 ĐÃ SỬA: Đồng bộ căn chỉnh nhãn ghi nhớ đăng nhập nằm ngay ngắn hàng ngang */
 .checkbox-label {
   display: flex;
   align-items: center;
-  gap: 8px; /* Tạo khoảng cách vừa vặn giữa ô tích vuông và chữ */
+  gap: 6px;
   cursor: pointer;
   font-weight: 500;
   user-select: none;
 }
 
-/* 🌟 ĐÃ SỬA: Bảo vệ kích thước ô vuông tuyệt đối, ngăn chặn hoàn toàn việc bị bóp méo từ CSS bên ngoài */
 .auth-checkbox {
   appearance: checkbox !important;
-  -webkit-appearance: checkbox !important;
-  -moz-appearance: checkbox !important;
-  accent-color: #1dbf73; /* Đổi màu dấu tích bên trong thành màu xanh lá thương hiệu */
-  width: 16px !important;
-  height: 16px !important;
-  min-width: 16px !important;  /* Khóa cứng chiều rộng tối thiểu */
-  min-height: 16px !important; /* Khóa cứng chiều cao tối thiểu */
-  border-radius: 0px !important; /* Triệt tiêu hoàn toàn lệnh bo tròn từ global input */
+  accent-color: var(--primary);
+  width: 15px !important;
+  height: 15px !important;
   cursor: pointer;
-  margin: 0 !important; /* Xóa bỏ khoảng cách thừa ép lệch tâm */
-  flex-shrink: 0 !important; /* Ngăn chặn flexbox đè ép thu nhỏ ô */
 }
 
 .forgot-link { 
-  color: #62646a !important; 
+  color: var(--text-secondary) !important; 
   font-weight: 600; 
   cursor: pointer; 
   text-decoration: none;
-  transition: color 0.2s;
+  transition: var(--transition-fast);
 }
 
 .forgot-link:hover {
-  color: #1dbf73 !important;
+  color: var(--primary) !important;
 }
 
 .auth-footer {
-  margin-top: 35px;
-  font-size: 13px;
-  color: #95979d !important;
+  margin-top: 30px;
+  font-size: 12px;
+  color: var(--text-muted) !important;
   text-align: center;
   line-height: 1.6;
 }
 
 .auth-footer b {
-  color: #62646a;
+  color: var(--text-secondary);
   cursor: pointer;
 }
 
 .auth-footer b:hover {
+  color: var(--primary);
   text-decoration: underline;
 }
 
 .back-link {
-  color: #1dbf73 !important;
+  color: var(--primary) !important;
   font-weight: 600;
   cursor: pointer;
-  margin-bottom: 25px;
+  margin-bottom: 20px;
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 14px;
-  transition: opacity 0.2s;
+  gap: 4px;
+  font-size: 13px;
+  transition: var(--transition-fast);
 }
 
 .back-link:hover {
-  opacity: 0.8;
+  color: var(--primary-hover);
 }
 
-/* --- HIỂN THỊ THÔNG BÁO --- */
+/* --- ALERTS & NOTIFICATIONS --- */
 .status-msg {
-  margin-top: 15px;
-  padding: 12px 16px;
-  border-radius: 25px;
-  font-size: 14px;
+  margin-top: 14px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
   font-weight: 500;
   text-align: center;
-  animation: fadeIn 0.3s ease;
+  animation: fadeIn 0.2s ease;
 }
 
 .status-msg.success {
-  background-color: #e8f7f0;
-  color: #1dbf73;
+  background-color: var(--primary-light);
+  color: var(--primary);
+  border: 1px solid rgba(16, 185, 129, 0.2);
 }
 
 .status-msg.error {
-  background-color: #fff0f0;
-  color: #f43f5e;
+  background-color: rgba(239, 68, 68, 0.05);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.15);
 }
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-5px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================
+   RESPONSIVE DESIGN
+   ============================================================ */
+@media (max-width: 992px) {
+  .auth-banner {
+    display: none;
+  }
+  .auth-form-side {
+    border-left: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .auth-form-side {
+    padding: 24px;
+  }
 }
